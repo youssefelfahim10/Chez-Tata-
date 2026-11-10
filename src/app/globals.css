@@ -46,3 +46,96 @@ body {
     transition: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Page d'accueil : animations. Tout est désactivé pour les personnes qui
+ * demandent moins de mouvement (prefers-reduced-motion) : le contenu reste visible.
+ * ------------------------------------------------------------------------- */
+
+@keyframes ct-fade-up {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ct-float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-14px) rotate(var(--r, 0deg)); }
+}
+@keyframes ct-blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(34px, -24px) scale(1.12); }
+  66% { transform: translate(-24px, 22px) scale(0.94); }
+}
+@keyframes ct-marquee {
+  to { transform: translateX(-50%); }
+}
+@keyframes ct-shimmer {
+  to { background-position: 220% center; }
+}
+@keyframes ct-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); }
+}
+/* Maquette du téléphone : une boucle de 9 s (arrivée pointée). */
+@keyframes ct-chip-before { 0%, 38% { opacity: 1; } 42%, 94% { opacity: 0; } 98%, 100% { opacity: 1; } }
+@keyframes ct-chip-after { 0%, 38% { opacity: 0; } 42%, 94% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes ct-tap { 0%, 34%, 46%, 100% { transform: scale(1); box-shadow: none; } 40% { transform: scale(0.9); box-shadow: 0 0 0 10px rgb(22 118 93 / 0.18); } }
+@keyframes ct-toast {
+  0%, 40% { opacity: 0; transform: translateY(18px); }
+  46%, 82% { opacity: 1; transform: none; }
+  90%, 100% { opacity: 0; transform: translateY(18px); }
+}
+@keyframes ct-count { 0%, 40% { opacity: 0; } 46%, 94% { opacity: 1; } 98%, 100% { opacity: 0; } }
+
+.ct-glass {
+  background: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+.ct-gradient-text {
+  background: linear-gradient(100deg, #16765d 10%, #2fa37f 45%, #f19a37 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ct-card {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.ct-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 22px 44px -18px rgb(22 118 93 / 0.35);
+  border-color: rgb(22 118 93 / 0.35);
+}
+.ct-shimmer {
+  background-image: linear-gradient(110deg, #16765d 35%, #2fa37f 50%, #16765d 65%);
+  background-size: 220% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .anim-up { animation: ct-fade-up 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .anim-float { animation: ct-float 7s ease-in-out infinite; }
+  .anim-blob { animation: ct-blob 18s ease-in-out infinite; }
+  .anim-marquee { animation: ct-marquee 38s linear infinite; }
+  .anim-marquee:hover { animation-play-state: paused; }
+  .anim-shimmer { animation: ct-shimmer 4.5s linear infinite; }
+  .anim-pop { animation: ct-pop 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .phone-chip-before { animation: ct-chip-before 9s infinite; }
+  .phone-chip-after { animation: ct-chip-after 9s infinite; }
+  .phone-tap { animation: ct-tap 9s infinite; }
+  .phone-toast { animation: ct-toast 9s infinite; }
+  .phone-count { animation: ct-count 9s infinite; }
+  /* Apparition au défilement (navigateurs compatibles) ; sinon le contenu est simplement visible. */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: ct-fade-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 38%;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .phone-chip-after, .phone-toast, .phone-count { opacity: 1 !important; }
+  .phone-chip-before { opacity: 0 !important; }
+}
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
