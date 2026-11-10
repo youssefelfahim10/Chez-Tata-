@@ -1,62 +1,85 @@
 import fontkit from "@pdf-lib/fontkit";
-import { PDFDocument, clip, endPath, popGraphicsState, pushGraphicsState, rectangle, rgb, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
+import { PDFDocument, appendBezierCurve, clip, closePath, endPath, lineTo, moveTo, popGraphicsState, pushGraphicsState, rectangle, rgb, type PDFFont, type PDFImage, type PDFPage, type RGB } from "pdf-lib";
 
-/** Palette Chez TaTa, déclinée pour l'impression (contrastes sûrs sur papier). */
+/** Palette Chez TaTa, relevée sur le logo : marine, rose, jaune, vert. Fond blanc, teintes très claires. */
 export const C = {
-  ink: rgb(0.094, 0.204, 0.18), // #18342e
-  muted: rgb(0.376, 0.459, 0.435), // #60756f
-  green: rgb(0.086, 0.463, 0.365), // #16765d
-  greenDeep: rgb(0.059, 0.361, 0.275), // #0f5c46
-  greenSoft: rgb(0.914, 0.973, 0.933), // #e9f8ee
-  orange: rgb(0.945, 0.604, 0.216), // #f19a37
-  orangeSoft: rgb(1, 0.957, 0.878), // #fff4e0
-  pink: rgb(0.988, 0.914, 0.933), // #fce9ee
-  line: rgb(0.859, 0.914, 0.875), // #dbe9df
-  paper: rgb(0.99, 0.992, 0.985),
+  navy: rgb(0.024, 0.216, 0.486), // #06377c
+  deepNavy: rgb(0.004, 0.153, 0.373), // #01275f
+  pink: rgb(0.929, 0.075, 0.349), // #ed1359
+  yellow: rgb(0.992, 0.722, 0.012), // #fdb803
+  green: rgb(0.231, 0.635, 0.122), // #3ba21f
+  ink: rgb(0.059, 0.122, 0.239), // #0f1f3d
+  muted: rgb(0.357, 0.42, 0.55), // #5b6b8c
+  line: rgb(0.835, 0.871, 0.941), // #d5deef
+  navyTint: rgb(0.933, 0.953, 0.984), // #eef3fb
+  pinkTint: rgb(1, 0.941, 0.961), // #fff0f5
+  yellowTint: rgb(1, 0.973, 0.882), // #fff8e1
+  greenTint: rgb(0.925, 0.973, 0.906), // #ecf8e7
   white: rgb(1, 1, 1),
 };
 
 export const A4 = { width: 595.276, height: 841.89 };
-export const MARGIN = { left: 48, right: 48, top: 48, bottom: 56 };
+export const MARGIN = { left: 44, right: 44, top: 44, bottom: 58 };
 
-/** Dessine dans un rectangle : tout ce qui dépasse est rogné (formes décoratives qui ne débordent jamais). */
+export type PdfAssets = { regular: Uint8Array; bold: Uint8Array; heavy: Uint8Array; logo: Uint8Array };
+export type Fonts = { regular: PDFFont; bold: PDFFont; heavy: PDFFont };
+
+export async function createDoc(assets: PdfAssets, meta: { title: string; subject: string }) {
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+  const fonts: Fonts = {
+    regular: await doc.embedFont(assets.regular, { subset: true }),
+    bold: await doc.embedFont(assets.bold, { subset: true }),
+    heavy: await doc.embedFont(assets.heavy, { subset: true }),
+  };
+  const logo = await doc.embedPng(assets.logo);
+  doc.setTitle(meta.title);
+  doc.setSubject(meta.subject);
+  doc.setAuthor("Chez TaTa");
+  doc.setCreator("Chez TaTa");
+  doc.setProducer("Chez TaTa");
+  return { doc, fonts, logo };
+}
+
+/** Dessine dans un rectangle : tout ce qui dépasse est rogné. */
 export function clipped(page: PDFPage, x: number, y: number, width: number, height: number, draw: () => void) {
   page.pushOperators(pushGraphicsState(), rectangle(x, y, width, height), clip(), endPath());
   draw();
   page.pushOperators(popGraphicsState());
 }
 
-export type FontBytes = { regular: Uint8Array; bold: Uint8Array; heavy: Uint8Array };
-export type Fonts = { regular: PDFFont; bold: PDFFont; heavy: PDFFont };
-
-export async function createDoc(bytes: FontBytes, meta: { title: string; subject: string }) {
-  const doc = await PDFDocument.create();
-  doc.registerFontkit(fontkit);
-  const fonts: Fonts = {
-    regular: await doc.embedFont(bytes.regular, { subset: true }),
-    bold: await doc.embedFont(bytes.bold, { subset: true }),
-    heavy: await doc.embedFont(bytes.heavy, { subset: true }),
-  };
-  doc.setTitle(meta.title);
-  doc.setSubject(meta.subject);
-  doc.setAuthor("Chez TaTa");
-  doc.setCreator("Chez TaTa");
-  doc.setProducer("Chez TaTa");
-  return { doc, fonts };
+/** Dessine dans un rectangle à coins arrondis (logo, vignettes). */
+export function roundedClip(page: PDFPage, x: number, y: number, width: number, height: number, radius: number, draw: () => void) {
+  const k = radius * 0.5523;
+  const r = radius;
+  page.pushOperators(
+    pushGraphicsState(),
+    moveTo(x + r, y),
+    lineTo(x + width - r, y),
+    appendBezierCurve(x + width - r + k, y, x + width, y + r - k, x + width, y + r),
+    lineTo(x + width, y + height - r),
+    appendBezierCurve(x + width, y + height - r + k, x + width - r + k, y + height, x + width - r, y + height),
+    lineTo(x + r, y + height),
+    appendBezierCurve(x + r - k, y + height, x, y + height - r + k, x, y + height - r),
+    lineTo(x, y + r),
+    appendBezierCurve(x, y + r - k, x + r - k, y, x + r, y),
+    closePath(),
+    clip(),
+    endPath(),
+  );
+  draw();
+  page.pushOperators(popGraphicsState());
 }
 
-const REPLACEMENTS: Record<string, string> = { " ": " ", " ": " ", " ": " ", "‑": "-", "–": "–", "→": "->", "✓": "x", "​": "" };
+const REPLACEMENTS: Record<string, string> = { " ": " ", " ": " ", " ": " ", "‑": "-", "→": "->", "✓": "x", "​": "" };
 
-/** Remplace les caractères que la police ne sait pas dessiner (émojis, symboles rares) au lieu de faire échouer le PDF. */
+/** Retire les caractères que la police ne sait pas dessiner (émojis, symboles rares) au lieu de faire échouer le PDF. */
 export function sanitize(text: string, font: PDFFont): string {
   const supported = new Set(font.getCharacterSet());
   let out = "";
   for (const ch of text.normalize("NFC")) {
-    const replaced = REPLACEMENTS[ch] ?? ch;
-    for (const c of replaced) {
-      const cp = c.codePointAt(0)!;
-      if (c === "\n" || supported.has(cp)) out += c;
-      else out += "";
+    for (const c of REPLACEMENTS[ch] ?? ch) {
+      if (c === "\n" || supported.has(c.codePointAt(0)!)) out += c;
     }
   }
   return out;
@@ -75,7 +98,6 @@ export function wrapLines(text: string, measure: (s: string) => number, maxWidth
     for (const word of words) {
       let piece = word;
       while (measure(piece) > maxWidth && piece.length > 1) {
-        // Mot plus large que la ligne : on le découpe.
         let cut = piece.length - 1;
         while (cut > 1 && measure(piece.slice(0, cut)) > maxWidth) cut -= 1;
         if (current) {
@@ -98,76 +120,128 @@ export function wrapLines(text: string, measure: (s: string) => number, maxWidth
 }
 
 type TextOpts = { size?: number; font?: PDFFont; color?: RGB; maxWidth?: number; lineHeight?: number; align?: "left" | "right" | "center" };
+type RectOpts = Parameters<PDFPage["drawRectangle"]>[0];
+const rounded = (o: RectOpts & { borderRadius?: number }) => o as RectOpts;
+
+const CARD_PAD = 14;
+const CARD_HEAD = 28;
 
 /**
- * Rédacteur de document : gère la position, les sauts de page, les titres, paragraphes, tableaux et signatures.
- * Les pieds de page (numéros) sont ajoutés à la fin, quand le nombre de pages est connu.
+ * Rédacteur de document : sections en cadres, champs, cases à cocher, tableaux, encadrés.
+ * Les cadres se prolongent proprement d'une page à l'autre. Les pieds de page sont posés à la fin.
  */
 export class Writer {
   page: PDFPage;
   y: number;
+  indent = 0;
   readonly contentWidth = A4.width - MARGIN.left - MARGIN.right;
   private pages: PDFPage[] = [];
+  private card: { num: number | null; title: string; startY: number } | null = null;
 
   constructor(
     public readonly doc: PDFDocument,
     public readonly fonts: Fonts,
-    private readonly onNewPage?: (writer: Writer, pageIndex: number) => void,
+    public readonly logo: PDFImage,
+    private readonly runningHeader: (writer: Writer) => void,
   ) {
     this.page = this.addPage();
     this.y = A4.height - MARGIN.top;
   }
 
+  get left() {
+    return MARGIN.left + this.indent;
+  }
+  get width() {
+    return this.contentWidth - this.indent * 2;
+  }
+  get pageCount() {
+    return this.pages.length;
+  }
+
   private addPage(): PDFPage {
     const page = this.doc.addPage([A4.width, A4.height]);
-    page.drawRectangle({ x: 0, y: 0, width: A4.width, height: A4.height, color: C.paper });
     this.pages.push(page);
     return page;
   }
 
-  get pageCount() {
-    return this.pages.length;
-  }
-  allPages() {
-    return this.pages;
-  }
-
   newPage() {
+    const card = this.card;
+    if (card) this.strokeCard(card.startY, this.y - 6);
     this.page = this.addPage();
-    this.y = A4.height - MARGIN.top;
-    this.onNewPage?.(this, this.pages.length - 1);
+    this.runningHeader(this);
+    if (card) {
+      this.card = { ...card, startY: this.y };
+      this.drawCardHead(card.num, `${card.title} (suite)`);
+    }
   }
 
   /** S'assure qu'il reste `height` points ; sinon, nouvelle page. */
   ensure(height: number) {
     if (this.y - height < MARGIN.bottom) this.newPage();
   }
-
   space(points: number) {
     this.y -= points;
   }
+
+  // ---------- Cadres de section ----------
+
+  private drawCardHead(num: number | null, title: string) {
+    const x = MARGIN.left;
+    const top = this.y;
+    this.page.drawRectangle(rounded({ x, y: top - CARD_HEAD, width: this.contentWidth, height: CARD_HEAD, color: C.navyTint, borderRadius: 8 }));
+    this.page.drawRectangle({ x, y: top - CARD_HEAD, width: this.contentWidth, height: CARD_HEAD / 2, color: C.navyTint });
+    this.page.drawRectangle({ x: x + 14, y: top - CARD_HEAD + 6, width: 3, height: CARD_HEAD - 12, color: C.yellow });
+    if (num !== null) {
+      this.page.drawCircle({ x: x + 36, y: top - CARD_HEAD / 2, size: 9.5, color: C.pink });
+      this.at(this.page, String(num), x + 36, top - CARD_HEAD / 2 - 3.4, { size: 10, font: this.fonts.heavy, color: C.white, align: "center" });
+    }
+    this.at(this.page, title.toUpperCase(), x + (num !== null ? 53 : 28), top - CARD_HEAD / 2 - 3.6, { size: 10.2, font: this.fonts.heavy, color: C.deepNavy });
+    this.y = top - CARD_HEAD - 7;
+    this.indent = CARD_PAD;
+  }
+
+  private strokeCard(startY: number, endY: number) {
+    this.page.drawRectangle(rounded({ x: MARGIN.left, y: endY, width: this.contentWidth, height: startY - endY, borderColor: C.line, borderWidth: 1, borderRadius: 8 }));
+  }
+
+  /** Ouvre un cadre de section : bandeau titre (numéro rose) puis contenu à l'intérieur du cadre. */
+  beginCard(num: number | null, title: string, keepWith = 0) {
+    this.endCard();
+    this.ensure(CARD_HEAD + 34 + keepWith);
+    this.space(10);
+    this.card = { num, title, startY: this.y };
+    this.drawCardHead(num, title);
+  }
+
+  endCard() {
+    if (!this.card) return;
+    this.space(4);
+    this.strokeCard(this.card.startY, this.y);
+    this.card = null;
+    this.indent = 0;
+    this.space(2);
+  }
+
+  // ---------- Texte ----------
 
   text(raw: string, opts: TextOpts & { x?: number } = {}): number {
     const font = opts.font ?? this.fonts.regular;
     const size = opts.size ?? 10;
     const lineHeight = opts.lineHeight ?? size * 1.45;
-    const x = opts.x ?? MARGIN.left;
-    const maxWidth = opts.maxWidth ?? this.contentWidth - (x - MARGIN.left);
-    const text = sanitize(raw, font);
-    const lines = wrapLines(text, (s) => font.widthOfTextAtSize(s, size), maxWidth);
+    const x = opts.x ?? this.left;
+    const maxWidth = opts.maxWidth ?? this.width - (x - this.left);
+    const lines = wrapLines(sanitize(raw, font), (s) => font.widthOfTextAtSize(s, size), maxWidth);
     for (const line of lines) {
       this.ensure(lineHeight);
       this.y -= lineHeight;
-      let drawX = x;
       const w = font.widthOfTextAtSize(line, size);
-      if (opts.align === "right") drawX = x + maxWidth - w;
-      if (opts.align === "center") drawX = x + (maxWidth - w) / 2;
+      const drawX = opts.align === "right" ? x + maxWidth - w : opts.align === "center" ? x + (maxWidth - w) / 2 : x;
       this.page.drawText(line, { x: drawX, y: this.y + size * 0.28, size, font, color: opts.color ?? C.ink });
     }
     return lines.length;
   }
 
-  /** Dessine un texte à une position absolue (sans toucher à la position courante). */
+  /** Texte à une position absolue (sans toucher à la position courante). */
   at(page: PDFPage, raw: string, x: number, y: number, opts: Omit<TextOpts, "maxWidth" | "lineHeight"> = {}) {
     const font = opts.font ?? this.fonts.regular;
     const size = opts.size ?? 10;
@@ -178,120 +252,96 @@ export class Writer {
     return w;
   }
 
-  width(raw: string, font: PDFFont, size: number) {
+  width_(raw: string, font: PDFFont, size: number) {
     return font.widthOfTextAtSize(sanitize(raw, font), size);
   }
 
-  rule(color: RGB = C.line, thickness = 0.8) {
-    this.page.drawLine({ start: { x: MARGIN.left, y: this.y }, end: { x: A4.width - MARGIN.right, y: this.y }, thickness, color });
-  }
-
-  /** Titre d'article : pastille numérotée + intitulé, avec filet. */
-  article(num: number, title: string, keepWith = 0) {
-    // Le titre reste avec son contenu : si `keepWith` ne tient pas sur la page, on passe à la suivante.
-    this.ensure(54 + keepWith);
-    this.space(11);
-    const y = this.y;
-    this.page.drawCircle({ x: MARGIN.left + 11, y: y - 4, size: 11, color: C.green });
-    this.at(this.page, String(num), MARGIN.left + 11, y - 7.6, { size: 11, font: this.fonts.heavy, color: C.white, align: "center" });
-    this.at(this.page, title.toUpperCase(), MARGIN.left + 30, y - 7.4, { size: 11.5, font: this.fonts.heavy, color: C.greenDeep });
-    this.y = y - 20;
-    this.page.drawLine({ start: { x: MARGIN.left, y: this.y }, end: { x: A4.width - MARGIN.right, y: this.y }, thickness: 1.2, color: C.greenSoft });
-    this.space(4);
+  /** Sous-titre dans un cadre. */
+  subhead(raw: string) {
+    this.ensure(26);
+    this.space(6);
+    this.text(raw, { font: this.fonts.heavy, size: 10.2, color: C.pink });
+    this.space(1);
   }
 
   /** Lignes « libellé : valeur » ; une valeur absente reste un blanc à compléter à la main. */
   fields(rows: [string, string | undefined | null][], opts: { labelWidth?: number } = {}) {
-    const labelWidth = opts.labelWidth ?? 150;
+    const labelWidth = opts.labelWidth ?? 138;
     for (const [label, value] of rows) {
       const valueText = value && value.trim() ? value : "";
       const font = valueText ? this.fonts.bold : this.fonts.regular;
-      const lines = wrapLines(sanitize(valueText, font), (s) => font.widthOfTextAtSize(s, 10), this.contentWidth - labelWidth - 6);
-      const height = Math.max(1, lines.length) * 13.8;
+      const lines = wrapLines(sanitize(valueText, font), (s) => font.widthOfTextAtSize(s, 10), this.width - labelWidth - 4);
+      const height = Math.max(1, lines.length) * 13.6 + 1.5;
       this.ensure(height + 2);
       const top = this.y;
-      this.at(this.page, label, MARGIN.left, top - 11, { size: 9.5, color: C.muted });
+      this.at(this.page, label, this.left, top - 11, { size: 9.2, color: C.muted });
       if (valueText) {
         let yy = top - 11;
         for (const line of lines) {
-          this.page.drawText(line, { x: MARGIN.left + labelWidth, y: yy, size: 10, font: this.fonts.bold, color: C.ink });
-          yy -= 13.8;
+          this.page.drawText(line, { x: this.left + labelWidth, y: yy, size: 10, font: this.fonts.bold, color: C.deepNavy });
+          yy -= 13.6;
         }
       } else {
-        // Blanc à compléter à la main : on n'invente rien.
-        this.page.drawLine({
-          start: { x: MARGIN.left + labelWidth, y: top - 12.5 },
-          end: { x: A4.width - MARGIN.right, y: top - 12.5 },
-          thickness: 0.6,
-          color: C.line,
-          dashArray: [2, 2],
-        });
+        this.page.drawLine({ start: { x: this.left + labelWidth, y: top - 12.6 }, end: { x: this.left + this.width, y: top - 12.6 }, thickness: 0.6, color: C.line, dashArray: [2, 2.5] });
       }
       this.y = top - height;
     }
   }
 
-  /** Encadré coloré avec du texte. */
-  callout(raw: string, tone: "green" | "orange" = "green", size = 9.2) {
+  /** Encadré teinté avec barre d'accent à gauche. */
+  callout(raw: string, tone: "navy" | "yellow" | "pink" = "navy", size = 9) {
     const font = this.fonts.regular;
-    const padX = 12;
+    const padX = 14;
     const padY = 9;
-    const lines = wrapLines(sanitize(raw, font), (s) => font.widthOfTextAtSize(s, size), this.contentWidth - padX * 2);
+    const lines = wrapLines(sanitize(raw, font), (s) => font.widthOfTextAtSize(s, size), this.width - padX * 2 - 4);
     const lineHeight = size * 1.45;
     const height = lines.length * lineHeight + padY * 2;
-    this.ensure(height + 6);
-    this.space(4);
+    this.ensure(height + 8);
+    this.space(6);
     const top = this.y;
-    this.page.drawRectangle({
-      x: MARGIN.left,
-      y: top - height,
-      width: this.contentWidth,
-      height,
-      color: tone === "green" ? C.greenSoft : C.orangeSoft,
-      borderColor: tone === "green" ? C.line : rgb(0.98, 0.84, 0.6),
-      borderWidth: 0.8,
-      borderRadius: 8,
-    } as Parameters<PDFPage["drawRectangle"]>[0]);
+    const fill = tone === "yellow" ? C.yellowTint : tone === "pink" ? C.pinkTint : C.navyTint;
+    const accent = tone === "yellow" ? C.yellow : tone === "pink" ? C.pink : C.navy;
+    this.page.drawRectangle(rounded({ x: this.left, y: top - height, width: this.width, height, color: fill, borderRadius: 6 }));
+    this.page.drawRectangle({ x: this.left, y: top - height + 3, width: 3.5, height: height - 6, color: accent });
     let yy = top - padY - size;
     for (const line of lines) {
-      this.page.drawText(line, { x: MARGIN.left + padX, y: yy + 2, size, font, color: C.ink });
+      this.page.drawText(line, { x: this.left + padX + 3, y: yy + 2, size, font, color: C.ink });
       yy -= lineHeight;
     }
-    this.y = top - height - 6;
+    this.y = top - height - 4;
   }
 
   /** Coche vectorielle (les polices ne contiennent pas « ✓ »). */
-  check(page: PDFPage, x: number, y: number, size: number, color: RGB = C.green) {
-    page.drawLine({ start: { x, y: y + size * 0.45 }, end: { x: x + size * 0.38, y }, thickness: size * 0.16, color });
-    page.drawLine({ start: { x: x + size * 0.38, y }, end: { x: x + size, y: y + size * 0.85 }, thickness: size * 0.16, color });
+  check(page: PDFPage, x: number, y: number, size: number, color: RGB = C.green, thickness = 0.16) {
+    page.drawLine({ start: { x, y: y + size * 0.45 }, end: { x: x + size * 0.38, y }, thickness: size * thickness, color });
+    page.drawLine({ start: { x: x + size * 0.38, y }, end: { x: x + size, y: y + size * 0.85 }, thickness: size * thickness, color });
   }
 
-  /** Case à cocher imprimée : cochée ou vide. */
+  /** Case à cocher imprimée : cochée (vert) ou vide. */
   checkbox(label: string, checked: boolean, opts: { x?: number; width?: number } = {}) {
-    const x = opts.x ?? MARGIN.left;
+    const x = opts.x ?? this.left;
     const size = 9.6;
     const font = checked ? this.fonts.bold : this.fonts.regular;
-    const lines = wrapLines(sanitize(label, font), (s) => font.widthOfTextAtSize(s, size), (opts.width ?? this.contentWidth) - 22);
-    const height = lines.length * 13.5 + 2;
+    const lines = wrapLines(sanitize(label, font), (s) => font.widthOfTextAtSize(s, size), (opts.width ?? this.width) - 22);
+    const height = lines.length * 13.5 + 3;
     this.ensure(height);
     const top = this.y;
-    this.page.drawRectangle({ x, y: top - 11.5, width: 10, height: 10, borderColor: checked ? C.green : C.muted, borderWidth: 1, color: checked ? C.greenSoft : C.white, borderRadius: 2 } as Parameters<PDFPage["drawRectangle"]>[0]);
-    if (checked) this.check(this.page, x + 1.8, top - 9.3, 6.6);
+    this.page.drawRectangle(rounded({ x, y: top - 12, width: 10.5, height: 10.5, borderColor: checked ? C.green : C.muted, borderWidth: 1, color: checked ? C.greenTint : C.white, borderRadius: 2.5 }));
+    if (checked) this.check(this.page, x + 1.9, top - 9.6, 6.8);
     let yy = top - 10.2;
     for (const line of lines) {
-      this.page.drawText(line, { x: x + 16, y: yy, size, font, color: C.ink });
+      this.page.drawText(line, { x: x + 17, y: yy, size, font, color: C.ink });
       yy -= 13.5;
     }
     this.y = top - height;
   }
 
-  /** Tableau simple : en-tête coloré, lignes alternées. Reste d'un seul tenant s'il tient sur une page. */
+  /** Tableau : en-tête marine, lignes séparées, total en jaune. Jamais d'en-tête ni de total orphelin. */
   table(columns: { title: string; width: number; align?: "left" | "right" | "center" }[], rows: string[][], opts: { totalRow?: string[] } = {}) {
     const headH = 24;
     const pad = 8;
     const total = columns.reduce((s, c) => s + c.width, 0);
-    const scale = this.contentWidth / total;
-    const widths = columns.map((c) => c.width * scale);
+    const widths = columns.map((c) => (c.width / total) * this.width);
     const measureRow = (cells: string[], strong: boolean) => {
       const font = strong ? this.fonts.heavy : this.fonts.regular;
       const wrapped = cells.map((cell, i) => wrapLines(sanitize(cell, font), (s) => font.widthOfTextAtSize(s, 9.6), widths[i] - pad * 2));
@@ -299,46 +349,45 @@ export class Writer {
     };
     const measured = rows.map((r) => measureRow(r, false));
     const totalMeasured = opts.totalRow ? measureRow(opts.totalRow, true) : null;
-    // On ne commence un tableau que si l'en-tête et au moins deux lignes tiennent (pas d'en-tête orphelin).
     const startBlock = headH + (measured[0]?.height ?? 0) + (measured[1]?.height ?? 0);
-    if (this.y - startBlock < MARGIN.bottom) this.newPage();
+    this.ensure(startBlock + 6);
 
+    const left = this.left;
     const drawHead = () => {
       this.ensure(headH + 30);
       const top = this.y;
-      this.page.drawRectangle({ x: MARGIN.left, y: top - headH, width: this.contentWidth, height: headH, color: C.green, borderRadius: 6 } as Parameters<PDFPage["drawRectangle"]>[0]);
-      let x = MARGIN.left;
+      this.page.drawRectangle(rounded({ x: left, y: top - headH, width: this.width, height: headH, color: C.navy, borderRadius: 6 }));
+      let x = left;
       columns.forEach((c, i) => {
         const align = c.align ?? "left";
         const cx = align === "right" ? x + widths[i] - pad : align === "center" ? x + widths[i] / 2 : x + pad;
-        this.at(this.page, c.title, cx, top - 15.5, { size: 8.8, font: this.fonts.heavy, color: C.white, align });
+        this.at(this.page, c.title, cx, top - 15.6, { size: 8.8, font: this.fonts.heavy, color: C.white, align });
         x += widths[i];
       });
       this.y = top - headH;
     };
     drawHead();
     const drawRow = (m: { wrapped: string[][]; height: number; font: PDFFont }, index: number, strong = false, keepAfter = 0) => {
-      // La dernière ligne reste avec la ligne de total (jamais de total seul sur une page).
       if (this.y - (m.height + keepAfter) < MARGIN.bottom) {
         this.newPage();
         drawHead();
       }
       const top = this.y;
-      if (strong) this.page.drawRectangle({ x: MARGIN.left, y: top - m.height, width: this.contentWidth, height: m.height, color: C.orangeSoft });
-      else if (index % 2 === 1) this.page.drawRectangle({ x: MARGIN.left, y: top - m.height, width: this.contentWidth, height: m.height, color: C.greenSoft });
-      let x = MARGIN.left;
+      if (strong) this.page.drawRectangle({ x: left, y: top - m.height, width: this.width, height: m.height, color: C.yellowTint });
+      else if (index % 2 === 1) this.page.drawRectangle({ x: left, y: top - m.height, width: this.width, height: m.height, color: C.navyTint });
+      let x = left;
       m.wrapped.forEach((lines, i) => {
         const align = columns[i].align ?? "left";
         let yy = top - 15;
         for (const line of lines) {
           const w = m.font.widthOfTextAtSize(line, 9.6);
           const dx = align === "right" ? x + widths[i] - pad - w : align === "center" ? x + (widths[i] - w) / 2 : x + pad;
-          this.page.drawText(line, { x: dx, y: yy, size: 9.6, font: m.font, color: C.ink });
+          this.page.drawText(line, { x: dx, y: yy, size: 9.6, font: m.font, color: strong ? C.deepNavy : C.ink });
           yy -= 13.2;
         }
         x += widths[i];
       });
-      this.page.drawLine({ start: { x: MARGIN.left, y: top - m.height }, end: { x: A4.width - MARGIN.right, y: top - m.height }, thickness: 0.5, color: C.line });
+      this.page.drawLine({ start: { x: left, y: top - m.height }, end: { x: left + this.width, y: top - m.height }, thickness: strong ? 1.2 : 0.5, color: strong ? C.yellow : C.line });
       this.y = top - m.height;
     };
     measured.forEach((m, i) => drawRow(m, i, false, i === measured.length - 1 ? (totalMeasured?.height ?? 0) : 0));
@@ -346,51 +395,62 @@ export class Writer {
     this.space(4);
   }
 
-  /** Pieds de page sur toutes les pages : filet, mention, numéro. */
-  footers(left: string) {
+  /** Pieds de page : filet, signature de la marque, référence, numéro. */
+  footers(reference: string) {
     const total = this.pages.length;
     this.pages.forEach((page, i) => {
-      page.drawLine({ start: { x: MARGIN.left, y: 38 }, end: { x: A4.width - MARGIN.right, y: 38 }, thickness: 0.6, color: C.line });
-      this.at(page, left, MARGIN.left, 24, { size: 7.8, color: C.muted });
-      this.at(page, `Page ${i + 1} / ${total}`, A4.width - MARGIN.right, 24, { size: 7.8, color: C.muted, align: "right" });
+      page.drawLine({ start: { x: MARGIN.left, y: 40 }, end: { x: A4.width - MARGIN.right, y: 40 }, thickness: 0.7, color: C.line });
+      page.drawRectangle({ x: MARGIN.left, y: 39.2, width: 36, height: 1.6, color: C.yellow });
+      this.at(page, "Chez TaTa", MARGIN.left, 25, { size: 8.4, font: this.fonts.heavy, color: C.navy });
+      this.at(page, "· L'application des assistantes maternelles & MAM", MARGIN.left + 44, 25, { size: 7.8, color: C.muted });
+      this.at(page, reference, A4.width / 2 + 60, 25, { size: 7.8, color: C.muted, align: "center" });
+      this.at(page, `Page ${i + 1} / ${total}`, A4.width - MARGIN.right, 25, { size: 8, font: this.fonts.bold, color: C.navy, align: "right" });
     });
   }
 }
 
-/** Bandeau d'en-tête de marque : bande verte, liseré orange, formes douces rognées, titre du document. */
-export function drawBrandHeader(w: Writer, opts: { kicker: string; title: string; right?: string[] }) {
+/** En-tête de première page : liseré tricolore, logo, titre, bloc de références encadré. */
+export function drawBrandHeader(w: Writer, opts: { kicker: string; title: string; subtitle?: string; meta: [string, string][] }) {
   const { page } = w;
-  const h = 132;
   const top = A4.height;
-  page.drawRectangle({ x: 0, y: top - h, width: A4.width, height: h, color: C.green });
-  clipped(page, 0, top - h, A4.width, h, () => {
-    page.drawCircle({ x: A4.width - 70, y: top - 14, size: 100, color: C.greenDeep, opacity: 0.55 });
-    page.drawCircle({ x: A4.width - 170, y: top - 128, size: 54, color: C.orange, opacity: 0.3 });
-    page.drawCircle({ x: 18, y: top - 126, size: 34, color: C.white, opacity: 0.09 });
+  page.drawRectangle({ x: 0, y: top - 9, width: A4.width, height: 9, color: C.navy });
+  page.drawRectangle({ x: A4.width - 150, y: top - 9, width: 60, height: 9, color: C.yellow });
+  page.drawRectangle({ x: A4.width - 90, y: top - 9, width: 90, height: 9, color: C.pink });
+
+  const logo = 78;
+  roundedClip(page, MARGIN.left, top - 28 - logo, logo, logo, 17, () => page.drawImage(w.logo, { x: MARGIN.left, y: top - 28 - logo, width: logo, height: logo }));
+  page.drawRectangle({ x: MARGIN.left, y: top - 28 - logo, width: logo, height: logo, borderColor: C.line, borderWidth: 0.8, borderRadius: 17 } as Parameters<PDFPage["drawRectangle"]>[0]);
+  const tx = MARGIN.left + logo + 18;
+  w.at(page, opts.kicker.toUpperCase(), tx, top - 52, { size: 8.6, font: w.fonts.heavy, color: C.pink });
+  w.at(page, opts.title, tx, top - 80, { size: 25, font: w.fonts.heavy, color: C.deepNavy });
+  if (opts.subtitle) w.at(page, opts.subtitle, tx, top - 96, { size: 9.6, color: C.muted });
+  page.drawRectangle(rounded({ x: tx, y: top - 108, width: 64, height: 3.6, color: C.yellow, borderRadius: 1.8 }));
+
+  // Bloc de références
+  const boxW = 168;
+  const boxH = 18 + opts.meta.length * 27;
+  const bx = A4.width - MARGIN.right - boxW;
+  const by = top - 30 - boxH;
+  page.drawRectangle(rounded({ x: bx, y: by, width: boxW, height: boxH, color: C.navyTint, borderColor: C.line, borderWidth: 1, borderRadius: 9 }));
+  opts.meta.forEach(([label, value], i) => {
+    const yy = by + boxH - 20 - i * 27;
+    w.at(page, label.toUpperCase(), bx + 12, yy + 3, { size: 6.6, font: w.fonts.heavy, color: C.muted });
+    w.at(page, value, bx + 12, yy - 8.5, { size: i === 0 ? 11.4 : 9.6, font: w.fonts.heavy, color: i === 0 ? C.pink : C.deepNavy });
   });
-  page.drawRectangle({ x: 0, y: top - h - 5, width: A4.width, height: 5, color: C.orange });
-
-  // Marque
-  page.drawRectangle({ x: MARGIN.left, y: top - 66, width: 34, height: 34, color: C.white, borderRadius: 10 } as Parameters<PDFPage["drawRectangle"]>[0]);
-  w.at(page, "T", MARGIN.left + 17, top - 57.6, { size: 21, font: w.fonts.heavy, color: C.green, align: "center" });
-  page.drawCircle({ x: MARGIN.left + 30, y: top - 35, size: 4.2, color: C.orange });
-  w.at(page, "Chez TaTa", MARGIN.left + 46, top - 54, { size: 19, font: w.fonts.heavy, color: C.white });
-  w.at(page, "Moins d'administratif, plus de temps pour les enfants", MARGIN.left + 46, top - 67, { size: 7.8, color: C.white });
-
-  w.at(page, opts.kicker.toUpperCase(), MARGIN.left, top - 98, { size: 8.2, font: w.fonts.bold, color: rgb(0.78, 0.94, 0.86) });
-  w.at(page, opts.title, MARGIN.left, top - 120, { size: 20, font: w.fonts.heavy, color: C.white });
-  (opts.right ?? []).forEach((line, i) => w.at(page, line, A4.width - MARGIN.right, top - 46 - i * 14, { size: i === 0 ? 12 : 8.8, font: i === 0 ? w.fonts.heavy : w.fonts.regular, color: C.white, align: "right" }));
-  w.y = top - h - 24;
+  w.y = top - 146;
 }
 
 /** Petit en-tête des pages suivantes. */
 export function drawRunningHeader(w: Writer, label: string) {
   const { page } = w;
-  page.drawRectangle({ x: 0, y: A4.height - 30, width: A4.width, height: 30, color: C.green });
-  page.drawRectangle({ x: 0, y: A4.height - 33, width: A4.width, height: 3, color: C.orange });
-  w.at(page, "Chez TaTa", MARGIN.left, A4.height - 20, { size: 10.5, font: w.fonts.heavy, color: C.white });
-  w.at(page, label, A4.width - MARGIN.right, A4.height - 20, { size: 8.4, color: C.white, align: "right" });
-  w.y = A4.height - 56;
+  const top = A4.height;
+  page.drawRectangle({ x: 0, y: top - 6, width: A4.width, height: 6, color: C.navy });
+  page.drawRectangle({ x: A4.width - 90, y: top - 6, width: 90, height: 6, color: C.pink });
+  roundedClip(page, MARGIN.left, top - 40, 26, 26, 6, () => page.drawImage(w.logo, { x: MARGIN.left, y: top - 40, width: 26, height: 26 }));
+  w.at(page, "Chez TaTa", MARGIN.left + 34, top - 31, { size: 11.4, font: w.fonts.heavy, color: C.deepNavy });
+  w.at(page, label, A4.width - MARGIN.right, top - 31, { size: 8.6, color: C.muted, align: "right" });
+  page.drawLine({ start: { x: MARGIN.left, y: top - 48 }, end: { x: A4.width - MARGIN.right, y: top - 48 }, thickness: 0.7, color: C.line });
+  w.y = top - 62;
 }
 
 export const euro = (cents: number) => {

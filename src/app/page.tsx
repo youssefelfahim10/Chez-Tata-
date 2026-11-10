@@ -115,7 +115,7 @@ export default function Page() {
       <header className="ct-glass sticky top-0 z-40 border-b border-line/70">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/" className="flex items-center gap-2 text-xl font-extrabold text-primary">
-            <span aria-hidden className="flex size-9 items-center justify-center rounded-xl bg-sun-soft text-xl">🧸</span>
+            <Image src="/logo-sm.png" alt="" width={40} height={40} className="size-10 rounded-xl shadow-sm" priority />
             Chez TaTa
           </Link>
           <nav aria-label="Sections" className="hidden items-center gap-6 text-sm font-bold text-ink-soft md:flex">
@@ -303,7 +303,7 @@ export default function Page() {
 
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-ink-soft">
-          <p className="flex items-center gap-2 font-extrabold text-ink"><span aria-hidden>🧸</span> Chez TaTa</p>
+          <p className="flex items-center gap-2 font-extrabold text-ink"><Image src="/logo-sm.png" alt="" width={28} height={28} className="size-7 rounded-lg" /> Chez TaTa</p>
           <p>Conçu pour protéger les données des enfants : isolation entre comptes, hébergement dans l’Union européenne, aucun envoi automatique d’informations.</p>
           <p>Mentions légales et politique de confidentialité : à publier avant l’ouverture au public.</p>
         </div>

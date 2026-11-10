@@ -1,17 +1,22 @@
-import type { FontBytes } from "./kit";
+import type { PdfAssets } from "./kit";
 
-let cached: Promise<FontBytes> | null = null;
+let cached: Promise<PdfAssets> | null = null;
 
 /** Polices de la marque (servies par l'appli, gardées pour le hors ligne). */
-export function loadFontBytes(): Promise<FontBytes> {
+export function loadFontBytes(): Promise<PdfAssets> {
   if (!cached) {
     const get = async (file: string) => {
       const response = await fetch(`/fonts/${file}`);
       if (!response.ok) throw new Error("Polices du document inaccessibles.");
       return new Uint8Array(await response.arrayBuffer());
     };
-    cached = Promise.all([get("nunito-latin-400-normal.woff"), get("nunito-latin-700-normal.woff"), get("nunito-latin-800-normal.woff")])
-      .then(([regular, bold, heavy]) => ({ regular, bold, heavy }))
+    const getLogo = async () => {
+      const response = await fetch("/logo-sm.png");
+      if (!response.ok) throw new Error("Logo du document inaccessible.");
+      return new Uint8Array(await response.arrayBuffer());
+    };
+    cached = Promise.all([get("nunito-latin-400-normal.woff"), get("nunito-latin-700-normal.woff"), get("nunito-latin-800-normal.woff"), getLogo()])
+      .then(([regular, bold, heavy, logo]) => ({ regular, bold, heavy, logo }))
       .catch((error) => {
         cached = null;
         throw error;

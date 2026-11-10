@@ -12,6 +12,7 @@ const fontBytes = {
   regular: new Uint8Array(readFileSync(join(fontDir, "nunito-latin-400-normal.woff"))),
   bold: new Uint8Array(readFileSync(join(fontDir, "nunito-latin-700-normal.woff"))),
   heavy: new Uint8Array(readFileSync(join(fontDir, "nunito-latin-800-normal.woff"))),
+  logo: new Uint8Array(readFileSync(join(__dirname, "..", "..", "public", "logo-sm.png"))),
 };
 
 const contract: ContractDoc = {
