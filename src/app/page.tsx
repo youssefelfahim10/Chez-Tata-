@@ -143,7 +143,7 @@ export default function Page() {
               <span className="relative flex size-2.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-pink opacity-60" /><span className="relative inline-flex size-2.5 rounded-full bg-pink" /></span>
               Pour les assistantes maternelles et les MAM
             </p>
-            <h1 className="anim-up text-[2.6rem] font-extrabold leading-[1.05] tracking-tight sm:text-6xl" style={{ animationDelay: "0.1s" }}>
+            <h1 className="anim-up font-display text-[3rem] font-semibold leading-[1.02] tracking-tight sm:text-7xl" style={{ animationDelay: "0.1s" }}>
               Moins d’administratif,
               <br />
               <span className="ct-gradient-text">plus de temps pour les enfants.</span>
@@ -192,7 +192,7 @@ export default function Page() {
         <section id="comment" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-20">
           <div className="reveal text-center">
             <p className="text-sm font-extrabold uppercase tracking-widest text-pink">Comment ça marche</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Trois gestes, et la journée est écrite</h2>
+            <h2 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Trois gestes, et la journée est écrite</h2>
           </div>
           <ol className="mt-12 grid gap-6 md:grid-cols-3">
             {STEPS.map((s) => (
@@ -211,7 +211,7 @@ export default function Page() {
           <div className="mx-auto w-full max-w-6xl px-4">
             <div className="reveal text-center">
               <p className="text-sm font-extrabold uppercase tracking-widest text-pink">Fonctions</p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Pensé pour le terrain</h2>
+              <h2 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Pensé pour le terrain</h2>
               <p className="mx-auto mt-2 max-w-xl text-ink-soft">De gros boutons, peu de texte à écrire, tout en français.</p>
             </div>
             <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -230,7 +230,7 @@ export default function Page() {
         <section className="mx-auto w-full max-w-6xl px-4 py-20">
           <div className="reveal text-center">
             <p className="text-sm font-extrabold uppercase tracking-widest text-pink">Pour qui ?</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Seule ou en équipe</h2>
+            <h2 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Seule ou en équipe</h2>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             <article className="reveal ct-card rounded-[1.75rem] border border-line bg-gradient-to-br from-leaf-soft to-surface p-8 shadow-sm">
@@ -260,7 +260,7 @@ export default function Page() {
           <div className="relative mx-auto w-full max-w-6xl px-4">
             <div className="reveal text-center">
               <p className="text-sm font-extrabold uppercase tracking-widest text-sun">Confiance</p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Les enfants d’abord, leurs données aussi</h2>
+              <h2 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Les enfants d’abord, leurs données aussi</h2>
             </div>
             <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {PILLARS.map((p) => (
@@ -278,7 +278,7 @@ export default function Page() {
         <section className="mx-auto w-full max-w-6xl px-4 py-20">
           <div className="reveal relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-[#2766c9] p-10 text-center text-white shadow-2xl shadow-primary/30 sm:p-14">
             <div aria-hidden className="anim-blob absolute -left-10 -top-10 size-56 rounded-full bg-white/15 blur-2xl" />
-            <h2 className="relative text-3xl font-extrabold tracking-tight sm:text-4xl">Prête à gagner du temps ?</h2>
+            <h2 className="relative font-display text-4xl font-semibold tracking-tight sm:text-5xl">Prête à gagner du temps ?</h2>
             <p className="relative mx-auto mt-2 max-w-md text-white/85">Créez votre espace en quelques secondes et pointez votre première journée.</p>
             <Link href="/inscription" className="relative mt-6 inline-flex min-h-14 items-center justify-center rounded-2xl bg-white px-9 text-lg font-extrabold text-primary shadow-lg transition hover:-translate-y-0.5">
               Commencer maintenant

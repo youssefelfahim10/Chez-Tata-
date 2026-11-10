@@ -5,8 +5,8 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-primary text-white hover:bg-primary-strong",
-  secondary: "bg-sun text-ink hover:brightness-95",
+  primary: "bg-gradient-to-b from-primary to-primary-strong text-white shadow-[0_8px_20px_-8px_rgb(1_39_95/0.7)] hover:brightness-110",
+  secondary: "bg-gradient-to-b from-[#d9b865] to-sun text-ink shadow-[0_8px_20px_-10px_rgb(143_111_38/0.7)] hover:brightness-105",
   ghost: "bg-surface text-ink border border-line hover:bg-cream",
   danger: "bg-surface text-danger border border-danger/40 hover:bg-pink-soft",
 };
@@ -16,14 +16,14 @@ export function Button({ variant = "primary", className = "", ...props }: Button
   return (
     <button
       {...props}
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 text-base font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-base font-bold tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
     />
   );
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-card border border-line bg-surface p-5 shadow-sm ${className}`}>{children}</section>
+    <section className={`rounded-card border border-line bg-surface p-5 shadow-luxe ${className}`}>{children}</section>
   );
 }
 
@@ -41,7 +41,7 @@ export function Field({ label, hint, id, name, ...props }: FieldProps) {
         name={name}
         aria-describedby={hint ? `${fieldId}-hint` : undefined}
         {...props}
-        className="min-h-12 rounded-2xl border border-line bg-surface px-4 text-base text-ink placeholder:text-ink-soft/70"
+        className="min-h-12 rounded-xl border border-line bg-surface px-4 text-base text-ink transition placeholder:text-ink-soft/70 focus:border-sun focus:outline-none focus:ring-4 focus:ring-sun/20"
       />
       {hint ? (
         <p id={`${fieldId}-hint`} className="text-sm text-ink-soft">
@@ -68,7 +68,7 @@ export function Notice({ tone, children }: { tone: "error" | "success" | "info";
 export function PageTitle({ children, subtitle }: { children: ReactNode; subtitle?: ReactNode }) {
   return (
     <header className="flex flex-col gap-1">
-      <h1 className="text-3xl font-extrabold tracking-tight text-ink">{children}</h1>
+      <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">{children}</h1>
       {subtitle ? <p className="text-base text-ink-soft first-letter:uppercase">{subtitle}</p> : null}
     </header>
   );

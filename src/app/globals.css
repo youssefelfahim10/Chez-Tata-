@@ -5,11 +5,11 @@
  * (présent, payé, enregistré). Tous les écrans passent par ces jetons : le changement se fait ici uniquement.
  */
 @theme {
-  --color-cream: #f5f8fd;
+  --color-cream: #f9f7f2;
   --color-surface: #ffffff;
   --color-ink: #0f1f3d;
-  --color-ink-soft: #5b6b8c;
-  --color-line: #d5deef;
+  --color-ink-soft: #5d6478;
+  --color-line: #e3ddd0;
   --color-primary: #06377c;
   --color-primary-strong: #01275f;
   --color-primary-soft: #eaf0fb;
@@ -17,12 +17,15 @@
   --color-pink-soft: #fff0f5;
   --color-leaf: #2f8a18;
   --color-leaf-soft: #ecf8e7;
-  --color-sun: #fdb803;
-  --color-sun-soft: #fff8e1;
+  --color-sun: #c9a24d;
+  --color-sun-soft: #fbf5e6;
+  --color-gold-deep: #8f6f26;
+  --shadow-luxe: 0 1px 2px rgb(15 31 61 / 0.04), 0 14px 34px -16px rgb(15 31 61 / 0.18);
   --color-sky-soft: #eaf2fd;
   --color-danger: #b3261e;
   --font-sans: var(--font-nunito), ui-rounded, "Segoe UI", system-ui, sans-serif;
-  --radius-card: 1.5rem;
+  --radius-card: 1.25rem;
+  --font-display: var(--font-display-serif), "Iowan Old Style", Georgia, serif;
 }
 
 html {
@@ -94,7 +97,7 @@ body {
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
 }
 .ct-gradient-text {
-  background: linear-gradient(100deg, #06377c 5%, #1f56b3 45%, #ed1359 100%);
+  background: linear-gradient(100deg, #06377c 8%, #1f4a8f 48%, #b8912f 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
