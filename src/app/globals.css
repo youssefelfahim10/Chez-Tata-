@@ -1,24 +1,23 @@
 @import "tailwindcss";
 
 /*
- * Thème Chez TaTa — jetons PROVISOIRES.
- * Le dépôt ne contenait aucun prototype au moment de l'audit : ces couleurs
- * sont à remplacer par celles du thème d'origine dès qu'il sera fourni.
+ * Thème Chez TaTa — palette reprise du prototype « Présences sur téléphone »
+ * (vert profond, orange chaleureux, fond crème verdâtre, rose tendre).
  * Tous les écrans passent par ces jetons : le changement se fait ici uniquement.
  */
 @theme {
-  --color-cream: #fff8f0;
+  --color-cream: #f6f8f3;
   --color-surface: #ffffff;
-  --color-ink: #2b2a33;
-  --color-ink-soft: #5c5a66;
-  --color-line: #eadfd2;
-  --color-primary: #c2452d;
-  --color-primary-strong: #a53822;
-  --color-primary-soft: #fde6df;
-  --color-leaf: #1f7a6d;
-  --color-leaf-soft: #dff3ee;
-  --color-sun: #ffd166;
-  --color-sun-soft: #fff3cf;
+  --color-ink: #18342e;
+  --color-ink-soft: #60756f;
+  --color-line: #dbe9df;
+  --color-primary: #16765d;
+  --color-primary-strong: #0f5c46;
+  --color-primary-soft: #fce9ee;
+  --color-leaf: #16765d;
+  --color-leaf-soft: #e9f8ee;
+  --color-sun: #f19a37;
+  --color-sun-soft: #fff9e8;
   --color-sky-soft: #e3f0fb;
   --color-danger: #b3261e;
   --font-sans: var(--font-nunito), ui-rounded, "Segoe UI", system-ui, sans-serif;

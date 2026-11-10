@@ -63,3 +63,15 @@ donc ses contrats et finances lui sont strictement personnels.
 Stockage privé des documents (URLs temporaires), Content-Security-Policy avec nonce, limitation de débit
 sur l'authentification, politique de conservation et registre RGPD, sauvegardes et test de restauration.
 Chaque point fait l'objet d'une issue.
+
+## Fiche de présence A4 (prototype intégré)
+
+- **Thème** : palette du prototype « Présences sur téléphone » (vert, orange, crème, rose) dans `src/app/globals.css`.
+- **Modèle illustré** : `public/fiche/modele-a4.jpg` (1055 × 1491), repris tel quel du prototype.
+- **Calculs** : `src/lib/sheet/compute.ts` — minutes et centimes entiers ; additions de la saisie uniquement.
+  Le salaire à verser est **saisi**, jamais calculé (« ne jamais présenter une estimation comme une paie officielle »).
+- **Dessin** : `render.ts` écrit dans les cases mesurées de `layout.ts` ; une valeur absente n'écrit rien.
+- **PDF** : `pdf.ts` (sans dépendance) ; généré **dans le navigateur**, donc hors ligne et sans envoi de données.
+- **Données** : `attendance_records` (migration `…0002`) ; aucun montant en euros dans cette table partagée de la MAM :
+  les montants d'indemnités viennent du contrat, privé à l'assistante.
+- **Calage** : coordonnées relevées par mesure sur l'image ; celles du prototype étaient décalées de 10 à 17 px.

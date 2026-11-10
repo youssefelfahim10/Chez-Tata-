@@ -126,3 +126,27 @@ export function summarizeChildDay(events: JournalEvent[], now: Date): ChildDay {
     counts: { meal: count("meal"), nap: count("nap"), diaper: count("diaper"), care: count("care") },
   };
 }
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/** Instant UTC correspondant à « jour AAAA-MM-JJ, HH:MM » à Paris (heure d'été comprise). */
+export function parisInstant(isoDate: string, hhmm: string): Date {
+  const date = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  const time = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(hhmm);
+  if (!date || !time) throw new Error("Date ou heure invalide.");
+  const guess = new Date(Date.UTC(+date[1], +date[2] - 1, +date[3], +time[1], +time[2]));
+  const first = new Date(guess.getTime() - parisOffsetMs(guess));
+  return new Date(guess.getTime() - parisOffsetMs(first));
+}
+
+/** « AAAA-MM-JJ » du jour civil parisien d'un instant. */
+export function parisDateKey(iso: string): string {
+  const p = partsInParis(new Date(iso));
+  return `${p.year}-${pad2(p.month)}-${pad2(p.day)}`;
+}
+
+/** « HH:MM » (heure de Paris) d'un instant, format attendu par les champs horaires. */
+export function parisHHMM(iso: string): string {
+  const p = partsInParis(new Date(iso));
+  return `${pad2(p.hour)}:${pad2(p.minute)}`;
+}

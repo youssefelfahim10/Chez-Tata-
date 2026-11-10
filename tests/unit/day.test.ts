@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatDuration, formatTime, parisDayBounds, summarizeChildDay, type JournalEvent } from "@/lib/journal/day";
+import {
+  formatDuration,
+  formatTime,
+  parisDateKey,
+  parisDayBounds,
+  parisHHMM,
+  parisInstant,
+  summarizeChildDay,
+  type JournalEvent,
+} from "@/lib/journal/day";
 
 const ev = (id: string, type: string, start: string, end: string | null = null): JournalEvent => ({
   id,
@@ -100,5 +109,32 @@ describe("summarizeChildDay", () => {
     );
     expect(day.openNapId).toBe("3");
     expect(day.counts).toEqual({ meal: 0, nap: 2, diaper: 2, care: 0 });
+  });
+});
+
+
+describe("heures de Paris ↔ instants UTC", () => {
+  it("applique UTC+1 en hiver et UTC+2 en été", () => {
+    expect(parisInstant("2026-11-09", "08:30").toISOString()).toBe("2026-11-09T07:30:00.000Z");
+    expect(parisInstant("2026-07-14", "08:30").toISOString()).toBe("2026-07-14T06:30:00.000Z");
+  });
+
+  it("gère les jours de changement d'heure", () => {
+    expect(parisInstant("2026-03-29", "01:30").toISOString()).toBe("2026-03-29T00:30:00.000Z");
+    expect(parisInstant("2026-03-29", "09:00").toISOString()).toBe("2026-03-29T07:00:00.000Z");
+    expect(parisInstant("2026-10-25", "09:00").toISOString()).toBe("2026-10-25T08:00:00.000Z");
+  });
+
+  it("fait l'aller-retour", () => {
+    for (const [d, h] of [["2026-11-09", "17:45"], ["2026-07-01", "00:05"], ["2026-12-31", "23:59"]]) {
+      const iso = parisInstant(d, h).toISOString();
+      expect(parisDateKey(iso)).toBe(d);
+      expect(parisHHMM(iso)).toBe(h);
+    }
+  });
+
+  it("refuse les valeurs invalides", () => {
+    expect(() => parisInstant("2026-11-9", "08:30")).toThrow();
+    expect(() => parisInstant("2026-11-09", "25:00")).toThrow();
   });
 });
