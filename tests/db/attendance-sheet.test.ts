@@ -95,3 +95,24 @@ describe("champs de la fiche de présence", () => {
     expect(note[0].note).toBe("RDV pédiatre");
   });
 });
+
+describe("requêtes de la page Planning", () => {
+  it("n'utilisent que des colonnes qui existent dans le schéma", async () => {
+    const { ATTENDANCE_COLUMNS, CHILD_COLUMNS, CONTRACT_COLUMNS } = await import("@/lib/sheet/queries");
+    await t.as(alice, async (q) => {
+      await q(`select ${CHILD_COLUMNS} from children`);
+      await q(`select ${ATTENDANCE_COLUMNS} from attendance_records`);
+      await q(`select ${CONTRACT_COLUMNS} from contracts`);
+    });
+  });
+
+  it("enregistre le nom de famille de l'enfant", async () => {
+    const rows = await t.as(alice, (q) =>
+      q("insert into children (organization_id, first_name, last_name) values ($1, 'Noa', 'Martin') returning last_name", [aliceOrg]),
+    );
+    expect(rows[0].last_name).toBe("Martin");
+    await expect(
+      t.as(alice, (q) => q("insert into children (organization_id, first_name, last_name) values ($1, 'X', '   ')", [aliceOrg])),
+    ).rejects.toThrow();
+  });
+});

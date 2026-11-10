@@ -11,6 +11,10 @@ const PUBLIC_PATHS = ["/connexion", "/inscription", "/auth", "/configuration"];
  */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Pages de démonstration (données fictives) : jamais servies en production.
+  if (process.env.NODE_ENV !== "production" && pathname.startsWith("/apercu")) return NextResponse.next();
+
   const env = getSupabaseEnv();
 
   if (!env) {

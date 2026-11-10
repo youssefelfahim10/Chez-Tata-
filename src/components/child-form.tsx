@@ -12,6 +12,7 @@ export function ChildForm() {
   return (
     <form action={action} className="flex flex-col gap-4">
       <Field label="Prénom de l'enfant" name="firstName" maxLength={60} autoComplete="off" required />
+      <Field label="Nom de famille (pour la fiche de présence)" name="lastName" maxLength={60} autoComplete="off" />
       <Field label="Date de naissance (facultatif)" name="birthDate" type="date" />
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
       {state.message ? <Notice tone="success">{state.message}</Notice> : null}

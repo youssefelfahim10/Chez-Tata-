@@ -6,6 +6,7 @@ import { Card, PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace } from "@/lib/auth/session";
 import { parisDateKey, parisDayBounds, parisHHMM, parisInstant } from "@/lib/journal/day";
 import { daysInMonth, type SheetData, type SheetDay } from "@/lib/sheet/compute";
+import { ATTENDANCE_COLUMNS, CHILD_COLUMNS, CONTRACT_COLUMNS } from "@/lib/sheet/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Planning" };
@@ -26,7 +27,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
   const supabase = await createClient();
   const childrenQuery = await supabase
     .from("children")
-    .select("id, first_name, last_name")
+    .select(CHILD_COLUMNS)
     .eq("organization_id", membership.organizationId)
     .eq("status", "active")
     .order("first_name");
@@ -59,7 +60,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
     supabase
       .from("attendance_records")
-      .select("date, actual_start, actual_end, absence_minutes, extra_minutes, maintenance_due, meal_due, leave_kind, note")
+      .select(ATTENDANCE_COLUMNS)
       .eq("organization_id", membership.organizationId)
       .eq("child_id", child.id)
       .gte("date", first)
@@ -77,7 +78,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
     // Contrat personnel : la RLS ne renvoie que celui de l'assistante connectée.
     supabase
       .from("contracts")
-      .select("start_date, scheduled_hours, weeks_per_year, hourly_rate, maintenance_allowance_cents, meal_allowance_cents")
+      .select(CONTRACT_COLUMNS)
       .eq("organization_id", membership.organizationId)
       .eq("child_id", child.id)
       .eq("assigned_assmat_id", user.id)

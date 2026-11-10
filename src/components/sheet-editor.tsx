@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import { saveAttendanceDay } from "@/app/actions/attendance";
+import { saveAttendanceDay, type SaveDayResult } from "@/app/actions/attendance";
 import { Button, Card, Notice } from "@/components/ui";
 import { createSheetPdf, sheetFileName } from "@/lib/sheet/browser";
 import {
@@ -19,7 +19,17 @@ import {
 
 export type SheetChild = { id: string; name: string };
 
-type Props = { initial: SheetData; childId: string; childrenList: SheetChild[]; hasContract: boolean };
+type SaveFn = (input: Parameters<typeof saveAttendanceDay>[0]) => Promise<SaveDayResult>;
+
+type Props = {
+  initial: SheetData;
+  childId: string;
+  childrenList: SheetChild[];
+  hasContract: boolean;
+  /** Remplaçable pour la page de démonstration (données fictives, rien n'est enregistré). */
+  save?: SaveFn;
+  basePath?: string;
+};
 
 type Draft = { in: string; out: string; absence: string; extra: string; maintenance: boolean; meal: boolean; leave: string; note: string };
 
@@ -39,7 +49,7 @@ const hasData = (d: SheetDay | undefined) =>
 
 const inputClass = "min-h-12 w-full rounded-2xl border border-line bg-surface px-4 text-base text-ink";
 
-export function SheetEditor({ initial, childId, childrenList, hasContract }: Props) {
+export function SheetEditor({ initial, childId, childrenList, hasContract, save: saveDay = saveAttendanceDay, basePath = "/planning" }: Props) {
   const router = useRouter();
   const { month } = initial;
   const last = daysInMonth(month);
@@ -71,7 +81,7 @@ export function SheetEditor({ initial, childId, childrenList, hasContract }: Pro
 
   function go(next: { mois?: string; enfant?: string }) {
     const qs = new URLSearchParams({ mois: next.mois ?? month, enfant: next.enfant ?? childId });
-    router.push(`/planning?${qs.toString()}`);
+    router.push(`${basePath}?${qs.toString()}`);
   }
 
   function select(day: number) {
@@ -93,7 +103,7 @@ export function SheetEditor({ initial, childId, childrenList, hasContract }: Pro
       note: draft.note.trim() || undefined,
     };
     startSaving(async () => {
-      const result = await saveAttendanceDay({
+      const result = await saveDay({
         childId,
         date: dateIso,
         in: draft.in,
@@ -223,7 +233,7 @@ export function SheetEditor({ initial, childId, childrenList, hasContract }: Pro
             <input inputMode="decimal" placeholder="0" value={draft.absence} className={inputClass} onChange={(e) => setDraft({ ...draft, absence: e.target.value })} />
           </label>
           <label className="flex flex-col gap-1.5 text-sm font-bold">
-            Heures complémentaires
+            H. complémentaires
             <input inputMode="decimal" placeholder="0" value={draft.extra} className={inputClass} onChange={(e) => setDraft({ ...draft, extra: e.target.value })} />
           </label>
         </div>
