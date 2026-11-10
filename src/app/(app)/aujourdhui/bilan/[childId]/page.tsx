@@ -25,7 +25,7 @@ async function Bilan({ params }: { params: Promise<{ childId: string }> }) {
     supabase.from("children").select("id, first_name").eq("id", childId).eq("organization_id", membership.organizationId).maybeSingle(),
     supabase
       .from("daily_events")
-      .select("id, child_id, event_type, started_at, ended_at")
+      .select("id, child_id, event_type, started_at, ended_at, event_payload")
       .eq("organization_id", membership.organizationId)
       .eq("child_id", childId)
       .is("deleted_at", null)

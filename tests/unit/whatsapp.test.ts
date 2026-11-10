@@ -50,6 +50,23 @@ describe("bilan du jour", () => {
     expect(text.endsWith("— TaTa Démo · Chez TaTa")).toBe(true);
   });
 
+  it("ajoute les précisions cochées, seulement si elles existent", () => {
+    const withPayload = (id: string, type: string, at: string, payload: Record<string, unknown>): JournalEvent => ({ ...ev(id, type, at), event_payload: payload });
+    const text = renderSummary(
+      buildDayReport("Lou", day, [
+        withPayload("1", "meal", "2026-11-10T11:05:00Z", { amount: "all" }),
+        withPayload("2", "meal", "2026-11-10T15:00:00Z", { amount: "little", note: "a bu de l'eau" }),
+        ev("3", "meal", "2026-11-10T16:00:00Z"),
+        withPayload("4", "diaper", "2026-11-10T09:00:00Z", { diaper: "wet" }),
+        withPayload("5", "care", "2026-11-10T09:20:00Z", { care: "medicine", hack: "<script>" }),
+      ]),
+    );
+    expect(text).toContain("Repas : 12 h 05 (tout mangé), 16 h 00 (un peu — a bu de l'eau), 17 h 00");
+    expect(text).toContain("1 change : 10 h 00 (pipi)");
+    expect(text).toContain("1 soin : 10 h 20 (médicament)");
+    expect(text).not.toContain("script");
+  });
+
   it("ne calcule pas de présence sans départ, et signale une sieste en cours", () => {
     const text = renderSummary(
       buildDayReport("Lou", day, [ev("1", "arrival", "2026-11-10T07:30:00Z"), ev("2", "nap", "2026-11-10T12:00:00Z")]),

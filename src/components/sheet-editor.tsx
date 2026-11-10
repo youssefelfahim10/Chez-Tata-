@@ -102,6 +102,10 @@ export function SheetEditor({ initial, childId, childrenList, hasContract, save:
       leave: draft.leave === "CP" || draft.leave === "CSS" ? draft.leave : null,
       note: draft.note.trim() || undefined,
     };
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setMessage({ tone: "error", text: "📴 Hors ligne : la fiche s’enregistre avec du réseau. Votre saisie reste à l’écran, réessayez dans un instant. (Les pointages d’Aujourd’hui, eux, fonctionnent hors ligne.)" });
+      return;
+    }
     startSaving(async () => {
       const result = await saveDay({
         childId,

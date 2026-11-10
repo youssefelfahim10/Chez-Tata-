@@ -11,6 +11,10 @@ export type JournalEvent = {
   event_type: string;
   started_at: string;
   ended_at: string | null;
+  /** Identifiant généré sur l'appareil : relie un événement affiché localement à celui du serveur. */
+  client_operation_id?: string;
+  /** Précisions cochées (quantité mangée, type de change…). Jamais déduites. */
+  event_payload?: Record<string, unknown>;
 };
 
 function partsInParis(date: Date) {

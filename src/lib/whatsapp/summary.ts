@@ -1,4 +1,5 @@
 import { formatDuration, formatLongDate, formatTime, type JournalEvent } from "@/lib/journal/day";
+import { detailLabel, type DetailKey } from "@/lib/journal/details";
 
 /**
  * Bilan du jour d'un enfant, construit UNIQUEMENT à partir des événements
@@ -12,11 +13,21 @@ export type DayReport = {
   departureAt: string | null;
   /** Durée entre la première arrivée et le dernier départ ; seulement si les deux existent. */
   presenceMs: number | null;
-  meals: string[];
+  meals: Dated[];
   naps: { start: string; end: string | null }[];
-  diapers: string[];
-  cares: string[];
+  diapers: Dated[];
+  cares: Dated[];
 };
+
+/** Une heure, avec les précisions cochées ou écrites (jamais déduites). */
+type Dated = { at: string; detail: string | null };
+
+function detailOf(e: JournalEvent, key: DetailKey): string | null {
+  const payload = e.event_payload ?? {};
+  const main = detailLabel(key, payload[key]);
+  const note = detailLabel("note", payload.note);
+  return [main, note].filter(Boolean).join(" — ") || null;
+}
 
 export function buildDayReport(childName: string, date: Date, events: JournalEvent[]): DayReport {
   const sorted = [...events].sort((a, b) => a.started_at.localeCompare(b.started_at));
@@ -30,10 +41,10 @@ export function buildDayReport(childName: string, date: Date, events: JournalEve
     arrivalAt: arrival?.started_at ?? null,
     departureAt: gone ? departure.started_at : null,
     presenceMs: gone ? new Date(departure.started_at).getTime() - new Date(arrival.started_at).getTime() : null,
-    meals: of("meal").map((e) => e.started_at),
+    meals: of("meal").map((e) => ({ at: e.started_at, detail: detailOf(e, "amount") })),
     naps: of("nap").map((e) => ({ start: e.started_at, end: e.ended_at })),
-    diapers: of("diaper").map((e) => e.started_at),
-    cares: of("care").map((e) => e.started_at),
+    diapers: of("diaper").map((e) => ({ at: e.started_at, detail: detailOf(e, "diaper") })),
+    cares: of("care").map((e) => ({ at: e.started_at, detail: detailOf(e, "care") })),
   };
 }
 
@@ -42,6 +53,7 @@ export function hasContent(r: DayReport): boolean {
 }
 
 const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
+const timed = (items: Dated[]) => items.map((d) => `${formatTime(d.at)}${d.detail ? ` (${d.detail})` : ""}`).join(", ");
 
 /** Texte prêt à relire et modifier avant tout partage. */
 export function renderSummary(r: DayReport, caregiverName?: string): string {
@@ -52,7 +64,7 @@ export function renderSummary(r: DayReport, caregiverName?: string): string {
   if (r.departureAt) body.push(`🏠 Départ : ${formatTime(r.departureAt)}`);
   if (r.presenceMs !== null) body.push(`⏱️ Temps de présence : ${formatDuration(r.presenceMs)}`);
   if (r.meals.length) {
-    body.push(`🍽️ ${plural(r.meals.length, "Repas", "Repas")} : ${r.meals.map(formatTime).join(", ")}`);
+    body.push(`🍽️ Repas : ${timed(r.meals)}`);
   }
   for (const nap of r.naps) {
     if (nap.end) {
@@ -63,10 +75,10 @@ export function renderSummary(r: DayReport, caregiverName?: string): string {
     }
   }
   if (r.diapers.length) {
-    body.push(`🧷 ${r.diapers.length} ${plural(r.diapers.length, "change", "changes")} : ${r.diapers.map(formatTime).join(", ")}`);
+    body.push(`🧷 ${r.diapers.length} ${plural(r.diapers.length, "change", "changes")} : ${timed(r.diapers)}`);
   }
   if (r.cares.length) {
-    body.push(`🩹 ${r.cares.length} ${plural(r.cares.length, "soin", "soins")} : ${r.cares.map(formatTime).join(", ")}`);
+    body.push(`🩹 ${r.cares.length} ${plural(r.cares.length, "soin", "soins")} : ${timed(r.cares)}`);
   }
 
   lines.push(...body);

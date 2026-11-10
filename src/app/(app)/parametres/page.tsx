@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { signOut } from "@/app/actions/auth";
+import { SignOutForm } from "@/components/sign-out-form";
 import { revokeInvitation, setMemberStatus, switchOrganization } from "@/app/actions/organization";
 import { DisplayNameForm, InviteForm } from "@/components/settings-forms";
 import { Button, Card, PageTitle, Skeleton } from "@/components/ui";
@@ -161,11 +161,7 @@ async function Settings() {
         </p>
       </Card>
 
-      <form action={signOut}>
-        <Button type="submit" variant="ghost" className="w-full">
-          Se déconnecter
-        </Button>
-      </form>
+      <SignOutForm />
     </>
   );
 }

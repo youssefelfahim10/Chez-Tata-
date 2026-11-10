@@ -82,3 +82,18 @@ export const requireWorkspace = cache(async (): Promise<Workspace> => {
     isManager: membership.role === "owner" || membership.role === "admin",
   };
 });
+
+/**
+ * Comme requireWorkspace, mais sans redirection : renvoie null si la session a
+ * expiré ou si l'utilisateur n'a aucun espace. Pour les synchronisations en
+ * arrière-plan, qui ne doivent jamais détourner l'écran de l'utilisateur.
+ */
+export async function getWorkspaceSoft(): Promise<Workspace | null> {
+  const user = await getUser();
+  if (!user) return null;
+  const memberships = await getMemberships();
+  if (memberships.length === 0) return null;
+  const preferred = (await cookies()).get(ACTIVE_ORG_COOKIE)?.value;
+  const membership = memberships.find((m) => m.organizationId === preferred) ?? memberships[0];
+  return { user, membership, memberships, isManager: membership.role === "owner" || membership.role === "admin" };
+}

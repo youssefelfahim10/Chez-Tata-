@@ -1,31 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { recordEvent, undoEvent, type RecordResult } from "@/app/actions/journal";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { syncOperation } from "@/app/actions/sync";
+import { useJournalSync, type SendFn } from "@/components/use-journal-sync";
+import { VoicePanel, type VoiceRow } from "@/components/voice-panel";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
-import type { ChildDay, QuickEventType } from "@/lib/journal/day";
+import { DETAILS, NOTE_MAX } from "@/lib/journal/details";
+import {
+  formatDuration,
+  formatTime,
+  parisDateKey,
+  parisInstant,
+  summarizeChildDay,
+  type ChildDay,
+  type JournalEvent,
+} from "@/lib/journal/day";
+import { LABELS, type ActionType } from "@/lib/journal/labels";
+import { isPlausibleTime, type Op } from "@/lib/offline/ops";
 
-export type TodayChild = {
-  id: string;
-  firstName: string;
-  day: ChildDay;
-  arrivalLabel: string | null;
-  departureLabel: string | null;
-  presenceLabel: string | null;
-  napSinceLabel: string | null;
-};
+export type BoardChild = { id: string; firstName: string };
 
-type ActionType = QuickEventType | "nap_end";
-
-const LABELS: Record<ActionType, { label: string; done: string; icon: string }> = {
-  arrival: { label: "Arrivée", done: "Arrivée enregistrée", icon: "👋" },
-  departure: { label: "Départ", done: "Départ enregistré", icon: "🏠" },
-  meal: { label: "Repas", done: "Repas enregistré", icon: "🍽️" },
-  nap: { label: "Sieste", done: "Début de sieste enregistré", icon: "😴" },
-  nap_end: { label: "Réveil", done: "Fin de sieste enregistrée", icon: "🌤️" },
-  diaper: { label: "Change", done: "Change enregistré", icon: "🧷" },
-  care: { label: "Soins", done: "Soin enregistré", icon: "🩹" },
+type Props = {
+  userId: string;
+  orgId: string;
+  kids: BoardChild[];
+  events: JournalEvent[];
+  /** Heure du serveur au moment du rendu (évite un décalage à l'hydratation). */
+  serverNow: string;
+  send?: SendFn;
+  onSynced?: () => void;
+  forceOffline?: boolean;
 };
 
 const STATUS: Record<ChildDay["status"], { text: string; className: string }> = {
@@ -34,106 +40,186 @@ const STATUS: Record<ChildDay["status"], { text: string; className: string }> = 
   gone: { text: "Parti", className: "bg-sky-soft text-ink" },
 };
 
-type Toast = { text: string; undo?: Extract<RecordResult, { ok: true }>["undo"]; error?: boolean };
+type DetailGroupName = "meal" | "diaper" | "care";
+type Toast = {
+  text: string;
+  error?: boolean;
+  undo?: Op;
+  detail?: { group: DetailGroupName; targetId: string; childName: string; chosen?: string };
+};
 
-export function TodayBoard({ items }: { items: TodayChild[] }) {
+export function TodayBoard({ userId, orgId, kids, events: serverEvents, serverNow, send = syncOperation, onSynced, forceOffline }: Props) {
+  const router = useRouter();
+  const handleSynced = useCallback(() => (onSynced ? onSynced() : router.refresh()), [onSynced, router]);
+  const { events, pending, online, syncing, problem, clearProblem, submit } = useJournalSync({
+    userId,
+    orgId,
+    serverEvents,
+    send,
+    onSynced: handleSynced,
+    forceOffline,
+  });
+
+  const [now, setNow] = useState(() => new Date(serverNow));
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+
   const [toast, setToast] = useState<Toast | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [note, setNote] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
 
-  function show(next: Toast) {
+  function show(next: Toast, ms = 10_000) {
     if (timer.current) clearTimeout(timer.current);
+    setNoteOpen(false);
+    setNote("");
     setToast(next);
-    timer.current = setTimeout(() => setToast(null), 8000);
+    timer.current = setTimeout(() => setToast(null), ms);
   }
 
-  function act(child: TodayChild, type: ActionType) {
-    const key = `${child.id}:${type}`;
-    if (busy) return;
-    setBusy(key);
-    const operationId = crypto.randomUUID();
-    startTransition(async () => {
-      const result = await recordEvent({
-        childId: child.id,
-        type,
-        operationId,
-        napId: type === "nap_end" ? (child.day.openNapId ?? undefined) : undefined,
-      });
-      setBusy(null);
-      if (result.ok) show({ text: `${LABELS[type].done} pour ${child.firstName}`, undo: result.undo });
-      else show({ text: result.error, error: true });
+  const days = useMemo(() => {
+    const byChild: Record<string, ChildDay> = {};
+    for (const kid of kids) {
+      byChild[kid.id] = summarizeChildDay(
+        events.filter((e) => e.child_id === kid.id),
+        now,
+      );
+    }
+    return byChild;
+  }, [kids, events, now]);
+
+  /** Enregistre un geste (instantané à l'écran, envoyé dès que possible). */
+  function perform(childId: string, action: ActionType, opts: { time?: string; details?: Record<string, string> } = {}): { error?: string; opId?: string; undo?: Op } {
+    const kid = kids.find((k) => k.id === childId);
+    const day = days[childId];
+    if (!kid || !day) return { error: "Enfant introuvable." };
+    let occurredAt = new Date().toISOString();
+    if (opts.time) {
+      occurredAt = parisInstantFor(serverNow, opts.time);
+      if (!isPlausibleTime(occurredAt, new Date())) return { error: `${kid.firstName} : l’heure ${opts.time} est dans le futur ou trop ancienne.` };
+    }
+    const id = crypto.randomUUID();
+    const offline = !online;
+    if (action === "nap_end") {
+      if (!day.openNapId) return { error: `${kid.firstName} n’a pas de sieste en cours.` };
+      submit({ kind: "nap_end", id, childId, napId: day.openNapId, occurredAt, offline });
+      return { opId: id, undo: { kind: "undo", id: crypto.randomUUID(), targetId: id, undo: "nap_end", napId: day.openNapId } };
+    }
+    submit({ kind: "create", id, childId, eventType: action, occurredAt, payload: opts.details, offline });
+    return { opId: id, undo: { kind: "undo", id: crypto.randomUUID(), targetId: id, undo: "event" } };
+  }
+
+  function act(kid: BoardChild, action: ActionType) {
+    const result = perform(kid.id, action);
+    if (result.error) return show({ text: result.error, error: true });
+    const group = action === "meal" || action === "diaper" || action === "care" ? action : null;
+    show({
+      text: `${LABELS[action].done} pour ${kid.firstName}${online ? "" : " (hors ligne)"}`,
+      undo: result.undo,
+      detail: group && result.opId ? { group, targetId: result.opId, childName: kid.firstName } : undefined,
     });
   }
 
   function undo() {
-    const target = toast?.undo;
-    if (!target) return;
-    startTransition(async () => {
-      const result = await undoEvent(target);
-      show(result.ok ? { text: "Action annulée" } : { text: "Annulation impossible", error: true });
-    });
+    if (!toast?.undo) return;
+    submit(toast.undo);
+    show({ text: "Action annulée" }, 4000);
   }
+
+  function choose(value: string) {
+    if (!toast?.detail) return;
+    const group = DETAILS[toast.detail.group];
+    submit({ kind: "detail", id: crypto.randomUUID(), targetId: toast.detail.targetId, payload: { [group.key]: value } });
+    const label = group.choices.find((c) => c.value === value)?.label ?? value;
+    setToast({ ...toast, detail: { ...toast.detail, chosen: label } });
+  }
+
+  function saveNote() {
+    if (!toast?.detail || !note.trim()) return;
+    submit({ kind: "detail", id: crypto.randomUUID(), targetId: toast.detail.targetId, payload: { note: note.trim().slice(0, NOTE_MAX) } });
+    show({ text: "Note ajoutée ✓" }, 3000);
+  }
+
+  function validateVoice(rows: VoiceRow[]): string[] {
+    const problems: string[] = [];
+    let done = 0;
+    for (const row of rows) {
+      const result = perform(row.childId, row.action as ActionType, { time: row.time || undefined, details: row.details });
+      if (result.error) problems.push(result.error);
+      else done += 1;
+    }
+    if (done > 0) show({ text: `${done} action${done > 1 ? "s" : ""} enregistrée${done > 1 ? "s" : ""} par la voix` }, 5000);
+    return problems;
+  }
+
+  const present = kids.filter((k) => days[k.id]?.status === "present").length;
+  const detailGroup = toast?.detail ? DETAILS[toast.detail.group] : null;
 
   return (
     <>
+      <ConnectionBanner online={online} pending={pending} syncing={syncing} problem={problem} onDismiss={clearProblem} />
+
+      <div className="grid grid-cols-[1fr_auto] items-stretch gap-3">
+        <p className="rounded-card bg-leaf-soft px-5 py-4 text-lg font-extrabold text-leaf">
+          {present === 0 ? "😴 Aucun enfant présent" : `👶 ${present} enfant${present > 1 ? "s" : ""} présent${present > 1 ? "s" : ""}`}
+        </p>
+        <button
+          type="button"
+          onClick={() => setVoiceOpen((v) => !v)}
+          aria-expanded={voiceOpen}
+          className="flex min-w-20 flex-col items-center justify-center gap-0.5 rounded-card bg-primary px-4 text-sm font-extrabold text-white"
+        >
+          <span aria-hidden className="text-2xl">
+            🎙️
+          </span>
+          Dicter
+        </button>
+      </div>
+
+      {voiceOpen ? <VoicePanel kids={kids} onValidate={validateVoice} onClose={() => setVoiceOpen(false)} /> : null}
+
       <ul className="flex flex-col gap-4">
-        {items.map((child) => {
-          const { day } = child;
+        {kids.map((kid) => {
+          const day = days[kid.id];
           const napping = Boolean(day.openNapId);
-          const actions: ActionType[] = [
-            "arrival",
-            "departure",
-            "meal",
-            napping ? "nap_end" : "nap",
-            "diaper",
-            "care",
-          ];
-          const disabled = (type: ActionType) =>
-            (type === "arrival" && day.status === "present") ||
-            (type === "departure" && day.status !== "present") ||
-            busy !== null;
+          const actions: ActionType[] = ["arrival", "departure", "meal", napping ? "nap_end" : "nap", "diaper", "care"];
+          const disabled = (type: ActionType) => (type === "arrival" && day.status === "present") || (type === "departure" && day.status !== "present");
           const counts: [string, number][] = [
-            ["repas", day.counts.meal],
-            ["sieste", day.counts.nap],
-            ["change", day.counts.diaper],
-            ["soin", day.counts.care],
+            ["🍽️ repas", day.counts.meal],
+            ["😴 sieste", day.counts.nap],
+            ["🧷 change", day.counts.diaper],
+            ["🩹 soin", day.counts.care],
           ];
-          const summary = counts.filter(([, n]) => n > 0).map(([label, n]) => `${n} ${label}${n > 1 ? "s" : ""}`);
+          const summary = counts.filter(([, n]) => n > 0).map(([label, n]) => `${label}${n > 1 ? "s" : ""} ×${n}`);
+          const arrival = day.arrivalAt ? formatTime(day.arrivalAt) : null;
+          const departure = day.departureAt ? formatTime(day.departureAt) : null;
 
           return (
-            <li key={child.id} className="rounded-card border border-line bg-surface p-4 shadow-sm">
+            <li key={kid.id} className="rounded-card border border-line bg-surface p-4 shadow-sm">
               <div className="flex items-center gap-3">
-                <span
-                  aria-hidden
-                  className="flex size-14 shrink-0 items-center justify-center rounded-full bg-sun text-2xl font-extrabold text-ink"
-                >
-                  {child.firstName.charAt(0).toUpperCase()}
+                <span aria-hidden className="flex size-14 shrink-0 items-center justify-center rounded-full bg-sun text-2xl font-extrabold text-ink">
+                  {kid.firstName.charAt(0).toUpperCase()}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-xl font-extrabold">{child.firstName}</h2>
+                  <h2 className="truncate text-xl font-extrabold">{kid.firstName}</h2>
                   <p className="text-sm text-ink-soft">
                     {day.status === "expected"
                       ? "Aucune arrivée saisie"
-                      : [
-                          child.arrivalLabel && `Arrivée ${child.arrivalLabel}`,
-                          child.departureLabel && `Départ ${child.departureLabel}`,
-                          child.presenceLabel,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
+                      : [arrival && `Arrivée ${arrival}`, departure && `Départ ${departure}`, formatDuration(day.presenceMs)].filter(Boolean).join(" · ")}
                   </p>
                 </div>
                 <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${STATUS[day.status].className}`}>
-                  {napping ? "Sieste" : STATUS[day.status].text}
+                  {napping ? "😴 Sieste" : STATUS[day.status].text}
                 </span>
               </div>
 
               {napping || summary.length > 0 ? (
                 <p className="mt-3 text-sm text-ink-soft">
-                  {[napping && `Dort depuis ${child.napSinceLabel}`, ...summary].filter(Boolean).join(" · ")}
+                  {[napping && day.openNapSince && `😴 Dort depuis ${formatTime(day.openNapSince)}`, ...summary].filter(Boolean).join(" · ")}
                 </p>
               ) : null}
 
@@ -142,14 +228,12 @@ export function TodayBoard({ items }: { items: TodayChild[] }) {
                   <button
                     key={type}
                     type="button"
-                    onClick={() => act(child, type)}
+                    onClick={() => act(kid, type)}
                     disabled={disabled(type)}
-                    aria-label={`${LABELS[type].label} — ${child.firstName}`}
-                    className={`flex min-h-16 flex-col items-center justify-center gap-0.5 rounded-2xl border text-sm font-bold transition active:scale-95 disabled:opacity-40 ${
-                      type === "nap_end" ? "border-leaf bg-leaf-soft text-leaf" : "border-line bg-cream text-ink"
-                    } ${busy === `${child.id}:${type}` ? "animate-pulse" : ""}`}
+                    aria-label={`${LABELS[type].label} — ${kid.firstName}`}
+                    className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border text-sm font-extrabold transition active:scale-95 disabled:opacity-35 ${LABELS[type].tone}`}
                   >
-                    <span aria-hidden className="text-2xl">
+                    <span aria-hidden className="text-3xl">
                       {LABELS[type].icon}
                     </span>
                     {LABELS[type].label}
@@ -159,7 +243,7 @@ export function TodayBoard({ items }: { items: TodayChild[] }) {
 
               {day.status !== "expected" || summary.length > 0 ? (
                 <Link
-                  href={`/aujourdhui/bilan/${child.id}`}
+                  href={`/aujourdhui/bilan/${kid.id}`}
                   className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 text-base font-extrabold text-[#06301a]"
                 >
                   <WhatsAppIcon className="size-6 text-white" />
@@ -173,20 +257,89 @@ export function TodayBoard({ items }: { items: TodayChild[] }) {
 
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-30 flex justify-center px-4 pb-[env(safe-area-inset-bottom)]">
         {toast ? (
-          <div
-            className={`pointer-events-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl px-4 py-2 text-sm font-bold text-white shadow-lg ${
-              toast.error ? "bg-danger" : "bg-ink"
-            }`}
-          >
-            <span className="py-2">{toast.error ? toast.text : `✓ ${toast.text}`}</span>
-            {toast.undo ? (
-              <button type="button" onClick={undo} className="min-h-11 rounded-xl bg-white/15 px-4 font-extrabold text-sun">
-                Annuler
-              </button>
+          <div className={`pointer-events-auto w-full max-w-md rounded-2xl px-4 py-2 text-white shadow-lg ${toast.error ? "bg-danger" : "bg-ink"}`}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="py-2 text-sm font-bold">{toast.error ? toast.text : `✓ ${toast.text}`}</span>
+              {toast.undo ? (
+                <button type="button" onClick={undo} className="min-h-11 rounded-xl bg-white/15 px-4 font-extrabold text-sun">
+                  Annuler
+                </button>
+              ) : null}
+            </div>
+            {detailGroup && toast.detail ? (
+              <div className="border-t border-white/20 pb-2 pt-2">
+                {toast.detail.chosen ? (
+                  <p className="text-sm font-bold text-sun">Précisé : {toast.detail.chosen} ✓</p>
+                ) : (
+                  <>
+                    <p className="mb-2 text-xs font-bold text-white/80">{detailGroup.title} (facultatif)</p>
+                    <div className="flex flex-wrap gap-2">
+                      {detailGroup.choices.map((c) => (
+                        <button key={c.value} type="button" onClick={() => choose(c.value)} className="min-h-11 rounded-full bg-white/15 px-3 text-sm font-bold">
+                          <span aria-hidden>{c.icon}</span> {c.label}
+                        </button>
+                      ))}
+                      {detailGroup.allowNote ? (
+                        <button type="button" onClick={() => setNoteOpen((o) => !o)} className="min-h-11 rounded-full bg-white/15 px-3 text-sm font-bold">
+                          ✍️ Autre…
+                        </button>
+                      ) : null}
+                    </div>
+                    {noteOpen ? (
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          value={note}
+                          onChange={(e) => setNote(e.target.value)}
+                          maxLength={NOTE_MAX}
+                          placeholder="Précisez en quelques mots"
+                          aria-label="Précision libre"
+                          className="min-h-11 flex-1 rounded-xl bg-white px-3 text-ink"
+                        />
+                        <button type="button" onClick={saveNote} disabled={!note.trim()} className="min-h-11 rounded-xl bg-sun px-4 font-extrabold text-ink disabled:opacity-50">
+                          OK
+                        </button>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </div>
             ) : null}
           </div>
         ) : null}
       </div>
     </>
   );
+}
+
+function ConnectionBanner({ online, pending, syncing, problem, onDismiss }: { online: boolean; pending: number; syncing: boolean; problem: string | null; onDismiss: () => void }) {
+  if (problem) {
+    return (
+      <div role="alert" className="flex items-start justify-between gap-3 rounded-card bg-primary-soft px-4 py-3 text-sm font-bold text-danger">
+        <span>⚠️ {problem}</span>
+        <button type="button" onClick={onDismiss} className="min-h-11 px-2" aria-label="Fermer le message">
+          ✕
+        </button>
+      </div>
+    );
+  }
+  if (!online) {
+    return (
+      <p role="status" className="rounded-card bg-sun-soft px-4 py-3 text-sm font-bold">
+        📴 Hors ligne : vos saisies sont gardées sur ce téléphone{pending > 0 ? ` (${pending} à envoyer)` : ""} et partiront dès le retour du réseau.
+      </p>
+    );
+  }
+  if (pending > 0) {
+    return (
+      <p role="status" className="rounded-card bg-sky-soft px-4 py-3 text-sm font-bold">
+        {syncing ? "🔄 Envoi en cours…" : `⏳ ${pending} saisie${pending > 1 ? "s" : ""} à envoyer`}
+      </p>
+    );
+  }
+  return null;
+}
+
+/** « HH:MM » de Paris pour le jour de `serverNow` → instant ISO. */
+function parisInstantFor(serverNow: string, hhmm: string): string {
+  return parisInstant(parisDateKey(serverNow), hhmm).toISOString();
 }

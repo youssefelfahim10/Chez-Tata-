@@ -85,3 +85,19 @@ Chaque point fait l'objet d'une issue.
   case « J'ai relu ce message » obligatoire (réarmée à chaque modification), puis ouverture de WhatsApp. **Jamais d'envoi automatique** :
   l'utilisateur appuie lui-même sur « Envoyer » dans WhatsApp.
 - `createClient()` appelle `connection()` : la session est propre à la requête (la vérification du jeton lit l'heure courante).
+
+## Hors ligne d'abord, dictée, finances
+
+- **Opérations** (`src/lib/offline/ops.ts`) : créer, fin de sieste, précision, annuler. Chacune porte un identifiant généré sur l'appareil
+  (rejouer ne crée jamais de doublon) et **l'heure réelle du geste**. `applyOps` les applique à l'écran immédiatement.
+- **File d'attente** : `localStorage`, liée au compte ET à l'espace (jamais d'envoi sous un autre compte). Annuler une action encore en attente
+  l'efface sans que le serveur en entende parler. Synchronisation dans l'ordre, arrêt au premier échec réseau, rien n'est perdu.
+- **Serveur** : `syncOperation` (idempotente, sans redirection : une session expirée n'efface rien), heure refusée si dans le futur (> 5 min) ou
+  vieille de plus de 72 h. Les saisies faites hors ligne sont marquées `event_payload.offline = true`.
+- **Service worker** (`public/sw.js`) : fichiers statiques en cache, pages de l'appli « réseau d'abord » avec dernière version vue, page `/hors-ligne`.
+  Caches vidés à la déconnexion ; les saisies non envoyées restent liées au compte.
+- **Dictée** (`src/lib/voice/parse.ts`, `voice-panel.tsx`) : transcription (Web Speech API) → interprétation → **proposition à confirmer**.
+  Jamais d'enregistrement sans validation ; enfant incertain = à choisir ; phrase incomprise = aucune proposition.
+- **Précisions à cocher** (`src/lib/journal/details.ts`) : quantité mangée, type de change, soin, note libre. Reprises dans le bilan WhatsApp si cochées.
+- **Finances** : tableau de bord `/gestion` (enfants, contrats, revenus estimés par mensualisation, charges, solde indicatif), charges à cocher
+  (`/gestion/charges`, catégorie « Autre » à préciser), export CSV protégé contre l'injection de formule. Montants en centimes entiers.
