@@ -133,16 +133,25 @@ export function SheetEditor({ initial, childId, childrenList, hasContract, save:
     });
   }
 
-  async function makePdf(open: boolean) {
+  /** Télécharge ou partage la fiche (le visualiseur PDF du navigateur n'est pas utilisé : la politique de sécurité le bloque). */
+  async function makePdf(share: boolean) {
     setPdfStatus("Création de la fiche A4…");
     try {
       const blob = await createSheetPdf(data);
-      const url = URL.createObjectURL(blob);
-      if (open) {
-        if (!window.open(url, "_blank")) triggerDownload(url, sheetFileName(data));
-      } else {
-        triggerDownload(url, sheetFileName(data));
+      const name = sheetFileName(data);
+      const file = new File([blob], name, { type: "application/pdf" });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (share && nav.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: name });
+          setPdfStatus("Partage ouvert.");
+          return;
+        } catch (error) {
+          if ((error as DOMException).name === "AbortError") return setPdfStatus("Partage annulé.");
+        }
       }
+      const url = URL.createObjectURL(blob);
+      triggerDownload(url, name);
       setTimeout(() => URL.revokeObjectURL(url), 120_000);
       setPdfStatus("PDF A4 créé. Vous pouvez le partager ou l’imprimer.");
     } catch (error) {
@@ -329,7 +338,7 @@ export function SheetEditor({ initial, childId, childrenList, hasContract, save:
             Télécharger le PDF
           </Button>
           <Button type="button" variant="ghost" onClick={() => makePdf(true)}>
-            Ouvrir le PDF
+            Partager…
           </Button>
         </div>
         {pdfStatus ? (

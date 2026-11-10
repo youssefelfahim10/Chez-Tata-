@@ -33,7 +33,7 @@ async function Dashboard() {
   const { start, end, isoDate } = parisDayBounds(now);
   const { first, after } = monthRange(isoDate.slice(0, 7));
 
-  const [children, events, contracts, expenses] = await Promise.all([
+  const [children, events, contracts, expenses, received] = await Promise.all([
     supabase
       .from("children")
       .select("id, first_name, last_name, birth_date")
@@ -62,8 +62,10 @@ async function Dashboard() {
       .eq("owner_id", user.id)
       .gte("date", first)
       .lt("date", after),
+    // Paiements reçus ce mois (privés à l'assistante : la base ne renvoie que les siens).
+    supabase.from("payments").select("amount_cents").eq("organization_id", membership.organizationId).eq("status", "received").gte("payment_date", first).lt("payment_date", after),
   ]);
-  if (children.error || events.error || contracts.error || expenses.error) throw new Error("Chargement de la gestion impossible.");
+  if (children.error || events.error || contracts.error || expenses.error || received.error) throw new Error("Chargement de la gestion impossible.");
 
   const kids = (children.data ?? []) as Row[];
   const allEvents = (events.data ?? []) as JournalEvent[];
@@ -77,6 +79,7 @@ async function Dashboard() {
   );
   const charges = sumCents((expenses.data ?? []) as { amount_cents: number }[]);
   const hasContracts = contractRows.length > 0;
+  const cashedIn = sumCents((received.data ?? []) as { amount_cents: number }[]);
 
   return (
     <>
@@ -89,15 +92,28 @@ async function Dashboard() {
           hint={hasContracts ? `${formatDecimalHours(weeklyMinutes)} h par semaine` : "Aucun contrat pour l’instant"}
         />
         <Tile icon="💶" value={hasContracts ? `${formatEuros(income)} €` : "—"} label="Revenus estimés / mois" hint="Estimation (mensualisation), hors indemnités" tone="bg-sun-soft" />
+        <Tile icon="✅" value={`${formatEuros(cashedIn)} €`} label="Encaissé ce mois" hint="Paiements marqués « reçus »" tone="bg-leaf-soft" />
         <Tile icon="🧾" value={`${formatEuros(charges)} €`} label="Charges du mois" hint="Ce que vous avez payé" />
         <Tile
           icon="⚖️"
-          wide
           value={hasContracts ? `${formatEuros(income - charges)} €` : "—"}
           label="Solde indicatif du mois"
-          hint="Revenus estimés moins charges. Repère personnel : ce n’est ni une paie ni une déclaration."
+          hint="Revenus estimés moins charges. Simple repère."
         />
       </div>
+
+      <Link href="/gestion/factures" className="flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-5 shadow-sm">
+        <span className="flex items-center gap-3 text-lg font-extrabold">
+          <span aria-hidden className="text-3xl">
+            💶
+          </span>
+          Factures et paiements
+          <span className="text-sm font-normal text-ink-soft">paiement reçu → facture</span>
+        </span>
+        <span aria-hidden className="text-2xl text-ink-soft">
+          ›
+        </span>
+      </Link>
 
       <Link href="/gestion/charges" className="flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-5 shadow-sm">
         <span className="flex items-center gap-3 text-lg font-extrabold">

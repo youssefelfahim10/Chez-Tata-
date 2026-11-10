@@ -5,7 +5,7 @@ export function getDemoConfig(): { code: string; email: string; password: string
   const code = process.env.DEMO_ACCESS_CODE;
   const email = process.env.DEMO_EMAIL;
   const password = process.env.DEMO_PASSWORD;
-  if (!code || code.length < 16 || !email || !password) return null;
+  if (!code || code.length < 12 || !email || !password) return null;
   return { code, email: email.toLowerCase(), password };
 }
 

@@ -102,14 +102,23 @@ async function Detail({ params }: { params: Promise<{ childId: string }> }) {
                 </div>
               ))}
             </dl>
+            <Link href={`/gestion/${childId}/contrat`} className="mt-4 flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-lg font-extrabold text-white">
+              📄 Contrat professionnel (PDF)
+            </Link>
             <div className="mt-4">
               <EndContractForm contractId={active.id as string} childId={childId} today={today} />
             </div>
           </>
         ) : (
           <>
-            <p className="mb-4 mt-2 text-ink-soft">Aucun contrat actif. Créez-le pour pré-remplir la fiche de présence.</p>
-            <ContractForm childId={childId} today={today} />
+            <p className="mb-4 mt-2 text-ink-soft">Aucun contrat actif. Créez-le : il pré-remplit la fiche de présence et se génère en PDF professionnel.</p>
+            <Link href={`/gestion/${childId}/contrat`} className="mb-4 flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-lg font-extrabold text-white">
+              📄 Créer le contrat (PDF)
+            </Link>
+            <details className="rounded-2xl border border-line p-4">
+              <summary className="min-h-11 cursor-pointer font-bold">Saisie rapide (sans document)</summary>
+              <div className="mt-3"><ContractForm childId={childId} today={today} /></div>
+            </details>
           </>
         )}
         {past.length > 0 ? (

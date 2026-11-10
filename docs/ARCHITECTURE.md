@@ -101,3 +101,14 @@ Chaque point fait l'objet d'une issue.
 - **Précisions à cocher** (`src/lib/journal/details.ts`) : quantité mangée, type de change, soin, note libre. Reprises dans le bilan WhatsApp si cochées.
 - **Finances** : tableau de bord `/gestion` (enfants, contrats, revenus estimés par mensualisation, charges, solde indicatif), charges à cocher
   (`/gestion/charges`, catégorie « Autre » à préciser), export CSV protégé contre l'injection de formule. Montants en centimes entiers.
+
+## Contrats et factures (PDF)
+
+- **Moteur PDF** (`src/lib/pdf/`) : `pdf-lib` + police Nunito de la marque (`public/fonts`, licence OFL). Les PDF sont créés **dans le navigateur** :
+  aucune donnée d'enfant n'est envoyée pour les fabriquer. Caractères non gérés (émojis…) retirés au lieu de faire échouer le document ;
+  les champs absents restent des blancs à compléter à la main, rien n'est inventé.
+- **Contrat d'accueil** : éditeur `/gestion/[enfant]/contrat` (choix à cocher, planning par jour, tarifs), détails privés dans `contracts.details`.
+  Modèle à relire par les parties : il ne constitue pas un conseil juridique.
+- **Facture** : `/gestion/factures`. « Paiement reçu » appelle `finalize_invoice` (une seule opération en base) : numéro continu propre à l'assistante
+  (FAC-AAAA-0001), décompte figé, paiement enregistré. Double facturation d'un mois impossible, facture non modifiable.
+- **Partage** : feuille de partage du téléphone avec le PDF (WhatsApp compris), sinon téléchargement + ouverture de WhatsApp. Jamais d'envoi automatique.
