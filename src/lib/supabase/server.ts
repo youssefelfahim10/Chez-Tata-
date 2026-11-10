@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { getSupabaseEnv } from "./env";
+import { hardenCookie } from "./cookies";
 
 /** Client Supabase côté serveur, lié à la session (cookies) de la requête. */
 export async function createClient() {
@@ -22,7 +23,7 @@ export async function createClient() {
       setAll(cookiesToSet) {
         try {
           for (const { name, value, options } of cookiesToSet) {
-            cookieStore.set(name, value, options);
+            cookieStore.set(name, value, hardenCookie(options));
           }
         } catch {
           // Appelé depuis un Server Component : l'écriture est impossible ici.

@@ -42,3 +42,31 @@ le pousser dans une branche `prototype` ou le transmettre, afin de reprendre le 
   (`typescript-eslint`, via `eslint-config-next`) ; outils de développement uniquement, non embarqués
   dans l'application. À suivre lors des mises à jour.
 - Aucun secret dans le dépôt ; `.env*` ignoré sauf `.env.example`.
+
+## Audit de sécurité — 10 novembre 2026 (avant déploiement)
+
+Périmètre : dépôt, base Supabase réelle, application construite en production.
+
+**Contrôles qui passent**
+- Aucun secret dans le dépôt ; `.env.local` ignoré ; `npm audit --omit=dev` : 0 vulnérabilité.
+- Aucun `console.*`, aucune injection HTML (`dangerouslySetInnerHTML`, `innerHTML`, `eval`).
+- 20 tables sur 20 avec RLS, 53 politiques, aucun droit `anon` (tables et fonctions), schéma `private` non exposé.
+- Attaque systématique d'un second compte sur l'API réelle : 56 contrôles (lecture, insertion, modification, suppression sur toutes les
+  tables, fonctions, schéma privé, administration Auth, jeton falsifié) — tous refusés.
+- Toutes les Server Actions revérifient la session ; les entrées sont validées par zod ; les redirections sont filtrées.
+
+**Écarts trouvés et corrigés**
+| Écart | Correction |
+|---|---|
+| Cookies de session lisibles par JavaScript | `httpOnly`, `sameSite=lax`, `secure` en production (`src/lib/supabase/cookies.ts`) |
+| Aucune politique de sécurité du contenu | CSP (connexions limitées à l'appli et Supabase, pas d'iframe ni de plugin), COOP `same-origin` |
+| Routes de démonstration fictives `/apercu` | Supprimées (surface d'attaque inutile) |
+| 15 clés étrangères sans index | Migration `20261110000004_fk_indexes.sql` |
+| Pages gardées pour le hors ligne sans durée de vie | Oubliées après 48 h ; vidées à la déconnexion |
+| Accès démo | Code d'accès serveur (comparaison en temps constant, délai sur échec) ; identifiants jamais exposés au navigateur |
+
+**Écarts connus, non corrigés (à décider)**
+- CSP avec `'unsafe-inline'` pour les scripts (Next.js en injecte) : un nonce par requête rendrait toutes les pages dynamiques.
+- Protection contre les mots de passe compromis : option Supabase (dashboard) non activée ; la longueur minimale (10) est appliquée.
+- Files de saisies hors ligne non chiffrées sur l'appareil.
+- Mentions légales, politique de confidentialité, registre RGPD : à rédiger avant l'ouverture au public.

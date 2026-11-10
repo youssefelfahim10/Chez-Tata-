@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { hardenCookie } from "@/lib/supabase/cookies";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
 const PUBLIC_PATHS = ["/connexion", "/inscription", "/auth", "/configuration", "/hors-ligne"];
@@ -33,7 +34,7 @@ export async function proxy(request: NextRequest) {
         for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
         response = NextResponse.next({ request });
         for (const { name, value, options } of cookiesToSet) {
-          response.cookies.set(name, value, options);
+          response.cookies.set(name, value, hardenCookie(options));
         }
       },
     },
@@ -41,7 +42,7 @@ export async function proxy(request: NextRequest) {
 
   const { data } = await supabase.auth.getClaims();
   const isAuthenticated = Boolean(data?.claims?.sub);
-  const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isPublic = pathname === "/" || PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   const redirectTo = (path: string, next?: string) => {
     const url = request.nextUrl.clone();
