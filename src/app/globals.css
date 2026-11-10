@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/*
+ * Thème Chez TaTa — jetons PROVISOIRES.
+ * Le dépôt ne contenait aucun prototype au moment de l'audit : ces couleurs
+ * sont à remplacer par celles du thème d'origine dès qu'il sera fourni.
+ * Tous les écrans passent par ces jetons : le changement se fait ici uniquement.
+ */
+@theme {
+  --color-cream: #fff8f0;
+  --color-surface: #ffffff;
+  --color-ink: #2b2a33;
+  --color-ink-soft: #5c5a66;
+  --color-line: #eadfd2;
+  --color-primary: #c2452d;
+  --color-primary-strong: #a53822;
+  --color-primary-soft: #fde6df;
+  --color-leaf: #1f7a6d;
+  --color-leaf-soft: #dff3ee;
+  --color-sun: #ffd166;
+  --color-sun-soft: #fff3cf;
+  --color-sky-soft: #e3f0fb;
+  --color-danger: #b3261e;
+  --font-sans: var(--font-nunito), ui-rounded, "Segoe UI", system-ui, sans-serif;
+  --radius-card: 1.5rem;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-leaf);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
