@@ -8,7 +8,7 @@ const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary: "bg-primary text-white hover:bg-primary-strong",
   secondary: "bg-sun text-ink hover:brightness-95",
   ghost: "bg-surface text-ink border border-line hover:bg-cream",
-  danger: "bg-surface text-danger border border-danger/40 hover:bg-primary-soft",
+  danger: "bg-surface text-danger border border-danger/40 hover:bg-pink-soft",
 };
 
 /** Bouton tactile : 48 px de haut minimum. */
@@ -54,7 +54,7 @@ export function Field({ label, hint, id, name, ...props }: FieldProps) {
 
 export function Notice({ tone, children }: { tone: "error" | "success" | "info"; children: ReactNode }) {
   const tones = {
-    error: "bg-primary-soft text-danger",
+    error: "bg-pink-soft text-danger",
     success: "bg-leaf-soft text-leaf",
     info: "bg-sun-soft text-ink",
   };

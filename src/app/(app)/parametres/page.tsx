@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { SignOutForm } from "@/components/sign-out-form";
 import { revokeInvitation, setMemberStatus, switchOrganization } from "@/app/actions/organization";
+import { DeleteAccountForm } from "@/components/delete-account";
 import { DisplayNameForm, InviteForm } from "@/components/settings-forms";
 import { Button, Card, PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace, type Role } from "@/lib/auth/session";
+import { isDemoEmail } from "@/lib/demo";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Réglages" };
@@ -155,10 +158,18 @@ async function Settings() {
       ) : null}
 
       <Card>
-        <p className="font-bold">Bientôt disponible</p>
-        <p className="mt-1 text-ink-soft">
-          Archives de documents, export et sauvegarde des données, notifications, assistant juridique.
+        <h2 className="text-lg font-extrabold">Mes données</h2>
+        <p className="mt-1 mb-4 text-sm text-ink-soft">
+          Vos données vous appartiennent : téléchargez-les ou supprimez votre compte à tout moment.{" "}
+          <Link href="/confidentialite" className="font-bold text-primary underline">Confidentialité</Link>
         </p>
+        <div className="flex flex-col gap-3">
+          <a href="/api/export" download className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-line px-4 font-bold hover:bg-primary-soft">
+            ⬇️ Télécharger mes données
+          </a>
+          <DeleteAccountForm disabled={isDemoEmail(user.email)} />
+          {isDemoEmail(user.email) ? <p className="text-sm text-ink-soft">Compte de démonstration : suppression désactivée.</p> : null}
+        </div>
       </Card>
 
       <SignOutForm />

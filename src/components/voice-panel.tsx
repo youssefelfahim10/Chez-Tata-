@@ -184,7 +184,7 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
             ))}
           </ul>
           {errors.length > 0 ? (
-            <ul role="alert" className="mt-3 rounded-2xl bg-primary-soft px-4 py-3 text-sm text-danger">
+            <ul role="alert" className="mt-3 rounded-2xl bg-pink-soft px-4 py-3 text-sm text-danger">
               {errors.map((e) => (
                 <li key={e}>{e}</li>
               ))}

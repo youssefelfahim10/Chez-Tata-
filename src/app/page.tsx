@@ -132,15 +132,15 @@ export default function Page() {
 
       {/* Hero */}
       <section className="relative isolate overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-leaf-soft/70 via-cream to-cream" />
-        <div aria-hidden className="anim-blob pointer-events-none absolute -left-24 top-10 -z-10 size-80 rounded-full bg-[#9be3c4]/55 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-primary-soft via-cream to-cream" />
+        <div aria-hidden className="anim-blob pointer-events-none absolute -left-24 top-10 -z-10 size-80 rounded-full bg-[#9dbcf0]/55 blur-3xl" />
         <div aria-hidden className="anim-blob pointer-events-none absolute right-0 top-0 -z-10 size-96 rounded-full bg-sun/30 blur-3xl" style={{ animationDelay: "-6s" }} />
         <div aria-hidden className="anim-blob pointer-events-none absolute bottom-0 left-1/3 -z-10 size-72 rounded-full bg-[#f7c6d4]/50 blur-3xl" style={{ animationDelay: "-11s" }} />
 
         <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pb-16 pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:pt-20">
           <div className="flex flex-col gap-6">
-            <p className="anim-up inline-flex w-fit items-center gap-2 rounded-full border border-leaf/25 bg-surface/80 px-4 py-1.5 text-sm font-bold text-leaf shadow-sm">
-              <span className="relative flex size-2.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-leaf opacity-60" /><span className="relative inline-flex size-2.5 rounded-full bg-leaf" /></span>
+            <p className="anim-up inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-surface/80 px-4 py-1.5 text-sm font-bold text-primary shadow-sm">
+              <span className="relative flex size-2.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-pink opacity-60" /><span className="relative inline-flex size-2.5 rounded-full bg-pink" /></span>
               Pour les assistantes maternelles et les MAM
             </p>
             <h1 className="anim-up text-[2.6rem] font-extrabold leading-[1.05] tracking-tight sm:text-6xl" style={{ animationDelay: "0.1s" }}>
@@ -191,7 +191,7 @@ export default function Page() {
         {/* Comment ça marche */}
         <section id="comment" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-20">
           <div className="reveal text-center">
-            <p className="text-sm font-extrabold uppercase tracking-widest text-leaf">Comment ça marche</p>
+            <p className="text-sm font-extrabold uppercase tracking-widest text-pink">Comment ça marche</p>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Trois gestes, et la journée est écrite</h2>
           </div>
           <ol className="mt-12 grid gap-6 md:grid-cols-3">
@@ -210,7 +210,7 @@ export default function Page() {
         <section id="fonctions" className="scroll-mt-20 bg-surface/60 py-20">
           <div className="mx-auto w-full max-w-6xl px-4">
             <div className="reveal text-center">
-              <p className="text-sm font-extrabold uppercase tracking-widest text-leaf">Fonctions</p>
+              <p className="text-sm font-extrabold uppercase tracking-widest text-pink">Fonctions</p>
               <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Pensé pour le terrain</h2>
               <p className="mx-auto mt-2 max-w-xl text-ink-soft">De gros boutons, peu de texte à écrire, tout en français.</p>
             </div>
@@ -229,7 +229,7 @@ export default function Page() {
         {/* Pour qui */}
         <section className="mx-auto w-full max-w-6xl px-4 py-20">
           <div className="reveal text-center">
-            <p className="text-sm font-extrabold uppercase tracking-widest text-leaf">Pour qui ?</p>
+            <p className="text-sm font-extrabold uppercase tracking-widest text-pink">Pour qui ?</p>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Seule ou en équipe</h2>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-2">
@@ -255,11 +255,11 @@ export default function Page() {
         </section>
 
         {/* Sécurité */}
-        <section id="securite" className="relative scroll-mt-20 overflow-hidden bg-[#0f2a24] py-20 text-white">
-          <div aria-hidden className="anim-blob pointer-events-none absolute -right-20 -top-24 size-96 rounded-full bg-leaf/40 blur-3xl" />
+        <section id="securite" className="relative scroll-mt-20 overflow-hidden bg-primary-strong py-20 text-white">
+          <div aria-hidden className="anim-blob pointer-events-none absolute -right-20 -top-24 size-96 rounded-full bg-[#2766c9]/45 blur-3xl" />
           <div className="relative mx-auto w-full max-w-6xl px-4">
             <div className="reveal text-center">
-              <p className="text-sm font-extrabold uppercase tracking-widest text-[#7fe0bb]">Confiance</p>
+              <p className="text-sm font-extrabold uppercase tracking-widest text-sun">Confiance</p>
               <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Les enfants d’abord, leurs données aussi</h2>
             </div>
             <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -276,7 +276,7 @@ export default function Page() {
 
         {/* Appel final */}
         <section className="mx-auto w-full max-w-6xl px-4 py-20">
-          <div className="reveal relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-[#2fa37f] p-10 text-center text-white shadow-2xl shadow-primary/30 sm:p-14">
+          <div className="reveal relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-[#2766c9] p-10 text-center text-white shadow-2xl shadow-primary/30 sm:p-14">
             <div aria-hidden className="anim-blob absolute -left-10 -top-10 size-56 rounded-full bg-white/15 blur-2xl" />
             <h2 className="relative text-3xl font-extrabold tracking-tight sm:text-4xl">Prête à gagner du temps ?</h2>
             <p className="relative mx-auto mt-2 max-w-md text-white/85">Créez votre espace en quelques secondes et pointez votre première journée.</p>
@@ -305,7 +305,13 @@ export default function Page() {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-ink-soft">
           <p className="flex items-center gap-2 font-extrabold text-ink"><Image src="/logo-sm.png" alt="" width={28} height={28} className="size-7 rounded-lg" /> Chez TaTa</p>
           <p>Conçu pour protéger les données des enfants : isolation entre comptes, hébergement dans l’Union européenne, aucun envoi automatique d’informations.</p>
-          <p>Mentions légales et politique de confidentialité : à publier avant l’ouverture au public.</p>
+          <nav aria-label="Informations légales" className="flex flex-wrap gap-x-5 gap-y-2 pt-1 font-bold text-primary">
+            <Link href="/confidentialite" className="underline">Confidentialité</Link>
+            <Link href="/conditions" className="underline">Conditions d’utilisation</Link>
+            <Link href="/mentions-legales" className="underline">Mentions légales</Link>
+            <Link href="/suppression-compte" className="underline">Supprimer mon compte</Link>
+            <Link href="/aide" className="underline">Aide</Link>
+          </nav>
         </div>
       </footer>
     </div>

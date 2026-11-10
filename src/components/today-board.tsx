@@ -314,7 +314,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, serverNo
 function ConnectionBanner({ online, pending, syncing, problem, onDismiss }: { online: boolean; pending: number; syncing: boolean; problem: string | null; onDismiss: () => void }) {
   if (problem) {
     return (
-      <div role="alert" className="flex items-start justify-between gap-3 rounded-card bg-primary-soft px-4 py-3 text-sm font-bold text-danger">
+      <div role="alert" className="flex items-start justify-between gap-3 rounded-card bg-pink-soft px-4 py-3 text-sm font-bold text-danger">
         <span>⚠️ {problem}</span>
         <button type="button" onClick={onDismiss} className="min-h-11 px-2" aria-label="Fermer le message">
           ✕

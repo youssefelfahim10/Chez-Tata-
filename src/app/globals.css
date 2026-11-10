@@ -1,24 +1,25 @@
 @import "tailwindcss";
 
 /*
- * Thème Chez TaTa — palette reprise du prototype « Présences sur téléphone »
- * (vert profond, orange chaleureux, fond crème verdâtre, rose tendre).
- * Tous les écrans passent par ces jetons : le changement se fait ici uniquement.
+ * Thème Chez TaTa — couleurs du logo : bleu marine, rose, jaune. Le vert reste réservé aux états positifs
+ * (présent, payé, enregistré). Tous les écrans passent par ces jetons : le changement se fait ici uniquement.
  */
 @theme {
-  --color-cream: #f6f8f3;
+  --color-cream: #f5f8fd;
   --color-surface: #ffffff;
-  --color-ink: #18342e;
-  --color-ink-soft: #60756f;
-  --color-line: #dbe9df;
-  --color-primary: #16765d;
-  --color-primary-strong: #0f5c46;
-  --color-primary-soft: #fce9ee;
-  --color-leaf: #16765d;
-  --color-leaf-soft: #e9f8ee;
-  --color-sun: #f19a37;
-  --color-sun-soft: #fff9e8;
-  --color-sky-soft: #e3f0fb;
+  --color-ink: #0f1f3d;
+  --color-ink-soft: #5b6b8c;
+  --color-line: #d5deef;
+  --color-primary: #06377c;
+  --color-primary-strong: #01275f;
+  --color-primary-soft: #eaf0fb;
+  --color-pink: #ed1359;
+  --color-pink-soft: #fff0f5;
+  --color-leaf: #2f8a18;
+  --color-leaf-soft: #ecf8e7;
+  --color-sun: #fdb803;
+  --color-sun-soft: #fff8e1;
+  --color-sky-soft: #eaf2fd;
   --color-danger: #b3261e;
   --font-sans: var(--font-nunito), ui-rounded, "Segoe UI", system-ui, sans-serif;
   --radius-card: 1.5rem;
@@ -79,7 +80,7 @@ body {
 /* Maquette du téléphone : une boucle de 9 s (arrivée pointée). */
 @keyframes ct-chip-before { 0%, 38% { opacity: 1; } 42%, 94% { opacity: 0; } 98%, 100% { opacity: 1; } }
 @keyframes ct-chip-after { 0%, 38% { opacity: 0; } 42%, 94% { opacity: 1; } 98%, 100% { opacity: 0; } }
-@keyframes ct-tap { 0%, 34%, 46%, 100% { transform: scale(1); box-shadow: none; } 40% { transform: scale(0.9); box-shadow: 0 0 0 10px rgb(22 118 93 / 0.18); } }
+@keyframes ct-tap { 0%, 34%, 46%, 100% { transform: scale(1); box-shadow: none; } 40% { transform: scale(0.9); box-shadow: 0 0 0 10px rgb(6 55 124 / 0.18); } }
 @keyframes ct-toast {
   0%, 40% { opacity: 0; transform: translateY(18px); }
   46%, 82% { opacity: 1; transform: none; }
@@ -93,7 +94,7 @@ body {
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
 }
 .ct-gradient-text {
-  background: linear-gradient(100deg, #16765d 10%, #2fa37f 45%, #f19a37 95%);
+  background: linear-gradient(100deg, #06377c 5%, #1f56b3 45%, #ed1359 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -103,11 +104,11 @@ body {
 }
 .ct-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 22px 44px -18px rgb(22 118 93 / 0.35);
-  border-color: rgb(22 118 93 / 0.35);
+  box-shadow: 0 22px 44px -18px rgb(6 55 124 / 0.35);
+  border-color: rgb(6 55 124 / 0.35);
 }
 .ct-shimmer {
-  background-image: linear-gradient(110deg, #16765d 35%, #2fa37f 50%, #16765d 65%);
+  background-image: linear-gradient(110deg, #06377c 35%, #2766c9 50%, #06377c 65%);
   background-size: 220% 100%;
 }
 

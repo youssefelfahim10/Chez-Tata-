@@ -105,7 +105,7 @@ export function DeleteExpenseForm({ id, label }: { id: string; label: string }) 
       }}
     >
       <input type="hidden" name="id" value={id} />
-      <button type="submit" disabled={pending} aria-label={`Supprimer ${label}`} className="min-h-11 min-w-11 rounded-xl text-xl text-ink-soft hover:bg-primary-soft">
+      <button type="submit" disabled={pending} aria-label={`Supprimer ${label}`} className="min-h-11 min-w-11 rounded-xl text-xl text-ink-soft hover:bg-pink-soft">
         🗑️
       </button>
       {state.error ? <span role="alert" className="text-xs text-danger">{state.error}</span> : null}
