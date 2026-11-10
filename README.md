@@ -44,3 +44,11 @@ npm run build
 - Montants en centimes (entiers) ; aucune estimation n'est présentée comme une paie officielle.
 - Aucune donnée personnelle réelle dans les tests.
 - Aucun envoi automatique d'informations concernant un enfant (WhatsApp : toujours confirmé par l'utilisatrice).
+
+## Déploiement (Vercel)
+
+- Projet Vercel `chez-tata`, fonctions en `fra1` (Francfort), à côté de la base Supabase (UE).
+- Variables d'environnement (Production et Preview) : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+  `NEXT_PUBLIC_SITE_URL`, et en **secrètes** `DEMO_ACCESS_CODE`, `DEMO_EMAIL`, `DEMO_PASSWORD`.
+- Déployer : `vercel deploy --prod` (ou liaison Git depuis le tableau de bord Vercel pour déployer à chaque push).
+- Après un changement de domaine : mettre à jour `NEXT_PUBLIC_SITE_URL` et Supabase → Auth → URL Configuration.
