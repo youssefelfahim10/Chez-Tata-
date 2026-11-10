@@ -75,3 +75,13 @@ Chaque point fait l'objet d'une issue.
 - **Données** : `attendance_records` (migration `…0002`) ; aucun montant en euros dans cette table partagée de la MAM :
   les montants d'indemnités viennent du contrat, privé à l'assistante.
 - **Calage** : coordonnées relevées par mesure sur l'image ; celles du prototype étaient décalées de 10 à 17 px.
+
+## Bilan du jour sur WhatsApp
+
+- `src/lib/whatsapp/summary.ts` : texte construit **uniquement** à partir des événements enregistrés ; une rubrique sans donnée est omise
+  (pas de repas saisi → pas de ligne « Repas »). Aucune présence calculée sans départ.
+- `src/lib/whatsapp/link.ts` : numéro normalisé pour `wa.me` (numéros français et internationaux), `null` si inexploitable.
+- Écran `/aujourdhui/bilan/[childId]` : aperçu **modifiable**, choix du destinataire (familles ayant un numéro valide, ou « Choisir dans WhatsApp »),
+  case « J'ai relu ce message » obligatoire (réarmée à chaque modification), puis ouverture de WhatsApp. **Jamais d'envoi automatique** :
+  l'utilisateur appuie lui-même sur « Envoyer » dans WhatsApp.
+- `createClient()` appelle `connection()` : la session est propre à la requête (la vérification du jeton lit l'heure courante).

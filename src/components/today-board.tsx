@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { recordEvent, undoEvent, type RecordResult } from "@/app/actions/journal";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import type { ChildDay, QuickEventType } from "@/lib/journal/day";
 
 export type TodayChild = {
@@ -154,6 +156,16 @@ export function TodayBoard({ items }: { items: TodayChild[] }) {
                   </button>
                 ))}
               </div>
+
+              {day.status !== "expected" || summary.length > 0 ? (
+                <Link
+                  href={`/aujourdhui/bilan/${child.id}`}
+                  className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 text-base font-extrabold text-[#06301a]"
+                >
+                  <WhatsAppIcon className="size-6 text-white" />
+                  Bilan du jour sur WhatsApp
+                </Link>
+              ) : null}
             </li>
           );
         })}
