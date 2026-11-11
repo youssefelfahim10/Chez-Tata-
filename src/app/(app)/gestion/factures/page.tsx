@@ -27,7 +27,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
   const [contracts, statements, profile, caregiver] = await Promise.all([
     supabase
       .from("contracts")
-      .select("id, child_id, scheduled_hours, weeks_per_year, hourly_rate, maintenance_allowance_cents, meal_allowance_cents, details, children(first_name, last_name)")
+      .select("id, child_id, scheduled_hours, weeks_per_year, hourly_rate, maintenance_allowance_cents, meal_allowance_cents, details, children(first_name, last_name, gender)")
       .eq("organization_id", membership.organizationId)
       .eq("assigned_assmat_id", user.id)
       .eq("status", "active")
@@ -43,7 +43,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
     supabase.from("caregiver_profiles").select(PROFILE_COLUMNS).eq("organization_id", membership.organizationId).eq("user_id", user.id).maybeSingle(),
   ]);
   if (contracts.error || statements.error) throw new Error("Chargement des factures impossible.");
-  const contractRows = (contracts.data ?? []) as unknown as (Row & { children: { first_name: string; last_name: string | null } | null })[];
+  const contractRows = (contracts.data ?? []) as unknown as (Row & { children: { first_name: string; last_name: string | null; gender: string | null } | null })[];
 
   const attendance = contractRows.length
     ? await supabase
@@ -63,6 +63,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
     const details = fillEmployeeFromProfile(parseDetails(c.details), caregiver.error ? null : employeeFromProfile(caregiver.data as ProfileRow | null));
     return {
       contractId: c.id as string,
+      childGender: c.children?.gender ?? null,
       childName: [c.children?.first_name, c.children?.last_name].filter(Boolean).join(" "),
       contract: {
         scheduledHours: Number(c.scheduled_hours),

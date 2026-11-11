@@ -1,5 +1,6 @@
 "use client";
 
+import { ChildAvatar } from "@/components/child-avatar";
 import { useRef, useState } from "react";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { applyAction, demoBilan, DEMO_EMERGENCY, DEMO_KIDS } from "@/lib/demo/sandbox";
@@ -59,7 +60,7 @@ export function Sandbox({ onTouched }: { onTouched?: () => void }) {
               return (
                 <li key={kid.id} className="rounded-2xl border border-line bg-surface p-3 shadow-luxe">
                   <div className="flex items-center gap-2.5">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft font-display text-lg font-semibold text-primary">{kid.firstName[0]}</span>
+                    <ChildAvatar name={kid.firstName} gender={kid.gender} size="sm" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold leading-none">{kid.firstName}</p>
                       <p className="mt-1 text-[10px] text-ink-soft">

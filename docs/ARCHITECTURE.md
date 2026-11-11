@@ -164,6 +164,7 @@ Chaque point fait l'objet d'une issue.
 - **Profil** (`caregiver_profiles`, migration `…0010`) : identité, adresse du lieu d'accueil, agrément (numéro, dates, nombre d'enfants), assurance. **Strictement personnel** :
   la RLS ne laisse lire que son propre profil, y compris pour une responsable de MAM. Ni numéro de sécurité sociale ni coordonnées bancaires. Il pré-remplit contrats et factures
   (`fillEmployeeFromProfile` : il complète les blancs, n'écrase jamais) et alimente les **rappels d'échéance** (agrément, assurance ; bandeau sur « Aujourd'hui » et sur le profil).
+- **Icône de l'enfant** : `children.gender` (`girl` / `boy`, facultatif, migration 0011) choisit l'icône 👧 / 👦 (`ChildAvatar`) ; sans choix, l'initiale. Jamais déduit du prénom ; choisi à la création ou sur la fiche de l'enfant.
 - **Corriger sans rien perdre** (écran Aujourd'hui) : chaque geste de la « Journée de … » a « Modifier » (heure, réveil de sieste, précisions) et « Annuler ».
   Annuler = suppression logique (`deleted_at`) : le geste passe dans « Annulés aujourd'hui » et se **rétablit** d'un geste (opération `restore`). « Modifier » (opération `edit`) laisse la trace dans `daily_event_revisions`
   et propose « Annuler la modification ». Même un geste créé puis annulé hors ligne part au serveur avant d'être archivé.

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { TodayBoard } from "@/components/today-board";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
+import { toGender } from "@/lib/children/gender";
 import { requireWorkspace } from "@/lib/auth/session";
 import { formatLongDate, parisDayBounds, type JournalEvent } from "@/lib/journal/day";
 import { reminderText, remindersFor } from "@/lib/profile/schema";
@@ -20,7 +21,7 @@ async function Today() {
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
     supabase
       .from("children")
-      .select("id, first_name")
+      .select("id, first_name, gender")
       .eq("organization_id", membership.organizationId)
       .eq("status", "active")
       .order("first_name"),
@@ -53,7 +54,7 @@ async function Today() {
   if (health.error) console.error("Fiche santé indisponible", health.error.code);
 
   const allergies = new Map((health.data ?? []).map((h) => [h.child_id as string, (h.allergies as string).trim()]));
-  const kids = (children.data ?? []).map((c) => ({ id: c.id as string, firstName: c.first_name as string, allergies: allergies.get(c.id as string) || null }));
+  const kids = (children.data ?? []).map((c) => ({ id: c.id as string, firstName: c.first_name as string, gender: toGender(c.gender), allergies: allergies.get(c.id as string) || null }));
   const name = profile.data?.display_name?.trim() || "TaTa";
   // Un profil indisponible (migration pas encore appliquée) ne doit jamais bloquer l'écran principal.
   const reminders = caregiver.error ? [] : remindersFor(caregiver.data as { agreement_expiry: string | null; insurance_expiry: string | null } | null, isoDate);

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { syncOperation } from "@/app/actions/sync";
 import { useJournalSync, type SendFn } from "@/components/use-journal-sync";
 import { VoicePanel, type VoiceRow } from "@/components/voice-panel";
+import { ChildAvatar } from "@/components/child-avatar";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { DETAILS, NOTE_MAX } from "@/lib/journal/details";
 import {
@@ -22,7 +23,7 @@ import { buildTimeline, type TimelineItem } from "@/lib/journal/timeline";
 import { TONES } from "@/lib/ui/tones";
 import { isPlausibleTime, type Op } from "@/lib/offline/ops";
 
-export type BoardChild = { id: string; firstName: string; allergies?: string | null };
+export type BoardChild = { id: string; firstName: string; gender?: string | null; allergies?: string | null };
 
 type Props = {
   userId: string;
@@ -296,9 +297,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
           return (
             <li key={kid.id} className="overflow-hidden rounded-card border border-line bg-surface shadow-luxe">
               <header className="flex items-center gap-3 p-4 pb-3">
-                <span aria-hidden className="flex size-14 shrink-0 items-center justify-center rounded-full bg-sun text-2xl font-extrabold text-ink">
-                  {kid.firstName.charAt(0).toUpperCase()}
-                </span>
+                <ChildAvatar name={kid.firstName} gender={kid.gender} size="lg" />
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate text-xl font-extrabold">{kid.firstName}</h2>
                   <p className="text-sm text-ink-soft">

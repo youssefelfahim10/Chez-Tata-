@@ -249,6 +249,16 @@ describe("deux assistantes indépendantes", () => {
     );
   });
 
+  it("l'icône fille / garçon : valeurs contrôlées, et Bob ne peut pas la changer chez Alice", async () => {
+    await t.admin("update children set gender = 'girl' where id = $1", [aliceData.child]);
+    expect(await t.admin("select gender from children where id = $1", [aliceData.child])).toEqual([{ gender: "girl" }]);
+    await expect(t.admin("update children set gender = 'autre' where id = $1", [aliceData.child])).rejects.toThrow(/check/i);
+    const rows = await t.as(bob, (q) => q("update children set gender = 'boy' where id = $1 returning id", [aliceData.child]));
+    expect(rows).toEqual([]);
+    expect(await t.admin("select gender from children where id = $1", [aliceData.child])).toEqual([{ gender: "girl" }]);
+    await t.admin("update children set gender = null where id = $1", [aliceData.child]);
+  });
+
   it("Bob ne peut ni modifier ni supprimer les données d'Alice", async () => {
     const attempts: [string, unknown[]][] = [
       ["update children set first_name = 'Piraté' where id = $1 returning id", [aliceData.child]],

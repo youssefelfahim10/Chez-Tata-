@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { confirmPayment } from "@/app/actions/billing";
+import { ChildAvatar } from "@/components/child-avatar";
 import { Notice } from "@/components/ui";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { PAYMENT_METHODS, buildDraftLines, paymentMethodLabel, type BillingContract, type MonthActivity, type PaymentMethod } from "@/lib/billing/invoice";
@@ -14,6 +15,7 @@ import { buildWhatsAppUrl, toWhatsAppNumber } from "@/lib/whatsapp/link";
 export type InvoiceItem = {
   contractId: string;
   childName: string;
+  childGender?: string | null;
   contract: BillingContract;
   activity: MonthActivity;
   details: ContractDetails;
@@ -131,7 +133,7 @@ function InvoiceCard({ item, month, today, canInvoice }: { item: InvoiceItem; mo
   return (
     <li className="rounded-card border border-line bg-surface p-5 shadow-sm">
       <div className="flex items-center gap-3">
-        <span aria-hidden className="flex size-12 items-center justify-center rounded-full bg-sun text-lg font-extrabold">{item.childName.charAt(0).toUpperCase()}</span>
+        <ChildAvatar name={item.childName} gender={item.childGender} />
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-lg font-extrabold">{item.childName}</h2>
           <p className="text-sm text-ink-soft">{parentName ? `Famille : ${parentName}` : "Parents non renseignés"} · {periodLabel}</p>

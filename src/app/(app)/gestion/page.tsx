@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { ChildAvatar } from "@/components/child-avatar";
 import { ChildForm } from "@/components/child-form";
 import { HubLink, SectionTitle } from "@/components/hub-link";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
@@ -37,7 +38,7 @@ async function Dashboard() {
   const [children, events, contracts, expenses, received] = await Promise.all([
     supabase
       .from("children")
-      .select("id, first_name, last_name, birth_date")
+      .select("id, first_name, last_name, birth_date, gender")
       .eq("organization_id", membership.organizationId)
       .eq("status", "active")
       .order("first_name"),
@@ -114,9 +115,7 @@ async function Dashboard() {
               <li key={child.id as string}>
                 <Link href={`/gestion/${child.id as string}`} className="flex min-h-14 items-center justify-between gap-3 py-2">
                   <span className="flex items-center gap-3 font-bold">
-                    <span aria-hidden className="flex size-10 items-center justify-center rounded-full bg-sun font-extrabold">
-                      {(child.first_name as string).charAt(0).toUpperCase()}
-                    </span>
+                    <ChildAvatar name={child.first_name as string} gender={child.gender as string | null} size="sm" />
                     {[child.first_name, child.last_name].filter(Boolean).join(" ")}
                   </span>
                   <span className="text-sm text-ink-soft">famille · santé · contrat ›</span>
