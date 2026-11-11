@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui";
 import { LABELS, type ActionType } from "@/lib/journal/labels";
+import { detectSpeechEnv, explainSpeechError, keyboardTip, MIC_NO_ANSWER, NOTHING_HEARD, type SpeechEnv } from "@/lib/voice/errors";
 import { parseVoice, type VoiceAction } from "@/lib/voice/parse";
 
 type Child = { id: string; firstName: string };
@@ -14,6 +15,7 @@ type Recognition = {
   continuous: boolean;
   start(): void;
   stop(): void;
+  onstart: (() => void) | null;
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
   onerror: ((e: { error: string }) => void) | null;
   onend: (() => void) | null;
@@ -25,6 +27,12 @@ const getCtor = () => {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition;
 };
 const subscribeNone = () => () => {};
+/** Environnement (iPhone, application installée) : lu côté navigateur uniquement, sans décalage à l'hydratation. */
+const getEnvKey = () => {
+  const env = detectSpeechEnv(navigator as Navigator & { standalone?: boolean }, window.matchMedia("(display-mode: standalone)").matches);
+  return `${env.ios ? "ios" : "other"}${env.standalone ? "-app" : ""}`;
+};
+const WATCHDOG_MS = 7000;
 const ACTIONS: VoiceAction[] = ["arrival", "departure", "meal", "nap", "nap_end", "diaper", "care"];
 
 type Props = {
@@ -40,12 +48,30 @@ type Props = {
  */
 export function VoicePanel({ kids, onValidate, onClose }: Props) {
   const supported = useSyncExternalStore(subscribeNone, () => Boolean(getCtor()), () => false);
+  const envKey = useSyncExternalStore(subscribeNone, getEnvKey, () => "other");
+  const env: SpeechEnv = { ios: envKey.startsWith("ios"), standalone: envKey.endsWith("-app") };
   const [text, setText] = useState("");
   const [rows, setRows] = useState<VoiceRow[] | null>(null);
   const [listening, setListening] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const recognition = useRef<Recognition | null>(null);
+  const textarea = useRef<HTMLTextAreaElement | null>(null);
+  const watchdog = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [starting, setStarting] = useState(false);
+
+  useEffect(
+    () => () => {
+      if (watchdog.current) clearTimeout(watchdog.current);
+      recognition.current?.stop();
+    },
+    [],
+  );
+
+  const clearWatchdog = () => {
+    if (watchdog.current) clearTimeout(watchdog.current);
+    watchdog.current = null;
+  };
 
   function analyse(value: string) {
     const result = parseVoice(value, kids);
@@ -73,11 +99,23 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
     if (!Ctor) return;
     setMessage(null);
     setRows(null);
-    const rec = new Ctor();
+    let rec: Recognition;
+    try {
+      rec = new Ctor();
+    } catch {
+      setMessage(explainSpeechError("service-not-allowed", env));
+      return;
+    }
     rec.lang = "fr-FR";
     rec.interimResults = true;
     rec.continuous = false;
     let finalText = "";
+    let failed = false;
+    rec.onstart = () => {
+      clearWatchdog();
+      setStarting(false);
+      setListening(true);
+    };
     rec.onresult = (e) => {
       let line = "";
       for (let i = 0; i < e.results.length; i += 1) line += e.results[i][0].transcript;
@@ -85,16 +123,41 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
       setText(line);
     };
     rec.onerror = (e) => {
+      failed = true;
+      clearWatchdog();
+      setStarting(false);
       setListening(false);
-      setMessage(e.error === "not-allowed" ? "Le micro est refusé : autorisez-le dans les réglages du navigateur." : "La dictée a échoué. Réessayez ou écrivez la phrase.");
+      setMessage(explainSpeechError(e.error, env));
     };
     rec.onend = () => {
+      clearWatchdog();
+      setStarting(false);
       setListening(false);
       if (finalText.trim()) analyse(finalText);
+      else if (!failed) setMessage(NOTHING_HEARD);
     };
     recognition.current = rec;
-    setListening(true);
-    rec.start();
+    setStarting(true);
+    // Délai de sécurité : si le navigateur ne démarre jamais l'écoute (autorisation en attente, dictée bloquée), on le dit.
+    watchdog.current = setTimeout(() => {
+      failed = true;
+      setStarting(false);
+      setListening(false);
+      setMessage(MIC_NO_ANSWER);
+      try {
+        rec.stop();
+      } catch {
+        /* déjà arrêté */
+      }
+    }, WATCHDOG_MS);
+    try {
+      rec.start();
+    } catch {
+      failed = true;
+      clearWatchdog();
+      setStarting(false);
+      setMessage(explainSpeechError("service-not-allowed", env));
+    }
   }
 
   function stop() {
@@ -124,13 +187,13 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
       {supported ? (
         <button
           type="button"
-          onClick={listening ? stop : listen}
+          onClick={listening || starting ? stop : listen}
           className={`mt-3 flex min-h-16 w-full items-center justify-center gap-3 rounded-2xl text-lg font-extrabold text-white ${listening ? "animate-pulse bg-danger" : "bg-primary"}`}
         >
           <span aria-hidden className="text-3xl">
             {listening ? "⏹️" : "🎙️"}
           </span>
-          {listening ? "J’écoute… appuyez pour finir" : "Appuyer et parler"}
+          {listening ? "J’écoute… appuyez pour finir" : starting ? "Démarrage du micro…" : "Appuyer et parler"}
         </button>
       ) : (
         <p className="mt-3 rounded-2xl bg-sun-soft px-4 py-3 text-sm">
@@ -138,15 +201,28 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
         </p>
       )}
 
+      <button
+        type="button"
+        onClick={() => textarea.current?.focus()}
+        className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line bg-surface px-4 text-sm font-bold text-primary"
+      >
+        <span aria-hidden>⌨️</span> Écrire ou dicter avec le clavier
+      </button>
+      <p className="mt-1.5 text-xs text-ink-soft">{keyboardTip(env)}</p>
+
       <label className="mt-3 flex flex-col gap-1.5 text-sm font-bold">
         Ce que j’ai compris (modifiable)
-        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} className="min-h-16 rounded-2xl border border-line bg-cream p-3 text-base font-normal" />
+        <textarea ref={textarea} value={text} onChange={(e) => setText(e.target.value)} rows={2} className="min-h-16 rounded-2xl border border-line bg-cream p-3 text-base font-normal" />
       </label>
-      <Button type="button" variant="ghost" className="mt-2 w-full" onClick={() => analyse(text)} disabled={!text.trim()}>
+      <Button type="button" variant={text.trim() ? "primary" : "ghost"} className="mt-2 w-full" onClick={() => analyse(text)} disabled={!text.trim()}>
         Analyser le texte
       </Button>
 
-      {message ? <p className="mt-3 rounded-2xl bg-sun-soft px-4 py-3 text-sm">{message}</p> : null}
+      {message ? (
+        <p role="status" className="mt-3 rounded-2xl bg-sun-soft px-4 py-3 text-sm">
+          {message}
+        </p>
+      ) : null}
 
       {rows && rows.length > 0 ? (
         <div className="mt-4">
