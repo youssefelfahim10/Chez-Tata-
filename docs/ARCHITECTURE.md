@@ -22,7 +22,7 @@ de lire ou d'écrire les données d'un autre espace.
 | `src/lib/journal/day.ts` | Logique pure du journal (fuseau Europe/Paris, résumé de journée) |
 | `src/app/actions/` | Actions serveur (validation zod, session revérifiée à chaque appel) |
 | `src/app/(auth)/`, `bienvenue/`, `invitation/` | Connexion, inscription, création d'espace, invitation |
-| `src/app/(app)/` | Les 4 écrans : Aujourd'hui, Planning, Gestion, Réglages |
+| `src/app/(app)/` | Les 4 onglets : Aujourd'hui, Planning, Gestion, Profil (Espace et données depuis le profil) |
 | `tests/db/` | Tests d'isolation RLS (PGlite + shim Supabase) |
 | `tests/unit/` | Tests de logique métier |
 

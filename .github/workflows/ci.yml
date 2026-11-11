@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/relaxed-heisenberg-dk0uud]
   pull_request:
 
 permissions:
