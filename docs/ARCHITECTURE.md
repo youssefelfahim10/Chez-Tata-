@@ -135,3 +135,15 @@ Chaque point fait l'objet d'une issue.
   Destination de retour limitée aux chemins internes (`safeNextPath`) ; erreur ou refus → `/connexion?erreur=google`.
 - Seuls nom et adresse e-mail sont reçus de Google. Le prénom alimente le profil (migration `…0009`), jamais une valeur inventée.
 - L'e-mail et le mot de passe restent disponibles. Mise en service (Google Cloud + Supabase) : `docs/GOOGLE_SIGNIN.md`.
+
+## Démonstration publique (`/demo`)
+
+- **Aucune donnée, aucun compte, aucun appel serveur** : tout s'exécute dans le navigateur du visiteur, avec des enfants fictifs. Rien à nettoyer, rien à abuser,
+  aucun risque de voir saisir de vraies données dans une base partagée. La page est publique (`PUBLIC_PATHS` dans `src/proxy.ts`).
+- **Présentation animée** (« film » de 8 chapitres) : scénario et machine à états du lecteur dans `src/lib/demo/script.ts` (pure, testée) ; écrans dans
+  `src/components/demo/screens.tsx`. Les animations sont en CSS (classes `d-*` dans `globals.css`, délais via `--d`) ; le lecteur gère pause, chapitres, clavier (← →).
+  Mouvement réduit : pas de lecture automatique, contenu affiché dans son état final. L'onglet caché met en pause.
+- **« Essayer vous-même »** (`src/components/demo/sandbox.tsx`) : les vrais gestes sur deux enfants fictifs. Les règles (une arrivée par présence, une sieste à la fois)
+  et le **bilan** viennent du vrai code (`summarizeChildDay`, `buildDayReport`, `renderSummary`), donc ce que voit le visiteur est ce que produit l'application.
+- **Urgence en démo** : numéros fictifs ; les boutons 15 / 112 / 18 ne composent jamais de numéro (`button`, pas `tel:`).
+- L'ancien accès équipe (compte de démonstration protégé par code, `src/app/actions/demo.ts`) reste disponible, sous « Accès équipe » sur l'accueil.

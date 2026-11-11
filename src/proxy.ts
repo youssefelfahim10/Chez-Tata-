@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { hardenCookie } from "@/lib/supabase/cookies";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
-const PUBLIC_PATHS = ["/connexion", "/inscription", "/auth", "/configuration", "/hors-ligne", "/confidentialite", "/conditions", "/mentions-legales", "/suppression-compte", "/aide", "/.well-known"];
+const PUBLIC_PATHS = ["/demo", "/connexion", "/inscription", "/auth", "/configuration", "/hors-ligne", "/confidentialite", "/conditions", "/mentions-legales", "/suppression-compte", "/aide", "/.well-known"];
 
 /**
  * Rafraîchit la session Supabase et applique une première barrière de

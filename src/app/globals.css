@@ -86,3 +86,50 @@ body {
 }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ---------------------------------------------------------------------------
+ * Démonstration animée (/demo). Tout est désactivé pour les personnes qui demandent moins de
+ * mouvement : le contenu reste visible dans son état final, et le lecteur ne démarre pas seul.
+ * Les décalages se règlent avec --d (délai), --t (durée) et --n (nombre de pas de la frappe).
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes d-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+  @keyframes d-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes d-out { to { opacity: 0; visibility: hidden; } }
+  @keyframes d-pop { 0% { opacity: 0; transform: scale(0.6); } 70% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
+  @keyframes d-press { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.92); } }
+  @keyframes d-finger {
+    0% { opacity: 0; transform: translate(30px, 38px) scale(1); }
+    26% { opacity: 1; transform: translate(0, 0) scale(1); }
+    44% { opacity: 1; transform: translate(0, 0) scale(0.86); }
+    58% { opacity: 1; transform: translate(0, 0) scale(1); }
+    100% { opacity: 0; transform: translate(0, 0) scale(1); }
+  }
+  @keyframes d-ripple { 0% { opacity: 0.55; transform: scale(0.2); } 100% { opacity: 0; transform: scale(1.7); } }
+  @keyframes d-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes d-bar { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }
+  @keyframes d-scene { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+  @keyframes d-caption { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes d-glow { 0%, 100% { box-shadow: 0 0 0 0 rgb(201 162 77 / 0.5); } 50% { box-shadow: 0 0 0 12px rgb(201 162 77 / 0); } }
+
+  .d-in { animation: d-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d, 0s) both; }
+  .d-fade { animation: d-fade 0.5s ease var(--d, 0s) both; }
+  .d-out { animation: d-out 0.3s ease var(--d, 0s) forwards; }
+  .d-pop { animation: d-pop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d, 0s) both; }
+  .d-press { animation: d-press 0.42s ease var(--d, 0s) both; }
+  .d-finger { animation: d-finger 1.6s ease var(--d, 0s) both; }
+  .d-ripple { animation: d-ripple 0.8s ease-out var(--d, 0s) both; }
+  .d-type { animation: d-type var(--t, 1.4s) steps(var(--n, 20)) var(--d, 0s) both; }
+  .d-bar { animation: d-bar 0.9s ease-in-out var(--d, 0s) infinite; transform-origin: center; }
+  .d-scene { animation: d-scene 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .d-caption { animation: d-caption 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .d-glow { animation: d-glow 2.2s ease-out infinite; }
+
+  /* Pause : fige toutes les animations du chapitre en cours. */
+  [data-paused="true"] * { animation-play-state: paused !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-out { display: none; }
+  .d-finger, .d-ripple { display: none; }
+}

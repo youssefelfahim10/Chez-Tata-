@@ -101,6 +101,7 @@ export default function Page() {
             <a href="#comment" className="hover:text-ink">Comment ça marche</a>
             <a href="#fonctions" className="hover:text-ink">Fonctions</a>
             <a href="#securite" className="hover:text-ink">Sécurité</a>
+            <Link href="/demo" className="hover:text-ink">Démo</Link>
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/connexion" className="inline-flex min-h-11 items-center rounded-xl px-4 font-semibold hover:bg-primary-soft">Se connecter</Link>
@@ -123,7 +124,7 @@ export default function Page() {
           </p>
           <div className="anim-up flex flex-wrap gap-3" style={{ animationDelay: "0.24s" }}>
             <Link href="/inscription" className={LINK_PRIMARY}>Créer mon espace</Link>
-            <Link href="/connexion" className={LINK_GHOST}>Se connecter</Link>
+            <Link href="/demo" className={LINK_GHOST}>Voir la démo</Link>
           </div>
           <p className="anim-up flex items-center gap-2 text-sm text-ink-soft" style={{ animationDelay: "0.32s" }}>
             <Icon name="shield" className="size-4 text-gold-deep" /> Hébergé dans l’Union européenne · aucun envoi automatique
@@ -231,7 +232,7 @@ export default function Page() {
         <section className="mx-auto w-full max-w-md px-4 pb-20" aria-labelledby="demo-title">
           <details className="reveal group rounded-card border border-line bg-surface p-5 shadow-luxe">
             <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-base font-bold" id="demo-title">
-              <span className="flex items-center gap-2">Accès démo <span className="rounded-full bg-sun-soft px-2 py-0.5 text-xs font-bold text-gold-deep">équipe</span></span>
+              <span className="flex items-center gap-2">Accès équipe <span className="rounded-full bg-sun-soft px-2 py-0.5 text-xs font-bold text-gold-deep">équipe</span></span>
               <Icon name="chevron" className="size-5 text-ink-soft transition group-open:rotate-180" />
             </summary>
             <p className="mb-4 mt-2 text-sm text-ink-soft">
