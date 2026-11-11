@@ -164,6 +164,9 @@ Chaque point fait l'objet d'une issue.
 - **Profil** (`caregiver_profiles`, migration `…0010`) : identité, adresse du lieu d'accueil, agrément (numéro, dates, nombre d'enfants), assurance. **Strictement personnel** :
   la RLS ne laisse lire que son propre profil, y compris pour une responsable de MAM. Ni numéro de sécurité sociale ni coordonnées bancaires. Il pré-remplit contrats et factures
   (`fillEmployeeFromProfile` : il complète les blancs, n'écrase jamais) et alimente les **rappels d'échéance** (agrément, assurance ; bandeau sur « Aujourd'hui » et sur le profil).
+- **Corriger sans rien perdre** (écran Aujourd'hui) : chaque geste de la « Journée de … » a « Modifier » (heure, réveil de sieste, précisions) et « Annuler ».
+  Annuler = suppression logique (`deleted_at`) : le geste passe dans « Annulés aujourd'hui » et se **rétablit** d'un geste (opération `restore`). « Modifier » (opération `edit`) laisse la trace dans `daily_event_revisions`
+  et propose « Annuler la modification ». Même un geste créé puis annulé hors ligne part au serveur avant d'être archivé.
 - **Aide à la déclaration d'impôts** (`/profil/impots`, `src/lib/tax/`) : récapitulatif annuel par enfant, d'après les factures finalisées (année de **paiement**) et les présences du journal.
   Calcul du **régime de la somme forfaitaire** publié sur impots.gouv.fr : part imposable = rémunérations + indemnités − 3 × SMIC horaire × jours de garde (4 × avec majoration de salaire ;
   proratisé en dessous de 8 h ; jamais de déficit). L'exemple officiel (852 €) est un test. Le SMIC n'est prérempli que pour 2025 (11,88 €) : pour une autre année il est à saisir.

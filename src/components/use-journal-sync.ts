@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { JournalEvent } from "@/lib/journal/day";
-import { applyOps, enqueueOp, flushQueue, forScope, type Op, type SendResult } from "@/lib/offline/ops";
+import { applyOpsWithArchive, enqueueOp, flushQueue, forScope, type Op, type SendResult } from "@/lib/offline/ops";
 import { getOnline, getOnlineServer, queueStore, subscribeOnline } from "@/lib/offline/store";
 
 export type SendFn = (input: { userId: string; orgId: string; op: Op }) => Promise<SendResult>;
@@ -11,6 +11,8 @@ type Params = {
   userId: string;
   orgId: string;
   serverEvents: JournalEvent[];
+  /** Gestes annulés aujourd'hui (suppression logique côté serveur). */
+  serverArchived?: JournalEvent[];
   send: SendFn;
   /** Appelé quand des opérations ont été envoyées : recharger les données du serveur. */
   onSynced: () => void;
@@ -18,13 +20,15 @@ type Params = {
   forceOffline?: boolean;
 };
 
+const NO_ARCHIVE: JournalEvent[] = [];
+
 type Awaiting = { base: JournalEvent[] | null; ops: Op[] };
 
 /**
  * Journal « hors ligne d'abord » : chaque geste est appliqué à l'écran tout de
  * suite, gardé sur l'appareil, puis envoyé dès que le réseau le permet.
  */
-export function useJournalSync({ userId, orgId, serverEvents, send, onSynced, forceOffline = false }: Params) {
+export function useJournalSync({ userId, orgId, serverEvents, serverArchived = NO_ARCHIVE, send, onSynced, forceOffline = false }: Params) {
   const queue = useSyncExternalStore(queueStore.subscribe, queueStore.get, queueStore.getServer);
   const browserOnline = useSyncExternalStore(subscribeOnline, getOnline, getOnlineServer);
   const online = browserOnline && !forceOffline;
@@ -96,10 +100,10 @@ export function useJournalSync({ userId, orgId, serverEvents, send, onSynced, fo
 
   const mine = useMemo(() => forScope(queue, userId, orgId), [queue, userId, orgId]);
   // Les opérations déjà envoyées restent appliquées jusqu'à ce que le serveur renvoie ses données.
-  const events = useMemo(
-    () => applyOps(serverEvents, [...(awaiting.base === serverEvents ? awaiting.ops : []), ...mine.map((q) => q.op)]),
-    [serverEvents, awaiting, mine],
+  const { events, archived } = useMemo(
+    () => applyOpsWithArchive(serverEvents, serverArchived, [...(awaiting.base === serverEvents ? awaiting.ops : []), ...mine.map((q) => q.op)]),
+    [serverEvents, serverArchived, awaiting, mine],
   );
 
-  return { events, pending: mine.length, online, syncing, problem, clearProblem: () => setProblem(null), submit, flush };
+  return { events, archived, pending: mine.length, online, syncing, problem, clearProblem: () => setProblem(null), submit, flush };
 }

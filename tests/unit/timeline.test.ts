@@ -42,4 +42,16 @@ describe("journée de l'enfant", () => {
   it("ignore les types inconnus", () => {
     expect(buildTimeline([ev("1", "bizarre", "2026-11-11T07:00:00Z")])).toEqual([]);
   });
+
+  it("prépare la correction : heures « HH:MM » de Paris et précisions brutes", () => {
+    const [nap, meal] = buildTimeline([
+      ev("1", "nap", "2026-11-11T12:30:00Z", { ended_at: "2026-11-11T14:10:00Z" }),
+      ev("2", "meal", "2026-11-11T15:00:00Z", { event_payload: { amount: "most", note: "ok", inconnu: "x" } }),
+    ]);
+    expect(nap.startValue).toBe("13:30");
+    expect(nap.endValue).toBe("15:10");
+    expect(nap.endedAt).toBe("2026-11-11T14:10:00Z");
+    expect(meal.endValue).toBeNull();
+    expect(meal.values).toEqual({ amount: "most", note: "ok" });
+  });
 });

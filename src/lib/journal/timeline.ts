@@ -1,5 +1,5 @@
 import { detailLabel, type DetailKey } from "@/lib/journal/details";
-import { formatDuration, formatTime, type JournalEvent } from "@/lib/journal/day";
+import { formatDuration, formatTime, parisHHMM, type JournalEvent } from "@/lib/journal/day";
 import { LABELS, type ActionType } from "@/lib/journal/labels";
 
 /** Un geste de la journée, prêt à être affiché dans la carte de l'enfant. Rien n'est déduit : seulement ce qui est saisi. */
@@ -14,6 +14,8 @@ export type TimelineItem = {
   startedAt: string;
   /** Sieste : heure de réveil. */
   endTime: string | null;
+  /** Instant du réveil (ISO), pour pouvoir le corriger puis revenir en arrière. */
+  endedAt: string | null;
   /** Sieste en cours. */
   open: boolean;
   /** Durée d'une sieste terminée. */
@@ -22,6 +24,11 @@ export type TimelineItem = {
   detail: string | null;
   /** Ce geste accepte une précision (repas, change, soin). */
   canDetail: "meal" | "diaper" | "care" | null;
+  /** « HH:MM » (Paris) pour les champs horaires de la correction. */
+  startValue: string;
+  endValue: string | null;
+  /** Précisions brutes (clé → valeur) pour pré-remplir la correction. */
+  values: Record<string, string>;
 };
 
 const SHOWN = new Set(["arrival", "departure", "meal", "nap", "diaper", "care"]);
@@ -50,10 +57,14 @@ export function buildTimeline(events: JournalEvent[]): TimelineItem[] {
         time: formatTime(e.started_at),
         startedAt: e.started_at,
         endTime: ended ? formatTime(ended) : null,
+        endedAt: ended,
         open: type === "nap" && !e.ended_at,
         duration: ended ? formatDuration(new Date(ended).getTime() - new Date(e.started_at).getTime()) : null,
         detail,
         canDetail: DETAIL_GROUP[type] ?? null,
+        startValue: parisHHMM(e.started_at),
+        endValue: ended ? parisHHMM(ended) : null,
+        values: Object.fromEntries(KEYS.flatMap((k) => (typeof e.event_payload?.[k] === "string" ? [[k, e.event_payload[k] as string]] : []))),
       };
     });
 }

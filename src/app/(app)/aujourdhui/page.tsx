@@ -16,7 +16,7 @@ async function Today() {
   const now = new Date();
   const { start, end, isoDate } = parisDayBounds(now);
 
-  const [profile, children, events, health, caregiver] = await Promise.all([
+  const [profile, children, events, archived, health, caregiver] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
     supabase
       .from("children")
@@ -32,6 +32,15 @@ async function Today() {
       .gte("started_at", start.toISOString())
       .lt("started_at", end.toISOString())
       .order("started_at"),
+    // Gestes annulés aujourd'hui : gardés en archive, on peut toujours les rétablir.
+    supabase
+      .from("daily_events")
+      .select("id, child_id, event_type, started_at, ended_at, client_operation_id, event_payload")
+      .eq("organization_id", membership.organizationId)
+      .not("deleted_at", "is", null)
+      .gte("started_at", start.toISOString())
+      .lt("started_at", end.toISOString())
+      .order("started_at"),
     supabase.from("child_health").select("child_id, allergies").eq("organization_id", membership.organizationId).not("allergies", "is", null),
     // Échéances d'agrément et d'assurance (profil strictement personnel).
     supabase.from("caregiver_profiles").select("agreement_expiry, insurance_expiry").eq("organization_id", membership.organizationId).eq("user_id", user.id).maybeSingle(),
@@ -39,6 +48,8 @@ async function Today() {
   if (children.error || events.error) throw new Error("Chargement de la journée impossible.");
   // Le badge d'allergie est un confort : si la fiche santé est indisponible (migration pas encore appliquée),
   // l'écran principal doit rester utilisable.
+  // L'archive est un confort : si elle est indisponible, la journée reste utilisable.
+  if (archived.error) console.error("Archives indisponibles", archived.error.code);
   if (health.error) console.error("Fiche santé indisponible", health.error.code);
 
   const allergies = new Map((health.data ?? []).map((h) => [h.child_id as string, (h.allergies as string).trim()]));
@@ -70,6 +81,7 @@ async function Today() {
           orgId={membership.organizationId}
           kids={kids}
           events={(events.data ?? []) as JournalEvent[]}
+          archivedEvents={archived.error ? [] : ((archived.data ?? []) as JournalEvent[])}
           serverNow={now.toISOString()}
         />
       )}
