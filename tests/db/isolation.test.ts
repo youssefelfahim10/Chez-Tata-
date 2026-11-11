@@ -31,6 +31,7 @@ const TENANT_TABLES = [
   "daily_events",
   "daily_event_revisions",
   "attendance_records",
+  "child_health",
   "monthly_statements",
   "payments",
   "expenses",
@@ -62,6 +63,10 @@ async function seedFullDataset(user: TestUser, org: string, firstName: string) {
     await q(
       "insert into child_family_links (organization_id, child_id, family_id) values ($1, $2, $3)",
       [org, child, family],
+    );
+    await q(
+      "insert into child_health (organization_id, child_id, allergies, updated_by) values ($1, $2, 'Allergie fictive', $3)",
+      [org, child, user.id],
     );
     const contract = await one(
       `insert into contracts (organization_id, child_id, assigned_assmat_id, start_date,
@@ -143,6 +148,22 @@ describe("configuration de sécurité du schéma", () => {
       "select routine_name from information_schema.role_routine_grants where grantee in ('anon', 'PUBLIC') and routine_schema in ('public', 'private')",
     );
     expect(functions).toEqual([]);
+  });
+
+  it("reprend le prénom fourni par Google, sans rien inventer", async () => {
+    const cases: [Record<string, string>, string][] = [
+      [{ given_name: "Marie", full_name: "Marie Test" }, "Marie"],
+      [{ full_name: "Jeanne Exemple" }, "Jeanne"],
+      [{ name: "Léa Fictive" }, "Léa"],
+      [{ display_name: "Tata", given_name: "Autre" }, "Tata"],
+      [{}, ""],
+    ];
+    for (const [meta, expected] of cases) {
+      const email = `google-${Math.random().toString(36).slice(2)}@exemple.test`;
+      const rows = await t.admin("insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id", [email, meta]);
+      const profile = await t.admin("select display_name from profiles where id = $1", [rows[0].id]);
+      expect(profile, JSON.stringify(meta)).toEqual([{ display_name: expected }]);
+    }
   });
 
   it("crée un profil à l'inscription", async () => {

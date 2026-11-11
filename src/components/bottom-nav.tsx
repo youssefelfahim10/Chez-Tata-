@@ -30,7 +30,7 @@ export function BottomNav() {
                   active ? "text-primary" : "text-ink-soft"
                 }`}
               >
-                <span aria-hidden className={`rounded-full px-4 py-0.5 text-xl ${active ? "bg-primary-soft" : ""}`}>
+                <span aria-hidden className={`rounded-full px-4 py-0.5 text-xl ${active ? "bg-sun-soft" : ""}`}>
                   {tab.icon}
                 </span>
                 {tab.label}

@@ -17,10 +17,11 @@ import {
   type ChildDay,
   type JournalEvent,
 } from "@/lib/journal/day";
-import { LABELS, type ActionType } from "@/lib/journal/labels";
+import { ACTION_EMOJI, ACTION_TONE, LABELS, type ActionType } from "@/lib/journal/labels";
+import { TONES } from "@/lib/ui/tones";
 import { isPlausibleTime, type Op } from "@/lib/offline/ops";
 
-export type BoardChild = { id: string; firstName: string };
+export type BoardChild = { id: string; firstName: string; allergies?: string | null };
 
 type Props = {
   userId: string;
@@ -35,9 +36,9 @@ type Props = {
 };
 
 const STATUS: Record<ChildDay["status"], { text: string; className: string }> = {
-  expected: { text: "Pas encore arrivé", className: "bg-sun-soft text-ink" },
+  expected: { text: "Pas encore arrivé", className: "bg-sun-soft text-gold-deep" },
   present: { text: "Présent", className: "bg-leaf-soft text-leaf" },
-  gone: { text: "Parti", className: "bg-sky-soft text-ink" },
+  gone: { text: "Parti", className: "bg-primary-soft text-primary" },
 };
 
 type DetailGroupName = "meal" | "diaper" | "care";
@@ -188,13 +189,13 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, serverNo
           const napping = Boolean(day.openNapId);
           const actions: ActionType[] = ["arrival", "departure", "meal", napping ? "nap_end" : "nap", "diaper", "care"];
           const disabled = (type: ActionType) => (type === "arrival" && day.status === "present") || (type === "departure" && day.status !== "present");
-          const counts: [string, number][] = [
-            ["🍽️ repas", day.counts.meal],
-            ["😴 sieste", day.counts.nap],
-            ["🧷 change", day.counts.diaper],
-            ["🩹 soin", day.counts.care],
+          const counts: [ActionType, string, number][] = [
+            ["meal", "repas", day.counts.meal],
+            ["nap", "sieste", day.counts.nap],
+            ["diaper", "change", day.counts.diaper],
+            ["care", "soin", day.counts.care],
           ];
-          const summary = counts.filter(([, n]) => n > 0).map(([label, n]) => `${label}${n > 1 ? "s" : ""} ×${n}`);
+          const summary = counts.filter(([, , n]) => n > 0);
           const arrival = day.arrivalAt ? formatTime(day.arrivalAt) : null;
           const departure = day.departureAt ? formatTime(day.departureAt) : null;
 
@@ -212,15 +213,33 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, serverNo
                       : [arrival && `Arrivée ${arrival}`, departure && `Départ ${departure}`, formatDuration(day.presenceMs)].filter(Boolean).join(" · ")}
                   </p>
                 </div>
-                <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${STATUS[day.status].className}`}>
+                <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${napping ? TONES.dusk.chip : STATUS[day.status].className}`}>
                   {napping ? "😴 Sieste" : STATUS[day.status].text}
                 </span>
               </div>
 
-              {napping || summary.length > 0 ? (
-                <p className="mt-3 text-sm text-ink-soft">
-                  {[napping && day.openNapSince && `😴 Dort depuis ${formatTime(day.openNapSince)}`, ...summary].filter(Boolean).join(" · ")}
+              {kid.allergies ? (
+                <p className="mt-3 flex items-start gap-2 rounded-xl bg-pink-soft px-3 py-2 text-sm font-bold text-danger">
+                  <span aria-hidden>⚠️</span>
+                  <span>Allergie : {kid.allergies}</span>
                 </p>
+              ) : null}
+
+              {(napping && day.openNapSince) || summary.length > 0 ? (
+                <ul className="mt-3 flex flex-wrap gap-1.5">
+                  {napping && day.openNapSince ? (
+                    <li className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold text-ink ${TONES.dusk.box}`}>
+                      <span aria-hidden>😴</span> Dort depuis {formatTime(day.openNapSince)}
+                    </li>
+                  ) : null}
+                  {summary.map(([type, label, n]) => (
+                    <li key={type} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold text-ink ${TONES[ACTION_TONE[type]].box}`}>
+                      <span aria-hidden>{ACTION_EMOJI[type]}</span>
+                      {label}
+                      {n > 1 ? "s" : ""} ×{n}
+                    </li>
+                  ))}
+                </ul>
               ) : null}
 
               <div className="mt-4 grid grid-cols-3 gap-2">
@@ -231,10 +250,10 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, serverNo
                     onClick={() => act(kid, type)}
                     disabled={disabled(type)}
                     aria-label={`${LABELS[type].label} — ${kid.firstName}`}
-                    className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border text-sm font-extrabold transition active:scale-95 disabled:opacity-35 ${LABELS[type].tone}`}
+                    className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border text-sm font-extrabold text-ink transition active:scale-95 disabled:opacity-35 ${TONES[ACTION_TONE[type]].box}`}
                   >
                     <span aria-hidden className="text-3xl">
-                      {LABELS[type].icon}
+                      {ACTION_EMOJI[type]}
                     </span>
                     {LABELS[type].label}
                   </button>
@@ -250,6 +269,15 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, serverNo
                   Bilan du jour sur WhatsApp
                 </Link>
               ) : null}
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Link href={`/aujourdhui/messages/${kid.id}`} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-3 text-sm font-bold text-primary">
+                  <span aria-hidden>💬</span> Message
+                </Link>
+                <Link href={`/aujourdhui/urgence/${kid.id}`} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-danger/40 bg-surface px-3 text-sm font-bold text-danger">
+                  <span aria-hidden>🚨</span> Urgence
+                </Link>
+              </div>
             </li>
           );
         })}
@@ -331,7 +359,7 @@ function ConnectionBanner({ online, pending, syncing, problem, onDismiss }: { on
   }
   if (pending > 0) {
     return (
-      <p role="status" className="rounded-card bg-sky-soft px-4 py-3 text-sm font-bold">
+      <p role="status" className="rounded-card bg-primary-soft px-4 py-3 text-sm font-bold text-primary">
         {syncing ? "🔄 Envoi en cours…" : `⏳ ${pending} saisie${pending > 1 ? "s" : ""} à envoyer`}
       </p>
     );

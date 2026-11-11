@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ChildHealthForm } from "@/components/child-health-form";
 import { ContractForm, EndContractForm, FamilyForm } from "@/components/family-contract-forms";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace } from "@/lib/auth/session";
+import { contactsFromJson } from "@/lib/health/schema";
 import { parisDayBounds } from "@/lib/journal/day";
 import { formatDateFR, formatDecimalHours, formatEuros } from "@/lib/sheet/compute";
 import { createClient } from "@/lib/supabase/server";
@@ -20,7 +22,7 @@ async function Detail({ params }: { params: Promise<{ childId: string }> }) {
   const supabase = await createClient();
   const today = parisDayBounds(new Date()).isoDate;
 
-  const [child, links, contracts] = await Promise.all([
+  const [child, links, contracts, health] = await Promise.all([
     supabase
       .from("children")
       .select("id, first_name, last_name, birth_date")
@@ -40,8 +42,16 @@ async function Detail({ params }: { params: Promise<{ childId: string }> }) {
       .eq("child_id", childId)
       .eq("assigned_assmat_id", user.id)
       .order("start_date", { ascending: false }),
+    supabase
+      .from("child_health")
+      .select("allergies, diet, medication, medical_notes, doctor_name, doctor_phone, emergency_contacts, authorized_pickups")
+      .eq("organization_id", membership.organizationId)
+      .eq("child_id", childId)
+      .maybeSingle(),
   ]);
   if (child.error || links.error || contracts.error) throw new Error("Chargement de la fiche enfant impossible.");
+  // La fiche santé indisponible (migration pas encore appliquée) ne doit pas bloquer famille et contrat.
+  if (health.error) console.error("Fiche santé indisponible", health.error.code);
   if (!child.data) notFound();
 
   const c = child.data as Row;
@@ -81,6 +91,29 @@ async function Detail({ params }: { params: Promise<{ childId: string }> }) {
       <Card>
         <h2 className="mb-4 text-lg font-extrabold">Ajouter une famille</h2>
         <FamilyForm childId={childId} />
+      </Card>
+
+      <Card id="sante" className="scroll-mt-20">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-lg font-extrabold">Santé et urgences</h2>
+          <Link href={`/aujourdhui/urgence/${childId}`} className="inline-flex min-h-11 items-center rounded-xl border border-danger/40 px-4 text-sm font-bold text-danger">
+            Voir l’écran Urgence
+          </Link>
+        </div>
+        <p className="mb-4 mt-1 text-sm text-ink-soft">Allergies, traitement, médecin, contacts d’urgence et personnes autorisées à récupérer l’enfant.</p>
+        <ChildHealthForm
+          childId={childId}
+          defaults={{
+            allergies: (health.data?.allergies as string | null) ?? "",
+            diet: (health.data?.diet as string | null) ?? "",
+            medication: (health.data?.medication as string | null) ?? "",
+            medicalNotes: (health.data?.medical_notes as string | null) ?? "",
+            doctorName: (health.data?.doctor_name as string | null) ?? "",
+            doctorPhone: (health.data?.doctor_phone as string | null) ?? "",
+            emergencyContacts: contactsFromJson(health.data?.emergency_contacts),
+            authorizedPickups: contactsFromJson(health.data?.authorized_pickups),
+          }}
+        />
       </Card>
 
       <Card>

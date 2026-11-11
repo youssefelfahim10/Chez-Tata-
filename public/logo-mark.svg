@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Chez TaTa">
+  <defs>
+    <linearGradient id="bg" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#0a4aa6"/>
+      <stop offset="0.55" stop-color="#06377c"/>
+      <stop offset="1" stop-color="#01275f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.28" r="0.75">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.20"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="heart" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ff5c8d"/>
+      <stop offset="1" stop-color="#ed1359"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd23f"/>
+      <stop offset="1" stop-color="#fdb803"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M96 248 L256 112 L416 248"/>
+    <path d="M144 222 V372 a32 32 0 0 0 32 32 H336 a32 32 0 0 0 32-32 V222"/>
+  </g>
+  <path fill="url(#heart)" d="M256 376 C198 334 172 304 172 272 C172 245 192 227 216 227 C234 227 249 237 256 252 C263 237 278 227 296 227 C320 227 340 245 340 272 C340 304 314 334 256 376 Z"/>
+  <path transform="translate(-10 12)" fill="url(#sun)" d="M392 96 C394 118 402 126 424 128 C402 130 394 138 392 160 C390 138 382 130 360 128 C382 126 390 118 392 96 Z"/>
+</svg>

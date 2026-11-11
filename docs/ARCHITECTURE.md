@@ -112,3 +112,47 @@ Chaque point fait l'objet d'une issue.
 - **Facture** : `/gestion/factures`. « Paiement reçu » appelle `finalize_invoice` (une seule opération en base) : numéro continu propre à l'assistante
   (FAC-AAAA-0001), décompte figé, paiement enregistré. Double facturation d'un mois impossible, facture non modifiable.
 - **Partage** : feuille de partage du téléphone avec le PDF (WhatsApp compris), sinon téléchargement + ouverture de WhatsApp. Jamais d'envoi automatique.
+
+## Fiche santé, écran Urgence et messages aux parents
+
+- **Fiche santé** (`child_health`, migration `…0008`) : allergies, régime, traitement, remarques, médecin, contacts d'urgence et personnes
+  autorisées à récupérer l'enfant (6 au plus chacun). Données sensibles : tout est **saisi** par l'assistante, rien n'est déduit.
+  Visible des membres actifs de l'espace (utile en MAM en cas d'urgence). L'audit ne conserve que qui / quoi / quand, jamais les valeurs.
+  Contrainte d'unicité par `(organization_id, child_id)` : une erreur d'unicité ne révèle pas l'existence d'une fiche d'un autre espace.
+  Validation : `src/lib/health/schema.ts` (zod) ; action `saveChildHealth` ; formulaire dans `/gestion/[enfant]#sante`.
+- **Écran Urgence** `/aujourdhui/urgence/[enfant]` : 15 / 112 / 18, allergies mises en avant, médecin, parents, contacts, personnes autorisées,
+  chaque numéro en lien `tel:`. Un numéro absent ou inexploitable n'est jamais deviné. Comme toute page de l'appli, il est gardé « réseau d'abord »
+  par le service worker (disponible hors ligne s'il a déjà été ouvert ; oublié après 48 h et à la déconnexion).
+- **Allergie** : badge sur la carte de l'enfant dans « Aujourd'hui » (uniquement ce qui est saisi).
+- **Messages aux parents** `/aujourdhui/messages/[enfant]` : modèles dans `src/lib/messages/templates.ts` (absence, congés, horaire, venir chercher
+  l'enfant, apporter quelque chose, rappel de règlement). Le texte est relu, modifiable, puis ouvert dans WhatsApp par l'utilisatrice
+  (même composant que le bilan : case « J'ai relu », jamais d'envoi automatique). Un champ obligatoire manquant empêche tout texte ; aucun montant ni
+  symptôme n'est inventé.
+
+## Connexion avec Google
+
+- Action `signInWithGoogle` (`src/app/actions/auth.ts`) → Google → Supabase → `/auth/callback` (échange du code PKCE contre la session).
+  Destination de retour limitée aux chemins internes (`safeNextPath`) ; erreur ou refus → `/connexion?erreur=google`.
+- Seuls nom et adresse e-mail sont reçus de Google. Le prénom alimente le profil (migration `…0009`), jamais une valeur inventée.
+- L'e-mail et le mot de passe restent disponibles. Mise en service (Google Cloud + Supabase) : `docs/GOOGLE_SIGNIN.md`.
+
+## Démonstration publique (`/demo`)
+
+- **Aucune donnée, aucun compte, aucun appel serveur** : tout s'exécute dans le navigateur du visiteur, avec des enfants fictifs. Rien à nettoyer, rien à abuser,
+  aucun risque de voir saisir de vraies données dans une base partagée. La page est publique (`PUBLIC_PATHS` dans `src/proxy.ts`).
+- **Présentation animée** (« film » de 8 chapitres) : scénario et machine à états du lecteur dans `src/lib/demo/script.ts` (pure, testée) ; écrans dans
+  `src/components/demo/screens.tsx`. Les animations sont en CSS (classes `d-*` dans `globals.css`, délais via `--d`) ; le lecteur gère pause, chapitres, clavier (← →).
+  Mouvement réduit : pas de lecture automatique, contenu affiché dans son état final. L'onglet caché met en pause.
+- **« Essayer vous-même »** (`src/components/demo/sandbox.tsx`) : les vrais gestes sur deux enfants fictifs. Les règles (une arrivée par présence, une sieste à la fois)
+  et le **bilan** viennent du vrai code (`summarizeChildDay`, `buildDayReport`, `renderSummary`), donc ce que voit le visiteur est ce que produit l'application.
+- **Urgence en démo** : numéros fictifs ; les boutons 15 / 112 / 18 ne composent jamais de numéro (`button`, pas `tel:`).
+- L'ancien accès équipe (compte de démonstration protégé par code, `src/app/actions/demo.ts`) reste disponible, sous « Accès équipe » sur l'accueil.
+
+## Couleurs fonctionnelles
+
+- Une couleur = un sens, partout (écran du jour, démo, accueil, navigation) : **Arrivée** vert · **Départ** marine · **Repas** or · **Sieste/Réveil** violet doux ·
+  **Change** turquoise · **Soins** rose. Jetons et classes dans `src/lib/ui/tones.ts` ; icône et teinte de chaque geste dans `src/lib/journal/labels.ts`
+  (`ACTION_EMOJI`, `ACTION_TONE`). Pour changer une couleur : modifier ces deux fichiers (et les jetons `--color-*` de `globals.css`).
+- **Règle d'accessibilité** : la couleur n'est jamais seule. Chaque bouton garde son émoji et son texte (en encre foncée, contraste élevé). Les alertes (allergie,
+  urgence) restent en rose/rouge, réservé à l'attention.
+- **Les émojis sont conservés** (choix du produit : ils parlent tout de suite) et accompagnés de leur teinte. Les icônes fines ne servent que pour les commandes (lecture, pause, flèches, coche).
