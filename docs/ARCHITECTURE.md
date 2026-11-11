@@ -169,4 +169,6 @@ Chaque point fait l'objet d'une issue.
   proratisé en dessous de 8 h ; jamais de déficit). L'exemple officiel (852 €) est un test. Le SMIC n'est prérempli que pour 2025 (11,88 €) : pour une autre année il est à saisir.
   **Tout est modifiable** avant génération (jours, heures, montants par mois, ajustement). Sorties : PDF (aide + attestation d'accueil par famille, générés dans le navigateur) et CSV.
   Ces documents sont une **aide**, jamais un justificatif officiel (bulletins, Pajemploi et déclaration pré-remplie font foi). Les règles et plafonds changent : à revérifier chaque année.
+  **Remplissage automatique** (`src/lib/tax/estimate.ts`) : les mois terminés sans facture validée sont estimés d'après le contrat (mensualisation) et les présences pointées ; jamais le mois en cours.
+  Ils sont marqués « estimé » (écran, PDF, CSV) et restent modifiables ; une facture validée remplace toujours l'estimation.
 - **Dictée vocale** : chaque échec (autorisation, dictée iOS désactivée, silence, micro qui ne démarre pas) affiche un message et la marche à suivre ; la dictée du clavier du téléphone est toujours proposée.

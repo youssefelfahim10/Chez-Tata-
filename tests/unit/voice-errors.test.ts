@@ -11,6 +11,9 @@ describe("détection de l'environnement", () => {
     expect(detectSpeechEnv({ userAgent: "Mozilla/5.0 (Linux; Android 14)" }).ios).toBe(false);
     expect(detectSpeechEnv({ userAgent: "iPhone", standalone: true }).standalone).toBe(true);
     expect(detectSpeechEnv({ userAgent: "iPhone" }, true).standalone).toBe(true);
+    expect(detectSpeechEnv({ userAgent: "Mozilla/5.0 (iPhone) AppleWebKit Version/17 Safari/604.1" }).thirdParty).toBe(false);
+    expect(detectSpeechEnv({ userAgent: "Mozilla/5.0 (iPhone) AppleWebKit CriOS/120 Mobile Safari/604.1" }).thirdParty).toBe(true);
+    expect(detectSpeechEnv({ userAgent: "Mozilla/5.0 (Linux; Android 14) Chrome/120" }).thirdParty).toBe(false);
   });
 });
 
@@ -18,6 +21,13 @@ describe("messages d'erreur de la dictée", () => {
   it("dit quoi faire sur iPhone quand le micro ou la dictée sont bloqués", () => {
     expect(explainSpeechError("not-allowed", IPHONE)).toContain("Réglages › Safari › Micro");
     expect(explainSpeechError("service-not-allowed", IPHONE)).toContain("Activer la dictée");
+  });
+
+  it("sur iPhone hors Safari, conseille d'ouvrir le site dans Safari", () => {
+    const chrome = { ios: true, standalone: false, thirdParty: true };
+    expect(explainSpeechError("service-not-allowed", chrome)).toContain("Safari");
+    expect(explainSpeechError("not-allowed", chrome)).toContain("micro du clavier");
+    expect(explainSpeechError("no-speech", chrome)).not.toContain("Safari");
   });
 
   it("prévient que l'application installée bloque la dictée sur iOS", () => {

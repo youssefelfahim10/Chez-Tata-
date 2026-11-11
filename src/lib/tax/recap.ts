@@ -33,7 +33,7 @@ export type StatementInput = {
 
 export type PresenceDay = { childId: string; date: string; minutes: number };
 
-export type MonthAmounts = { salaryCents: number; allowanceCents: number };
+export type MonthAmounts = { salaryCents: number; allowanceCents: number; /** Montant estimé d'après le contrat et les présences (aucune facture validée). */ estimated?: boolean };
 
 export type TaxChild = {
   id: string;
@@ -65,16 +65,25 @@ export function classifyLine(label: string): "allowance" | "salary" {
 
 const emptyMonths = (): MonthAmounts[] => Array.from({ length: 12 }, () => ({ salaryCents: 0, allowanceCents: 0 }));
 
-export function buildTaxInput(args: { year: number; children: { id: string; name: string }[]; statements: StatementInput[]; presence: PresenceDay[] }): TaxInput {
+export function buildTaxInput(args: {
+  year: number;
+  children: { id: string; name: string }[];
+  statements: StatementInput[];
+  presence: PresenceDay[];
+  /** Estimations (clé `${enfant}|${mois}`) appliquées aux seuls mois sans facture validée. */
+  estimates?: Map<string, MonthAmounts>;
+}): TaxInput {
   const { year } = args;
   const children: TaxChild[] = args.children.map((c) => ({ id: c.id, name: c.name, months: emptyMonths(), fullDays: 0, partialMinutes: 0 }));
   const byId = new Map(children.map((c) => [c.id, c]));
+  const invoiced = new Set<string>();
 
   for (const s of args.statements) {
     const child = byId.get(s.childId);
     if (!child || !s.paidAt.startsWith(`${year}-`)) continue;
     const month = Number(s.paidAt.slice(5, 7)) - 1;
     if (!(month >= 0 && month <= 11)) continue;
+    invoiced.add(`${child.id}|${month}`);
     let known = 0;
     for (const line of s.lines ?? []) {
       if (!Number.isFinite(line.amount_cents)) continue;
@@ -84,6 +93,14 @@ export function buildTaxInput(args: { year: number; children: { id: string; name
     }
     // Ce qui n'est pas détaillé dans les lignes est compté en rémunération (le total de la facture fait foi).
     child.months[month].salaryCents += s.totalCents - known;
+  }
+
+  for (const child of children) {
+    child.months.forEach((m, i) => {
+      if (invoiced.has(`${child.id}|${i}`)) return;
+      const est = args.estimates?.get(`${child.id}|${i}`);
+      if (est) child.months[i] = { salaryCents: est.salaryCents, allowanceCents: est.allowanceCents, estimated: true };
+    });
   }
 
   for (const p of args.presence) {
@@ -177,7 +194,7 @@ export function taxCsv(input: TaxInput, result: TaxResult): string {
   for (const c of input.children) {
     c.months.forEach((m, i) => {
       if (m.salaryCents === 0 && m.allowanceCents === 0) return;
-      lines.push([csvCell(c.name), csvCell(`${MONTH_NAMES[i]} ${input.year}`), csvEuros(m.salaryCents), csvEuros(m.allowanceCents), csvEuros(m.salaryCents + m.allowanceCents)].join(";"));
+      lines.push([csvCell(c.name), csvCell(`${MONTH_NAMES[i]} ${input.year}${m.estimated ? " (estimé)" : ""}`), csvEuros(m.salaryCents), csvEuros(m.allowanceCents), csvEuros(m.salaryCents + m.allowanceCents)].join(";"));
     });
   }
   lines.push("");

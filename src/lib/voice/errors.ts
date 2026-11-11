@@ -4,11 +4,21 @@
  * Purement textuel et testable ; aucune donnée n'est envoyée nulle part.
  */
 
-export type SpeechEnv = { ios: boolean; standalone: boolean };
+export type SpeechEnv = {
+  ios: boolean;
+  standalone: boolean;
+  /** iPhone/iPad avec un navigateur autre que Safari (Chrome, Firefox, application…) : la dictée intégrée y est souvent bloquée. */
+  thirdParty?: boolean;
+};
+
+const THIRD_PARTY_IOS = /CriOS|FxiOS|EdgiOS|OPiOS|OPT\/|DuckDuckGo|GSA\/|Brave|FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|Twitter|LinkedIn/;
+
+export const SAFARI_ADVICE =
+  "Sur iPhone, la dictée intégrée ne marche en général que dans Safari (pas dans Chrome, Firefox ni une application). Copiez le lien et ouvrez-le dans Safari, ou dictez avec le micro du clavier.";
 
 export function detectSpeechEnv(nav: { userAgent: string; platform?: string; maxTouchPoints?: number; standalone?: boolean }, standaloneMedia = false): SpeechEnv {
   const ios = /iPad|iPhone|iPod/.test(nav.userAgent) || (nav.platform === "MacIntel" && (nav.maxTouchPoints ?? 0) > 1);
-  return { ios, standalone: Boolean(nav.standalone) || standaloneMedia };
+  return { ios, standalone: Boolean(nav.standalone) || standaloneMedia, thirdParty: ios && THIRD_PARTY_IOS.test(nav.userAgent) };
 }
 
 /** Astuce toujours valable : la dictée du clavier du téléphone marche sans permission particulière. */
@@ -21,6 +31,8 @@ export function keyboardTip(env: SpeechEnv): string {
 /** Message pour un code d'erreur de la reconnaissance vocale (SpeechRecognitionErrorEvent.error). */
 export function explainSpeechError(code: string, env: SpeechEnv): string {
   const standaloneNote = env.ios && env.standalone ? " Dans l’application ajoutée à l’écran d’accueil, iOS bloque la dictée : ouvrez le site dans Safari." : "";
+  // Cause la plus fréquente sur iPhone : un navigateur autre que Safari.
+  if (env.ios && env.thirdParty && (code === "not-allowed" || code === "service-not-allowed")) return SAFARI_ADVICE;
   switch (code) {
     case "not-allowed":
       return env.ios

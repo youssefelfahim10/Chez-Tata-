@@ -14,6 +14,8 @@ export type TaxChildProps = {
   /** 12 mois, en centimes. */
   salary: number[];
   allowance: number[];
+  /** Mois remplis automatiquement par une estimation (aucune facture validée). */
+  estimated: boolean[];
   fullDays: number;
   partialMinutes: number;
   family: string;
@@ -42,6 +44,8 @@ type ChildState = {
   adjustment: string;
   salary: string[];
   allowance: string[];
+  /** Mois encore à l'état d'estimation (repasse à faux dès que vous le modifiez). */
+  estimated: boolean[];
   family: string;
   from: string;
   to: string;
@@ -67,6 +71,7 @@ function initialState(c: TaxChildProps): ChildState {
     adjustment: "",
     salary: c.salary.map(euros),
     allowance: c.allowance.map(euros),
+    estimated: [...c.estimated],
     family: c.family,
     from: c.firstDay,
     to: c.lastDay,
@@ -96,7 +101,10 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
 
   const patch = (id: string, p: Partial<ChildState>) => setStates((s) => ({ ...s, [id]: { ...s[id], ...p } }));
   const setMonth = (id: string, field: "salary" | "allowance", index: number, value: string) =>
-    setStates((s) => ({ ...s, [id]: { ...s[id], [field]: s[id][field].map((v, i) => (i === index ? value : v)) } }));
+    setStates((s) => ({
+      ...s,
+      [id]: { ...s[id], [field]: s[id][field].map((v, i) => (i === index ? value : v)), estimated: s[id].estimated.map((e, i) => (i === index ? false : e)) },
+    }));
 
   const { input, params } = useMemo(() => {
     const perChild: Record<string, ChildSettings> = {};
@@ -108,7 +116,7 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
         return {
           id: c.id,
           name: c.name,
-          months: st.salary.map((v, i) => ({ salaryCents: toCents(v), allowanceCents: toCents(st.allowance[i]) })),
+          months: st.salary.map((v, i) => ({ salaryCents: toCents(v), allowanceCents: toCents(st.allowance[i]), estimated: st.estimated[i] })),
           fullDays: intOf(st.fullDays),
           partialMinutes: hoursInputToMinutes(st.partialHours),
         };
@@ -270,6 +278,12 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
                     </div>
                   </div>
 
+                  {st.estimated.some(Boolean) ? (
+                    <p className="rounded-xl border border-sun/60 bg-sun-soft px-3 py-2 text-sm">
+                      ✨ <b>{st.estimated.filter(Boolean).length} mois remplis automatiquement</b> d’après le contrat et les présences pointées (mois sans facture validée). Ce sont des <b>estimations</b> : corrigez-les dans le détail ci-dessous, ou validez la facture du mois pour utiliser le montant réel.
+                    </p>
+                  ) : null}
+
                   <details className="rounded-xl border border-line">
                     <summary className="min-h-12 cursor-pointer px-4 py-3 text-sm font-bold">Détail par mois de paiement (modifiable)</summary>
                     <div className="overflow-x-auto px-3 pb-3">
@@ -284,7 +298,10 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
                         <tbody>
                           {MONTH_NAMES.map((name, i) => (
                             <tr key={name} className="border-t border-line">
-                              <td className="py-1.5 pr-2 capitalize">{name}</td>
+                              <td className="py-1.5 pr-2 capitalize">
+                                {name}
+                                {st.estimated[i] ? <span className="ml-1 rounded-full bg-sun-soft px-1.5 py-0.5 text-[10px] font-bold normal-case text-ink">estimé</span> : null}
+                              </td>
                               <td className="px-1 py-1.5">
                                 <input aria-label={`${name} : rémunération`} className={small} inputMode="decimal" value={st.salary[i]} onChange={(e) => setMonth(c.id, "salary", i, e.target.value)} />
                               </td>

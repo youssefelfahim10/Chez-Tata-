@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui";
 import { LABELS, type ActionType } from "@/lib/journal/labels";
-import { detectSpeechEnv, explainSpeechError, keyboardTip, MIC_NO_ANSWER, NOTHING_HEARD, type SpeechEnv } from "@/lib/voice/errors";
+import { detectSpeechEnv, explainSpeechError, keyboardTip, MIC_NO_ANSWER, NOTHING_HEARD, SAFARI_ADVICE, type SpeechEnv } from "@/lib/voice/errors";
 import { parseVoice, type VoiceAction } from "@/lib/voice/parse";
 
 type Child = { id: string; firstName: string };
@@ -30,7 +30,7 @@ const subscribeNone = () => () => {};
 /** Environnement (iPhone, application installée) : lu côté navigateur uniquement, sans décalage à l'hydratation. */
 const getEnvKey = () => {
   const env = detectSpeechEnv(navigator as Navigator & { standalone?: boolean }, window.matchMedia("(display-mode: standalone)").matches);
-  return `${env.ios ? "ios" : "other"}${env.standalone ? "-app" : ""}`;
+  return `${env.ios ? "ios" : "other"}${env.standalone ? "-app" : ""}${env.thirdParty ? "-other" : ""}`;
 };
 const WATCHDOG_MS = 7000;
 const ACTIONS: VoiceAction[] = ["arrival", "departure", "meal", "nap", "nap_end", "diaper", "care"];
@@ -49,7 +49,7 @@ type Props = {
 export function VoicePanel({ kids, onValidate, onClose }: Props) {
   const supported = useSyncExternalStore(subscribeNone, () => Boolean(getCtor()), () => false);
   const envKey = useSyncExternalStore(subscribeNone, getEnvKey, () => "other");
-  const env: SpeechEnv = { ios: envKey.startsWith("ios"), standalone: envKey.endsWith("-app") };
+  const env: SpeechEnv = { ios: envKey.startsWith("ios"), standalone: envKey.includes("-app"), thirdParty: envKey.endsWith("-other") };
   const [text, setText] = useState("");
   const [rows, setRows] = useState<VoiceRow[] | null>(null);
   const [listening, setListening] = useState(false);
@@ -73,25 +73,54 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
     watchdog.current = null;
   };
 
-  function analyse(value: string) {
-    const result = parseVoice(value, kids);
-    if (!result.understood) {
-      setRows([]);
-      setMessage("Je n’ai rien compris d’exploitable. Corrigez le texte ou choisissez directement une action sur la carte de l’enfant.");
-      return;
+  const lastAnalysed = useRef("");
+  const kidsRef = useRef(kids);
+  useEffect(() => {
+    kidsRef.current = kids;
+  });
+  const [copied, setCopied] = useState(false);
+
+  const analyse = useCallback(
+    (value: string) => {
+      lastAnalysed.current = value;
+      const result = parseVoice(value, kidsRef.current);
+      if (!result.understood) {
+        setRows([]);
+        setMessage("Je n’ai rien compris d’exploitable. Corrigez le texte ou choisissez directement une action sur la carte de l’enfant.");
+        return;
+      }
+      setMessage(null);
+      setRows(
+        result.proposals.map((p, i) => ({
+          key: `${i}-${p.childId}-${p.action}`,
+          childId: p.childId ?? "",
+          action: p.action,
+          time: p.time ?? "",
+          details: p.details,
+          heard: p.heard,
+          include: true,
+        })),
+      );
+    },
+    [],
+  );
+
+  // Texte écrit ou dicté au clavier : la proposition apparaît toute seule après une courte pause (rien n'est enregistré sans « Valider »).
+  useEffect(() => {
+    if (listening || starting) return;
+    const value = text.trim();
+    if (value.length < 4 || value === lastAnalysed.current) return;
+    const id = setTimeout(() => analyse(value), 1400);
+    return () => clearTimeout(id);
+  }, [text, listening, starting, analyse]);
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.origin);
+      setCopied(true);
+    } catch {
+      setMessage(`Copiez ce lien : ${window.location.origin}`);
     }
-    setMessage(null);
-    setRows(
-      result.proposals.map((p, i) => ({
-        key: `${i}-${p.childId}-${p.action}`,
-        childId: p.childId ?? "",
-        action: p.action,
-        time: p.time ?? "",
-        details: p.details,
-        heard: p.heard,
-        include: true,
-      })),
-    );
   }
 
   function listen() {
@@ -128,6 +157,7 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
       setStarting(false);
       setListening(false);
       setMessage(explainSpeechError(e.error, env));
+      textarea.current?.focus();
     };
     rec.onend = () => {
       clearWatchdog();
@@ -200,6 +230,15 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
           La dictée intégrée n’est pas disponible sur ce navigateur. Écrivez la phrase ci-dessous, ou utilisez le micro 🎙️ du clavier de votre téléphone.
         </p>
       )}
+
+      {env.thirdParty ? (
+        <div className="mt-3 rounded-2xl border border-sun/60 bg-sun-soft px-4 py-3 text-sm">
+          <p>{SAFARI_ADVICE}</p>
+          <button type="button" onClick={copyLink} className="mt-2 min-h-11 rounded-xl border border-line bg-surface px-4 font-bold text-primary">
+            {copied ? "✓ Lien copié : collez-le dans Safari" : "Copier le lien du site"}
+          </button>
+        </div>
+      ) : null}
 
       <button
         type="button"

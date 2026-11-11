@@ -23,7 +23,7 @@ function childCard(w: Writer, data: TaxPdfData, index: number) {
   const monthsWithData = input.months.filter((m) => m.salaryCents !== 0 || m.allowanceCents !== 0).length;
   w.beginCard(index + 1, `${r.name} · ${data.year}`, Math.min(560, 150 + monthsWithData * 27));
   const rows = input.months
-    .map((m, i): string[] | null => (m.salaryCents === 0 && m.allowanceCents === 0 ? null : [MONTH_NAMES[i], euro(m.salaryCents), euro(m.allowanceCents), euro(m.salaryCents + m.allowanceCents)]))
+    .map((m, i): string[] | null => (m.salaryCents === 0 && m.allowanceCents === 0 ? null : [`${MONTH_NAMES[i]}${m.estimated ? " (estimé)" : ""}`, euro(m.salaryCents), euro(m.allowanceCents), euro(m.salaryCents + m.allowanceCents)]))
     .filter((row): row is string[] => row !== null);
   if (rows.length > 0) {
     w.table(
