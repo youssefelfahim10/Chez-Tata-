@@ -24,7 +24,11 @@ Aucun secret n'entre dans le dépôt : l'identifiant et le secret du client Goog
 - `NEXT_PUBLIC_SITE_URL` doit valoir l'adresse publique (sinon l'adresse de la requête est utilisée).
 - Migration `…0009_google_display_name.sql` : reprend le prénom de Google pour « Bonjour {prénom} ! ».
 
-## 4. Test de bout en bout
+## 4. Activer le bouton
+Le bouton reste **invisible** tant que la variable `NEXT_PUBLIC_GOOGLE_SIGNIN` n'est pas égale à `on` (Vercel → Settings → Environment Variables, environnements
+Production et Preview). Sa valeur est intégrée à la construction : après l'avoir ajoutée, **redéployer** le projet.
+
+## 5. Test de bout en bout
 1. Ouvrir `/connexion` sur téléphone → « Continuer avec Google » → choisir le compte.
 2. Retour sur l'application : création de l'espace (`/bienvenue`) pour un nouveau compte, ou « Aujourd'hui » pour un compte existant.
 3. Refuser l'accès chez Google : retour sur `/connexion` avec un message, sans erreur technique.

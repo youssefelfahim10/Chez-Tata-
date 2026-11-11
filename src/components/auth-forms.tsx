@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { signIn, signUp, type FormState } from "@/app/actions/auth";
+import { GOOGLE_SIGNIN_ENABLED } from "@/lib/auth/google";
 import { GoogleButton, OrDivider } from "./google-button";
 import { Button, Card, Field, Notice } from "./ui";
 
@@ -18,8 +19,12 @@ export function SignInForm({ next, notice }: { next?: string; notice?: string })
     <Card>
       <div className="flex flex-col gap-4">
         {notice ? <Notice tone="error">{notice}</Notice> : null}
-        <GoogleButton next={next} />
-        <OrDivider />
+        {GOOGLE_SIGNIN_ENABLED ? (
+          <>
+            <GoogleButton next={next} />
+            <OrDivider />
+          </>
+        ) : null}
       </div>
       <form action={action} className="mt-4 flex flex-col gap-4">
         {next ? <input type="hidden" name="next" value={next} /> : null}
@@ -51,10 +56,12 @@ export function SignUpForm({ next }: { next?: string }) {
   }
   return (
     <Card>
-      <div className="flex flex-col gap-4">
-        <GoogleButton next={next} />
-        <OrDivider />
-      </div>
+      {GOOGLE_SIGNIN_ENABLED ? (
+        <div className="flex flex-col gap-4">
+          <GoogleButton next={next} />
+          <OrDivider />
+        </div>
+      ) : null}
       <form action={action} className="mt-4 flex flex-col gap-4">
         {next ? <input type="hidden" name="next" value={next} /> : null}
         <Field label="Votre prénom" name="displayName" autoComplete="given-name" maxLength={80} required />
