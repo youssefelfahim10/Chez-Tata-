@@ -53,3 +53,15 @@ describe("détails du contrat", () => {
     expect(doc.lines[0]).toEqual({ label: "Accueil", detail: "x", amountCents: 78000 });
   });
 });
+
+describe("pré-remplissage depuis le profil de l'assistante", () => {
+  it("complète seulement les blancs du contrat, sans rien écraser", async () => {
+    const { emptyDetails, fillEmployeeFromProfile } = await import("@/lib/documents/details");
+    const details = emptyDetails();
+    details.employee.fullName = "Nom du contrat";
+    const out = fillEmployeeFromProfile(details, { fullName: "Nom du profil", address: "1 rue Fictive, 75000 Ville", agrementNumber: "AG-1" });
+    expect(out.employee).toMatchObject({ fullName: "Nom du contrat", address: "1 rue Fictive, 75000 Ville", agrementNumber: "AG-1" });
+    expect(fillEmployeeFromProfile(details, null)).toBe(details);
+    expect(details.employee.address).toBe("");
+  });
+});

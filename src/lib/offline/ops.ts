@@ -29,7 +29,14 @@ export type Op =
       undo: "event" | "nap_end";
       /** Pour « nap_end » : la sieste à rouvrir (targetId désigne alors l'opération de réveil). */
       napId?: string;
-    };
+    }
+  /** Rétablit un geste annulé (il revient dans la journée avec ses précisions). */
+  | { kind: "restore"; id: string; targetId: string }
+  /**
+   * Corrige un geste : heure (et réveil d'une sieste) et/ou précisions.
+   * Une valeur de précision vide (« ») efface cette précision.
+   */
+  | { kind: "edit"; id: string; targetId: string; startedAt?: string; endedAt?: string; payload?: Record<string, string> };
 
 export type QueuedOp = { op: Op; userId: string; orgId: string; queuedAt: string };
 
@@ -40,11 +47,30 @@ const matches = (e: JournalEvent, id: string) => e.id === id || e.client_operati
  * C'est ce qui rend l'écran instantané, connecté ou non.
  */
 export function applyOps(events: JournalEvent[], ops: Op[]): JournalEvent[] {
+  return applyOpsWithArchive(events, [], ops).events;
+}
+
+/** Applique des précisions : une valeur vide efface la précision correspondante. */
+function mergePayload(current: Record<string, unknown> | undefined, patch: Record<string, string>): Record<string, unknown> {
+  const next: Record<string, unknown> = { ...(current ?? {}) };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === "") delete next[key];
+    else next[key] = value;
+  }
+  return next;
+}
+
+/**
+ * Comme `applyOps`, en gardant aussi les gestes annulés (les « archives » du jour) :
+ * annuler déplace un geste vers les archives, rétablir le ramène dans la journée.
+ */
+export function applyOpsWithArchive(events: JournalEvent[], archived: JournalEvent[], ops: Op[]): { events: JournalEvent[]; archived: JournalEvent[] } {
   let result = events.map((e) => ({ ...e }));
+  let shelf = archived.map((e) => ({ ...e }));
   for (const op of ops) {
     switch (op.kind) {
       case "create":
-        if (!result.some((e) => matches(e, op.id))) {
+        if (!result.some((e) => matches(e, op.id)) && !shelf.some((e) => matches(e, op.id))) {
           result.push({
             id: op.id,
             client_operation_id: op.id,
@@ -60,15 +86,32 @@ export function applyOps(events: JournalEvent[], ops: Op[]): JournalEvent[] {
         for (const e of result) if (matches(e, op.napId) && !e.ended_at) e.ended_at = op.occurredAt;
         break;
       case "detail":
-        for (const e of result) if (matches(e, op.targetId)) e.event_payload = { ...(e.event_payload ?? {}), ...op.payload };
+        for (const e of [...result, ...shelf]) if (matches(e, op.targetId)) e.event_payload = { ...(e.event_payload ?? {}), ...op.payload };
+        break;
+      case "edit":
+        for (const e of result) {
+          if (!matches(e, op.targetId)) continue;
+          if (op.startedAt) e.started_at = op.startedAt;
+          if (op.endedAt && e.event_type === "nap") e.ended_at = op.endedAt;
+          if (op.payload) e.event_payload = mergePayload(e.event_payload, op.payload);
+        }
         break;
       case "undo":
-        if (op.undo === "event") result = result.filter((e) => !matches(e, op.targetId));
-        else for (const e of result) if (matches(e, op.napId ?? op.targetId)) e.ended_at = null;
+        if (op.undo === "event") {
+          const gone = result.filter((e) => matches(e, op.targetId));
+          result = result.filter((e) => !matches(e, op.targetId));
+          shelf = [...shelf.filter((e) => !gone.some((g) => g.id === e.id)), ...gone];
+        } else for (const e of result) if (matches(e, op.napId ?? op.targetId)) e.ended_at = null;
         break;
+      case "restore": {
+        const back = shelf.filter((e) => matches(e, op.targetId));
+        shelf = shelf.filter((e) => !matches(e, op.targetId));
+        result = [...result.filter((e) => !back.some((b) => b.id === e.id)), ...back];
+        break;
+      }
     }
   }
-  return result;
+  return { events: result, archived: shelf };
 }
 
 /**
@@ -77,10 +120,29 @@ export function applyOps(events: JournalEvent[], ops: Op[]): JournalEvent[] {
  */
 export function enqueueOp(queue: QueuedOp[], item: QueuedOp): QueuedOp[] {
   const { op } = item;
-  if (op.kind === "undo") {
-    const target = queue.find((q) => q.op.id === op.targetId && (q.op.kind === "create" || q.op.kind === "nap_end"));
-    if (target) {
-      return queue.filter((q) => q.op.id !== op.targetId && !(q.op.kind === "detail" && q.op.targetId === op.targetId));
+  // Un réveil de sieste encore en attente et aussitôt annulé : rien à envoyer.
+  if (op.kind === "undo" && op.undo === "nap_end") {
+    const target = queue.find((q) => q.op.id === op.targetId && q.op.kind === "nap_end");
+    if (target) return queue.filter((q) => q.op.id !== op.targetId);
+  }
+  // Annuler puis rétablir (ou l'inverse) avant l'envoi : les deux se neutralisent.
+  // Un geste annulé n'est JAMAIS effacé : il part au serveur puis y reste en archive.
+  if (op.kind === "restore") {
+    const idx = queue.findIndex((q) => q.op.kind === "undo" && q.op.undo === "event" && q.op.targetId === op.targetId);
+    if (idx >= 0) return queue.filter((_, i) => i !== idx);
+  }
+  if (op.kind === "undo" && op.undo === "event") {
+    const idx = queue.findIndex((q) => q.op.kind === "restore" && q.op.targetId === op.targetId);
+    if (idx >= 0) return queue.filter((_, i) => i !== idx);
+  }
+  // Deux corrections successives du même geste : une seule, la plus récente l'emporte.
+  if (op.kind === "edit") {
+    const idx = queue.findIndex((q) => q.op.kind === "edit" && q.op.targetId === op.targetId);
+    if (idx >= 0) {
+      const merged = [...queue];
+      const prev = merged[idx].op as Extract<Op, { kind: "edit" }>;
+      merged[idx] = { ...item, op: { ...prev, ...op, id: prev.id, payload: prev.payload || op.payload ? { ...prev.payload, ...op.payload } : undefined } };
+      return merged;
     }
   }
   // Une précision remplace la précédente en attente pour la même cible.

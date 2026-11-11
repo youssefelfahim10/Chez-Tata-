@@ -42,6 +42,19 @@ export type ContractDetails = z.infer<typeof detailsSchema>;
 export const emptyDetails = (): ContractDetails => detailsSchema.parse({});
 
 /** Lit des détails venant de la base, sans jamais planter : ce qui est invalide est ignoré. */
+/**
+ * Complète les coordonnées de l'assistante laissées vides dans un contrat avec celles de son profil.
+ * Ce qui est déjà saisi dans le contrat n'est jamais écrasé ; sans profil, rien ne change.
+ */
+export function fillEmployeeFromProfile(details: ContractDetails, profile: Partial<ContractDetails["employee"]> | null | undefined): ContractDetails {
+  if (!profile) return details;
+  const employee = { ...details.employee };
+  for (const key of Object.keys(employee) as (keyof typeof employee)[]) {
+    if (!employee[key] && profile[key]) employee[key] = profile[key] as string;
+  }
+  return { ...details, employee };
+}
+
 export function parseDetails(raw: unknown): ContractDetails {
   const result = detailsSchema.safeParse(raw ?? {});
   return result.success ? result.data : emptyDetails();

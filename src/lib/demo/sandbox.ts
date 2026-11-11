@@ -8,8 +8,8 @@ import { buildDayReport, hasContent, renderSummary } from "@/lib/whatsapp/summar
  */
 
 export const DEMO_KIDS = [
-  { id: "demo-lou", firstName: "Lou" },
-  { id: "demo-noa", firstName: "Noa" },
+  { id: "demo-lou", firstName: "Lou", gender: "girl" },
+  { id: "demo-noa", firstName: "Noa", gender: "boy" },
 ] as const;
 
 /** Fiche d'urgence fictive (numéros inexistants : on ne compose jamais de vrai numéro depuis la démo). */

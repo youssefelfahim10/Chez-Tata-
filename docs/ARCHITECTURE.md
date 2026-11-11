@@ -22,7 +22,7 @@ de lire ou d'écrire les données d'un autre espace.
 | `src/lib/journal/day.ts` | Logique pure du journal (fuseau Europe/Paris, résumé de journée) |
 | `src/app/actions/` | Actions serveur (validation zod, session revérifiée à chaque appel) |
 | `src/app/(auth)/`, `bienvenue/`, `invitation/` | Connexion, inscription, création d'espace, invitation |
-| `src/app/(app)/` | Les 4 écrans : Aujourd'hui, Planning, Gestion, Réglages |
+| `src/app/(app)/` | Les 4 onglets : Aujourd'hui, Planning, Gestion, Profil (Espace et données depuis le profil) |
 | `tests/db/` | Tests d'isolation RLS (PGlite + shim Supabase) |
 | `tests/unit/` | Tests de logique métier |
 
@@ -156,3 +156,23 @@ Chaque point fait l'objet d'une issue.
 - **Règle d'accessibilité** : la couleur n'est jamais seule. Chaque bouton garde son émoji et son texte (en encre foncée, contraste élevé). Les alertes (allergie,
   urgence) restent en rose/rouge, réservé à l'attention.
 - **Les émojis sont conservés** (choix du produit : ils parlent tout de suite) et accompagnés de leur teinte. Les icônes fines ne servent que pour les commandes (lecture, pause, flèches, coche).
+
+## Profil de l'assistante et organisation de l'application
+
+- **Onglets** : Aujourd'hui (journal) · Planning (fiche de présence) · Gestion (enfants, argent, papiers) · **Profil** (identité, impôts et documents, espace, données).
+  L'ancien « Réglages » devient la page « Espace et données » (`/parametres`), accessible depuis le profil.
+- **Profil** (`caregiver_profiles`, migration `…0010`) : identité, adresse du lieu d'accueil, agrément (numéro, dates, nombre d'enfants), assurance. **Strictement personnel** :
+  la RLS ne laisse lire que son propre profil, y compris pour une responsable de MAM. Ni numéro de sécurité sociale ni coordonnées bancaires. Il pré-remplit contrats et factures
+  (`fillEmployeeFromProfile` : il complète les blancs, n'écrase jamais) et alimente les **rappels d'échéance** (agrément, assurance ; bandeau sur « Aujourd'hui » et sur le profil).
+- **Icône de l'enfant** : `children.gender` (`girl` / `boy`, facultatif, migration 0011) choisit l'icône 👧 / 👦 (`ChildAvatar`) ; sans choix, l'initiale. Jamais déduit du prénom ; choisi à la création ou sur la fiche de l'enfant.
+- **Corriger sans rien perdre** (écran Aujourd'hui) : chaque geste de la « Journée de … » a « Modifier » (heure, réveil de sieste, précisions) et « Annuler ».
+  Annuler = suppression logique (`deleted_at`) : le geste passe dans « Annulés aujourd'hui » et se **rétablit** d'un geste (opération `restore`). « Modifier » (opération `edit`) laisse la trace dans `daily_event_revisions`
+  et propose « Annuler la modification ». Même un geste créé puis annulé hors ligne part au serveur avant d'être archivé.
+- **Aide à la déclaration d'impôts** (`/profil/impots`, `src/lib/tax/`) : récapitulatif annuel par enfant, d'après les factures finalisées (année de **paiement**) et les présences du journal.
+  Calcul du **régime de la somme forfaitaire** publié sur impots.gouv.fr : part imposable = rémunérations + indemnités − 3 × SMIC horaire × jours de garde (4 × avec majoration de salaire ;
+  proratisé en dessous de 8 h ; jamais de déficit). L'exemple officiel (852 €) est un test. Le SMIC n'est prérempli que pour 2025 (11,88 €) : pour une autre année il est à saisir.
+  **Tout est modifiable** avant génération (jours, heures, montants par mois, ajustement). Sorties : PDF (aide + attestation d'accueil par famille, générés dans le navigateur) et CSV.
+  Ces documents sont une **aide**, jamais un justificatif officiel (bulletins, Pajemploi et déclaration pré-remplie font foi). Les règles et plafonds changent : à revérifier chaque année.
+  **Remplissage automatique** (`src/lib/tax/estimate.ts`) : les mois terminés sans facture validée sont estimés d'après le contrat (mensualisation) et les présences pointées ; jamais le mois en cours.
+  Ils sont marqués « estimé » (écran, PDF, CSV) et restent modifiables ; une facture validée remplace toujours l'estimation.
+- **Dictée vocale** : chaque échec (autorisation, dictée iOS désactivée, silence, micro qui ne démarre pas) affiche un message et la marche à suivre ; la dictée du clavier du téléphone est toujours proposée.

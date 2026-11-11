@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEvent } from "@/lib/journal/day";
 import { sanitizeDetails, detailLabel } from "@/lib/journal/details";
-import { applyOps, enqueueOp, flushQueue, forScope, isPlausibleTime, type Op, type QueuedOp, type SendResult } from "@/lib/offline/ops";
+import { applyOps, applyOpsWithArchive, enqueueOp, flushQueue, forScope, isPlausibleTime, type Op, type QueuedOp, type SendResult } from "@/lib/offline/ops";
 import { summarizeChildDay } from "@/lib/journal/day";
 
 const U = "user-1", O = "org-1", C = "child-1";
@@ -52,12 +52,29 @@ describe("affichage immédiat des opérations en attente", () => {
 });
 
 describe("file d'attente", () => {
-  it("annuler une action encore en attente l'efface avec ses précisions", () => {
+  it("annuler une action encore en attente ne la perd pas : elle part au serveur puis reste en archive", () => {
     let queue: QueuedOp[] = [];
     queue = enqueueOp(queue, q(create("m1", "meal", "2026-11-10T11:00:00Z")));
     queue = enqueueOp(queue, q({ kind: "detail", id: "d1", targetId: "m1", payload: { amount: "all" } }));
     queue = enqueueOp(queue, q({ kind: "undo", id: "u1", targetId: "m1", undo: "event" }));
+    expect(queue.map((i) => i.op.kind)).toEqual(["create", "detail", "undo"]);
+  });
+
+  it("annuler puis rétablir avant l'envoi se neutralise (et inversement)", () => {
+    let queue = enqueueOp([], q(create("m1", "meal", "2026-11-10T11:00:00Z")));
+    queue = enqueueOp(queue, q({ kind: "undo", id: "u1", targetId: "m1", undo: "event" }));
+    queue = enqueueOp(queue, q({ kind: "restore", id: "r1", targetId: "m1" }));
+    expect(queue.map((i) => i.op.kind)).toEqual(["create"]);
+    queue = enqueueOp(enqueueOp([], q({ kind: "restore", id: "r2", targetId: "srv" })), q({ kind: "undo", id: "u2", targetId: "srv", undo: "event" }));
     expect(queue).toEqual([]);
+  });
+
+  it("fusionne deux corrections successives du même geste", () => {
+    let queue = enqueueOp([], q({ kind: "edit", id: "e1", targetId: "m1", startedAt: "2026-11-10T10:00:00Z" }));
+    queue = enqueueOp(queue, q({ kind: "edit", id: "e2", targetId: "m1", payload: { amount: "half" } }));
+    queue = enqueueOp(queue, q({ kind: "edit", id: "e3", targetId: "m1", startedAt: "2026-11-10T10:30:00Z" }));
+    expect(queue).toHaveLength(1);
+    expect(queue[0].op).toMatchObject({ kind: "edit", id: "e1", startedAt: "2026-11-10T10:30:00Z", payload: { amount: "half" } });
   });
 
   it("garde l'annulation d'une action déjà envoyée", () => {
@@ -126,5 +143,48 @@ describe("garde-fous", () => {
     expect(sanitizeDetails(null)).toEqual({});
     expect(detailLabel("amount", "all")).toBe("tout mangé");
     expect(detailLabel("amount", "zzz")).toBeNull();
+  });
+});
+
+describe("archives du jour : rien n'est perdu", () => {
+  const meal = server("s1", "meal", "2026-11-10T11:00:00Z", "m1");
+
+  it("annuler déplace le geste en archive, rétablir le ramène avec ses précisions", () => {
+    const withDetail = { ...meal, event_payload: { amount: "all" } };
+    const cancelled = applyOpsWithArchive([withDetail], [], [{ kind: "undo", id: "u1", targetId: "m1", undo: "event" }]);
+    expect(cancelled.events).toEqual([]);
+    expect(cancelled.archived).toHaveLength(1);
+    expect(cancelled.archived[0].event_payload).toEqual({ amount: "all" });
+    const back = applyOpsWithArchive([withDetail], [], [
+      { kind: "undo", id: "u1", targetId: "m1", undo: "event" },
+      { kind: "restore", id: "r1", targetId: "m1" },
+    ]);
+    expect(back.events).toHaveLength(1);
+    expect(back.archived).toEqual([]);
+  });
+
+  it("rétablit un geste archivé côté serveur", () => {
+    const out = applyOpsWithArchive([], [meal], [{ kind: "restore", id: "r1", targetId: "s1" }]);
+    expect(out.events.map((e) => e.id)).toEqual(["s1"]);
+    expect(out.archived).toEqual([]);
+  });
+
+  it("un geste créé puis annulé hors ligne se retrouve aussi en archive", () => {
+    const out = applyOpsWithArchive([], [], [create("m9", "meal", "2026-11-10T11:00:00Z"), { kind: "undo", id: "u9", targetId: "m9", undo: "event" }]);
+    expect(out.events).toEqual([]);
+    expect(out.archived).toHaveLength(1);
+  });
+
+  it("corrige l'heure, le réveil et les précisions (une valeur vide efface)", () => {
+    const nap = { ...server("n1", "nap", "2026-11-10T12:00:00Z", "n1"), ended_at: "2026-11-10T13:00:00Z", event_payload: { note: "agité", amount: "all" } };
+    const [edited] = applyOps([nap], [{ kind: "edit", id: "e1", targetId: "n1", startedAt: "2026-11-10T12:10:00Z", endedAt: "2026-11-10T13:20:00Z", payload: { note: "", amount: "half" } }]);
+    expect(edited.started_at).toBe("2026-11-10T12:10:00Z");
+    expect(edited.ended_at).toBe("2026-11-10T13:20:00Z");
+    expect(edited.event_payload).toEqual({ amount: "half" });
+  });
+
+  it("ne change pas l'heure de fin d'un geste qui n'est pas une sieste", () => {
+    const [edited] = applyOps([meal], [{ kind: "edit", id: "e1", targetId: "m1", endedAt: "2026-11-10T13:20:00Z" }]);
+    expect(edited.ended_at).toBeNull();
   });
 });

@@ -32,6 +32,7 @@ const TENANT_TABLES = [
   "daily_event_revisions",
   "attendance_records",
   "child_health",
+  "caregiver_profiles",
   "monthly_statements",
   "payments",
   "expenses",
@@ -68,6 +69,7 @@ async function seedFullDataset(user: TestUser, org: string, firstName: string) {
       "insert into child_health (organization_id, child_id, allergies, updated_by) values ($1, $2, 'Allergie fictive', $3)",
       [org, child, user.id],
     );
+    await q("insert into caregiver_profiles (organization_id, user_id, first_name, city) values ($1, $2, $3, 'Ville fictive')", [org, user.id, firstName]);
     const contract = await one(
       `insert into contracts (organization_id, child_id, assigned_assmat_id, start_date,
          scheduled_hours, hourly_rate, maintenance_allowance_cents, status)
@@ -245,6 +247,16 @@ describe("deux assistantes indépendantes", () => {
       ),
       RLS_VIOLATION,
     );
+  });
+
+  it("l'icône fille / garçon : valeurs contrôlées, et Bob ne peut pas la changer chez Alice", async () => {
+    await t.admin("update children set gender = 'girl' where id = $1", [aliceData.child]);
+    expect(await t.admin("select gender from children where id = $1", [aliceData.child])).toEqual([{ gender: "girl" }]);
+    await expect(t.admin("update children set gender = 'autre' where id = $1", [aliceData.child])).rejects.toThrow(/check/i);
+    const rows = await t.as(bob, (q) => q("update children set gender = 'boy' where id = $1 returning id", [aliceData.child]));
+    expect(rows).toEqual([]);
+    expect(await t.admin("select gender from children where id = $1", [aliceData.child])).toEqual([{ gender: "girl" }]);
+    await t.admin("update children set gender = null where id = $1", [aliceData.child]);
   });
 
   it("Bob ne peut ni modifier ni supprimer les données d'Alice", async () => {

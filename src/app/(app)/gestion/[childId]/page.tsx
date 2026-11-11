@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ChildAvatar } from "@/components/child-avatar";
+import { ChildGenderPicker } from "@/components/child-gender-picker";
 import { ChildHealthForm } from "@/components/child-health-form";
 import { ContractForm, EndContractForm, FamilyForm } from "@/components/family-contract-forms";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
@@ -25,7 +27,7 @@ async function Detail({ params }: { params: Promise<{ childId: string }> }) {
   const [child, links, contracts, health] = await Promise.all([
     supabase
       .from("children")
-      .select("id, first_name, last_name, birth_date")
+      .select("id, first_name, last_name, birth_date, gender")
       .eq("id", childId)
       .eq("organization_id", membership.organizationId)
       .maybeSingle(),
@@ -70,6 +72,16 @@ async function Detail({ params }: { params: Promise<{ childId: string }> }) {
         ← Retour à la gestion
       </Link>
 
+      <Card>
+        <div className="flex items-center gap-3">
+          <ChildAvatar name={String(c.first_name)} gender={c.gender as string | null} size="lg" />
+          <div>
+            <h2 className="text-lg font-extrabold">Icône de {String(c.first_name)}</h2>
+            <p className="text-sm text-ink-soft">Fille ou garçon : sert seulement à choisir l’icône à l’écran.</p>
+          </div>
+        </div>
+        <ChildGenderPicker childId={childId} gender={(c.gender as string | null) ?? null} />
+      </Card>
       <Card>
         <h2 className="text-lg font-extrabold">Famille</h2>
         {families.length === 0 ? (
