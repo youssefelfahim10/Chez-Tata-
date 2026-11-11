@@ -112,3 +112,19 @@ Chaque point fait l'objet d'une issue.
 - **Facture** : `/gestion/factures`. « Paiement reçu » appelle `finalize_invoice` (une seule opération en base) : numéro continu propre à l'assistante
   (FAC-AAAA-0001), décompte figé, paiement enregistré. Double facturation d'un mois impossible, facture non modifiable.
 - **Partage** : feuille de partage du téléphone avec le PDF (WhatsApp compris), sinon téléchargement + ouverture de WhatsApp. Jamais d'envoi automatique.
+
+## Fiche santé, écran Urgence et messages aux parents
+
+- **Fiche santé** (`child_health`, migration `…0008`) : allergies, régime, traitement, remarques, médecin, contacts d'urgence et personnes
+  autorisées à récupérer l'enfant (6 au plus chacun). Données sensibles : tout est **saisi** par l'assistante, rien n'est déduit.
+  Visible des membres actifs de l'espace (utile en MAM en cas d'urgence). L'audit ne conserve que qui / quoi / quand, jamais les valeurs.
+  Contrainte d'unicité par `(organization_id, child_id)` : une erreur d'unicité ne révèle pas l'existence d'une fiche d'un autre espace.
+  Validation : `src/lib/health/schema.ts` (zod) ; action `saveChildHealth` ; formulaire dans `/gestion/[enfant]#sante`.
+- **Écran Urgence** `/aujourdhui/urgence/[enfant]` : 15 / 112 / 18, allergies mises en avant, médecin, parents, contacts, personnes autorisées,
+  chaque numéro en lien `tel:`. Un numéro absent ou inexploitable n'est jamais deviné. Comme toute page de l'appli, il est gardé « réseau d'abord »
+  par le service worker (disponible hors ligne s'il a déjà été ouvert ; oublié après 48 h et à la déconnexion).
+- **Allergie** : badge sur la carte de l'enfant dans « Aujourd'hui » (uniquement ce qui est saisi).
+- **Messages aux parents** `/aujourdhui/messages/[enfant]` : modèles dans `src/lib/messages/templates.ts` (absence, congés, horaire, venir chercher
+  l'enfant, apporter quelque chose, rappel de règlement). Le texte est relu, modifiable, puis ouvert dans WhatsApp par l'utilisatrice
+  (même composant que le bilan : case « J'ai relu », jamais d'envoi automatique). Un champ obligatoire manquant empêche tout texte ; aucun montant ni
+  symptôme n'est inventé.

@@ -10,6 +10,7 @@ const TABLES = [
   "children",
   "families",
   "child_family_links",
+  "child_health",
   "contracts",
   "attendance_records",
   "daily_events",

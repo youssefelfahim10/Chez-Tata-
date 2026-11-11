@@ -15,7 +15,7 @@ async function Today() {
   const now = new Date();
   const { start, end } = parisDayBounds(now);
 
-  const [profile, children, events] = await Promise.all([
+  const [profile, children, events, health] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
     supabase
       .from("children")
@@ -31,10 +31,15 @@ async function Today() {
       .gte("started_at", start.toISOString())
       .lt("started_at", end.toISOString())
       .order("started_at"),
+    supabase.from("child_health").select("child_id, allergies").eq("organization_id", membership.organizationId).not("allergies", "is", null),
   ]);
   if (children.error || events.error) throw new Error("Chargement de la journée impossible.");
+  // Le badge d'allergie est un confort : si la fiche santé est indisponible (migration pas encore appliquée),
+  // l'écran principal doit rester utilisable.
+  if (health.error) console.error("Fiche santé indisponible", health.error.code);
 
-  const kids = (children.data ?? []).map((c) => ({ id: c.id as string, firstName: c.first_name as string }));
+  const allergies = new Map((health.data ?? []).map((h) => [h.child_id as string, (h.allergies as string).trim()]));
+  const kids = (children.data ?? []).map((c) => ({ id: c.id as string, firstName: c.first_name as string, allergies: allergies.get(c.id as string) || null }));
   const name = profile.data?.display_name?.trim() || "TaTa";
 
   return (

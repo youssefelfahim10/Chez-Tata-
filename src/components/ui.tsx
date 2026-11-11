@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "ghost" | "danger";
@@ -21,9 +21,9 @@ export function Button({ variant = "primary", className = "", ...props }: Button
   );
 }
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Card({ children, className = "", id }: { children: ReactNode; className?: string; id?: string }) {
   return (
-    <section className={`rounded-card border border-line bg-surface p-5 shadow-luxe ${className}`}>{children}</section>
+    <section id={id} className={`rounded-card border border-line bg-surface p-5 shadow-luxe ${className}`}>{children}</section>
   );
 }
 
@@ -42,6 +42,32 @@ export function Field({ label, hint, id, name, ...props }: FieldProps) {
         aria-describedby={hint ? `${fieldId}-hint` : undefined}
         {...props}
         className="min-h-12 rounded-xl border border-line bg-surface px-4 text-base text-ink transition placeholder:text-ink-soft/70 focus:border-sun focus:outline-none focus:ring-4 focus:ring-sun/20"
+      />
+      {hint ? (
+        <p id={`${fieldId}-hint`} className="text-sm text-ink-soft">
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: string };
+
+export function TextareaField({ label, hint, id, name, ...props }: TextareaProps) {
+  const fieldId = id ?? `field-${name}`;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={fieldId} className="text-sm font-bold text-ink">
+        {label}
+      </label>
+      <textarea
+        id={fieldId}
+        name={name}
+        rows={3}
+        aria-describedby={hint ? `${fieldId}-hint` : undefined}
+        {...props}
+        className="min-h-24 rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink transition placeholder:text-ink-soft/70 focus:border-sun focus:outline-none focus:ring-4 focus:ring-sun/20"
       />
       {hint ? (
         <p id={`${fieldId}-hint`} className="text-sm text-ink-soft">

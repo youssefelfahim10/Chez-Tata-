@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { syncOperation } from "@/app/actions/sync";
 import { useJournalSync, type SendFn } from "@/components/use-journal-sync";
 import { VoicePanel, type VoiceRow } from "@/components/voice-panel";
+import { Icon } from "@/components/icons";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { DETAILS, NOTE_MAX } from "@/lib/journal/details";
 import {
@@ -20,7 +21,7 @@ import {
 import { LABELS, type ActionType } from "@/lib/journal/labels";
 import { isPlausibleTime, type Op } from "@/lib/offline/ops";
 
-export type BoardChild = { id: string; firstName: string };
+export type BoardChild = { id: string; firstName: string; allergies?: string | null };
 
 type Props = {
   userId: string;
@@ -217,6 +218,13 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, serverNo
                 </span>
               </div>
 
+              {kid.allergies ? (
+                <p className="mt-3 flex items-start gap-2 rounded-xl bg-pink-soft px-3 py-2 text-sm font-bold text-danger">
+                  <Icon name="alert" className="mt-0.5 size-4 shrink-0" />
+                  <span>Allergie : {kid.allergies}</span>
+                </p>
+              ) : null}
+
               {napping || summary.length > 0 ? (
                 <p className="mt-3 text-sm text-ink-soft">
                   {[napping && day.openNapSince && `😴 Dort depuis ${formatTime(day.openNapSince)}`, ...summary].filter(Boolean).join(" · ")}
@@ -250,6 +258,15 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, serverNo
                   Bilan du jour sur WhatsApp
                 </Link>
               ) : null}
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Link href={`/aujourdhui/messages/${kid.id}`} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-3 text-sm font-bold text-primary">
+                  <Icon name="message" className="size-4" /> Message
+                </Link>
+                <Link href={`/aujourdhui/urgence/${kid.id}`} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-danger/40 bg-surface px-3 text-sm font-bold text-danger">
+                  <Icon name="alert" className="size-4" /> Urgence
+                </Link>
+              </div>
             </li>
           );
         })}

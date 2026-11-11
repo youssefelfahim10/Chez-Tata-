@@ -31,6 +31,7 @@ const TENANT_TABLES = [
   "daily_events",
   "daily_event_revisions",
   "attendance_records",
+  "child_health",
   "monthly_statements",
   "payments",
   "expenses",
@@ -62,6 +63,10 @@ async function seedFullDataset(user: TestUser, org: string, firstName: string) {
     await q(
       "insert into child_family_links (organization_id, child_id, family_id) values ($1, $2, $3)",
       [org, child, family],
+    );
+    await q(
+      "insert into child_health (organization_id, child_id, allergies, updated_by) values ($1, $2, 'Allergie fictive', $3)",
+      [org, child, user.id],
     );
     const contract = await one(
       `insert into contracts (organization_id, child_id, assigned_assmat_id, start_date,
