@@ -91,7 +91,7 @@ export default function Page() {
       <section>
         <h2>8. Vos droits</h2>
         <p>
-          Vous pouvez accéder à vos données, les corriger, les exporter, vous opposer à certains traitements ou demander leur effacement. Dans l&apos;application, <b>Réglages → Mes données</b> permet de télécharger vos données et
+          Vous pouvez accéder à vos données, les corriger, les exporter, vous opposer à certains traitements ou demander leur effacement. Dans l&apos;application, <b>Profil → Mes données</b> permet de télécharger vos données et
           de supprimer votre compte. Pour toute autre demande : <Contact />. Nous répondons dans un délai d&apos;un mois.
         </p>
         <p>

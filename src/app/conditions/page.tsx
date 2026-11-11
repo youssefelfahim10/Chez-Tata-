@@ -31,7 +31,7 @@ export default function Page() {
       </section>
       <section>
         <h2>5. Fin du service</h2>
-        <p>Vous pouvez supprimer votre compte à tout moment depuis <b>Réglages → Mes données</b>. Nous pouvons suspendre un compte en cas d&apos;usage abusif ou illicite.</p>
+        <p>Vous pouvez supprimer votre compte à tout moment depuis <b>Profil → Mes données</b>. Nous pouvons suspendre un compte en cas d&apos;usage abusif ou illicite.</p>
       </section>
       <section>
         <h2>6. Droit applicable</h2>

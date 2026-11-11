@@ -6,6 +6,7 @@ import { ContractEditor } from "@/components/contract-editor";
 import { PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace } from "@/lib/auth/session";
 import { emptyDetails, parseDetails } from "@/lib/documents/details";
+import { employeeFromProfile, PROFILE_COLUMNS, type ProfileRow } from "@/lib/profile/schema";
 import { parisDayBounds } from "@/lib/journal/day";
 import { formatDecimalHours } from "@/lib/sheet/compute";
 import { createClient } from "@/lib/supabase/server";
@@ -22,7 +23,7 @@ async function Content({ params }: { params: Promise<{ childId: string }> }) {
   const supabase = await createClient();
   const today = parisDayBounds(new Date()).isoDate;
 
-  const [child, links, contract, previous, profile] = await Promise.all([
+  const [child, links, contract, previous, profile, caregiver] = await Promise.all([
     supabase.from("children").select("first_name, last_name, birth_date").eq("id", childId).eq("organization_id", membership.organizationId).maybeSingle(),
     supabase.from("child_family_links").select("families(name, contact_details)").eq("organization_id", membership.organizationId).eq("child_id", childId),
     supabase
@@ -36,12 +37,18 @@ async function Content({ params }: { params: Promise<{ childId: string }> }) {
     // Dernier contrat d'un autre enfant : on reprend les coordonnées de l'assistante pour ne pas les retaper.
     supabase.from("contracts").select("details").eq("organization_id", membership.organizationId).eq("assigned_assmat_id", user.id).order("created_at", { ascending: false }).limit(5),
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
+    supabase.from("caregiver_profiles").select(PROFILE_COLUMNS).eq("organization_id", membership.organizationId).eq("user_id", user.id).maybeSingle(),
   ]);
   if (child.error || links.error || contract.error || previous.error) throw new Error("Chargement du contrat impossible.");
   if (!child.data) notFound();
 
   const c = contract.data as Row | null;
   const details = c ? parseDetails(c.details) : emptyDetails();
+  // Priorité : ce qui est déjà dans ce contrat, puis le profil, puis le dernier contrat d'un autre enfant.
+  if (!caregiver.error && caregiver.data) {
+    const fromProfile = employeeFromProfile(caregiver.data as ProfileRow);
+    for (const key of Object.keys(fromProfile) as (keyof typeof fromProfile)[]) if (!details.employee[key] && fromProfile[key]) (details.employee[key] as string) = fromProfile[key] as string;
+  }
   const known = (previous.data ?? []).map((r) => parseDetails((r as Row).details).employee).find((e) => e.address || e.agrementNumber);
   if (known) {
     for (const key of Object.keys(known) as (keyof typeof known)[]) if (!details.employee[key]) (details.employee[key] as string) = known[key];

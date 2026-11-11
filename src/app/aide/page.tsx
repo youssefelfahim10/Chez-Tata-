@@ -17,7 +17,7 @@ export default function Page() {
           <li><b>Le bilan WhatsApp part-il tout seul ?</b> Non, jamais. Vous relisez, vous choisissez le destinataire et vous envoyez vous-même.</li>
           <li><b>Mes contrats et mes finances sont-ils visibles par mes collègues de MAM ?</b> Non, ils restent privés à chaque assistante.</li>
           <li><b>Comment installer l&apos;application ?</b> Sur Android, depuis Google Play. Sinon, ouvrez le site dans votre navigateur et choisissez « Ajouter à l&apos;écran d&apos;accueil ».</li>
-          <li><b>Comment supprimer mon compte ?</b> Réglages → Mes données → Supprimer mon compte.</li>
+          <li><b>Comment supprimer mon compte ?</b> Profil → Mes données → Supprimer mon compte.</li>
         </ul>
       </section>
     </LegalPage>

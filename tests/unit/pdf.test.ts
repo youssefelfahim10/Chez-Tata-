@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import type { ContractDoc, InvoiceDoc } from "@/lib/documents/types";
 import { buildContractPdf } from "@/lib/pdf/contract";
 import { buildInvoicePdf } from "@/lib/pdf/invoice";
+import { buildAttestationPdf, buildTaxHelpPdf } from "@/lib/pdf/tax";
+import { computeTax } from "@/lib/tax/recap";
 import { wrapLines } from "@/lib/pdf/kit";
 
 const fontDir = join(__dirname, "..", "..", "public", "fonts");
@@ -106,5 +108,34 @@ describe("documents PDF", () => {
     expect(giant.every((l) => measure(l) <= 60)).toBe(true);
     expect(giant.join("")).toBe("x".repeat(100));
     expect(wrapLines("a\n\nb", measure, 60)).toEqual(["a", "", "b"]);
+  });
+});
+
+
+describe("documents d'aide à la déclaration d'impôts", () => {
+  const months = Array.from({ length: 12 }, (_, i) => ({ salaryCents: i < 10 ? 60_000 : 0, allowanceCents: i < 10 ? 9_000 : 0 }));
+  const input = { year: 2025, children: [{ id: "c1", name: "Lou Martin", months, fullDays: 180, partialMinutes: 600 }, { id: "c2", name: "Noa Durand", months: months.map(() => ({ salaryCents: 0, allowanceCents: 0 })), fullDays: 0, partialMinutes: 0 }] };
+  const params = { smicHourlyCents: 1188, parentMealCents: 545, perChild: { c1: { multiplier: 3 as const, parentMealDays: 2, adjustmentCents: 0 } } };
+  const caregiver = { fullName: "Fatiha Lhosni", address: "12 rue des Lilas, 75011 Paris", phone: "06 00 00 00 00", email: "assmat@exemple.test", agreementNumber: "2019-0452" };
+
+  it("génère le récapitulatif PDF (plusieurs enfants, mois vides, SMIC renseigné)", async () => {
+    const result = computeTax(input, params);
+    const bytes = await buildTaxHelpPdf({ generatedOn: "2026-11-11", year: 2025, caregiver, params, input, result }, fontBytes);
+    const pdf = await PDFDocument.load(bytes);
+    expect(pdf.getPageCount()).toBeGreaterThanOrEqual(1);
+    expect(pdf.getTitle()).toContain("Aide à la déclaration d'impôts 2025");
+  });
+
+  it("génère le récapitulatif même sans SMIC ni profil (blancs à compléter, rien d'inventé)", async () => {
+    const p = { ...params, smicHourlyCents: 0 };
+    const bytes = await buildTaxHelpPdf({ generatedOn: "2026-11-11", year: 2026, caregiver: { fullName: "" }, params: p, input: { ...input, year: 2026 }, result: computeTax(input, p) }, fontBytes);
+    expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThanOrEqual(1);
+  });
+
+  it("génère l'attestation d'accueil", async () => {
+    const bytes = await buildAttestationPdf({ generatedOn: "2026-11-11", year: 2025, caregiver, childName: "Lou Martin", parentsNames: "Camille et Alex Martin", periodFrom: "2025-01-06", periodTo: "2025-12-19", days: 190, salaryCents: 600_000, allowanceCents: 90_000, place: "Paris" }, fontBytes);
+    const pdf = await PDFDocument.load(bytes);
+    expect(pdf.getPageCount()).toBe(1);
+    expect(pdf.getTitle()).toContain("Attestation d'accueil 2025");
   });
 });

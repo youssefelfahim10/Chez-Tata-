@@ -156,3 +156,17 @@ Chaque point fait l'objet d'une issue.
 - **Règle d'accessibilité** : la couleur n'est jamais seule. Chaque bouton garde son émoji et son texte (en encre foncée, contraste élevé). Les alertes (allergie,
   urgence) restent en rose/rouge, réservé à l'attention.
 - **Les émojis sont conservés** (choix du produit : ils parlent tout de suite) et accompagnés de leur teinte. Les icônes fines ne servent que pour les commandes (lecture, pause, flèches, coche).
+
+## Profil de l'assistante et organisation de l'application
+
+- **Onglets** : Aujourd'hui (journal) · Planning (fiche de présence) · Gestion (enfants, argent, papiers) · **Profil** (identité, impôts et documents, espace, données).
+  L'ancien « Réglages » devient la page « Espace et données » (`/parametres`), accessible depuis le profil.
+- **Profil** (`caregiver_profiles`, migration `…0010`) : identité, adresse du lieu d'accueil, agrément (numéro, dates, nombre d'enfants), assurance. **Strictement personnel** :
+  la RLS ne laisse lire que son propre profil, y compris pour une responsable de MAM. Ni numéro de sécurité sociale ni coordonnées bancaires. Il pré-remplit contrats et factures
+  (`fillEmployeeFromProfile` : il complète les blancs, n'écrase jamais) et alimente les **rappels d'échéance** (agrément, assurance ; bandeau sur « Aujourd'hui » et sur le profil).
+- **Aide à la déclaration d'impôts** (`/profil/impots`, `src/lib/tax/`) : récapitulatif annuel par enfant, d'après les factures finalisées (année de **paiement**) et les présences du journal.
+  Calcul du **régime de la somme forfaitaire** publié sur impots.gouv.fr : part imposable = rémunérations + indemnités − 3 × SMIC horaire × jours de garde (4 × avec majoration de salaire ;
+  proratisé en dessous de 8 h ; jamais de déficit). L'exemple officiel (852 €) est un test. Le SMIC n'est prérempli que pour 2025 (11,88 €) : pour une autre année il est à saisir.
+  **Tout est modifiable** avant génération (jours, heures, montants par mois, ajustement). Sorties : PDF (aide + attestation d'accueil par famille, générés dans le navigateur) et CSV.
+  Ces documents sont une **aide**, jamais un justificatif officiel (bulletins, Pajemploi et déclaration pré-remplie font foi). Les règles et plafonds changent : à revérifier chaque année.
+- **Dictée vocale** : chaque échec (autorisation, dictée iOS désactivée, silence, micro qui ne démarre pas) affiche un message et la marche à suivre ; la dictée du clavier du téléphone est toujours proposée.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ChildForm } from "@/components/child-form";
+import { HubLink, SectionTitle } from "@/components/hub-link";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace } from "@/lib/auth/session";
 import { monthRange, monthlyEstimateCents, sumCents } from "@/lib/finance/summary";
@@ -83,6 +84,7 @@ async function Dashboard() {
 
   return (
     <>
+      <SectionTitle>Ce mois-ci</SectionTitle>
       <div className="grid grid-cols-2 gap-3">
         <Tile icon="👶" value={String(kids.length)} label={kids.length > 1 ? "Enfants accueillis" : "Enfant accueilli"} hint={`${present} présent${present > 1 ? "s" : ""} aujourd’hui`} tone="bg-leaf-soft" />
         <Tile
@@ -102,38 +104,12 @@ async function Dashboard() {
         />
       </div>
 
-      <Link href="/gestion/factures" className="flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-5 shadow-sm">
-        <span className="flex items-center gap-3 text-lg font-extrabold">
-          <span aria-hidden className="text-3xl">
-            💶
-          </span>
-          Factures et paiements
-          <span className="text-sm font-normal text-ink-soft">paiement reçu → facture</span>
-        </span>
-        <span aria-hidden className="text-2xl text-ink-soft">
-          ›
-        </span>
-      </Link>
-
-      <Link href="/gestion/charges" className="flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-5 shadow-sm">
-        <span className="flex items-center gap-3 text-lg font-extrabold">
-          <span aria-hidden className="text-3xl">
-            🧾
-          </span>
-          Mes charges
-          <span className="text-sm font-normal text-ink-soft">cocher · exporter</span>
-        </span>
-        <span aria-hidden className="text-2xl text-ink-soft">
-          ›
-        </span>
-      </Link>
-
+      <SectionTitle>Mes enfants</SectionTitle>
       <Card>
-        <h2 className="text-lg font-extrabold">Enfants accueillis</h2>
         {kids.length === 0 ? (
-          <p className="mt-2 text-ink-soft">Aucun enfant pour le moment.</p>
+          <p className="text-ink-soft">Aucun enfant pour le moment. Ajoutez le premier ci-dessous.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-line">
+          <ul className="divide-y divide-line">
             {kids.map((child) => (
               <li key={child.id as string}>
                 <Link href={`/gestion/${child.id as string}`} className="flex min-h-14 items-center justify-between gap-3 py-2">
@@ -143,23 +119,26 @@ async function Dashboard() {
                     </span>
                     {[child.first_name, child.last_name].filter(Boolean).join(" ")}
                   </span>
-                  <span className="text-sm text-ink-soft">famille · contrat ›</span>
+                  <span className="text-sm text-ink-soft">famille · santé · contrat ›</span>
                 </Link>
               </li>
             ))}
           </ul>
         )}
+        <details className="mt-3 rounded-2xl border border-line" open={kids.length === 0}>
+          <summary className="flex min-h-12 cursor-pointer items-center gap-2 px-4 font-bold text-primary">
+            <span aria-hidden>➕</span> Ajouter un enfant
+          </summary>
+          <div className="px-4 pb-4 pt-2">
+            <ChildForm />
+          </div>
+        </details>
       </Card>
 
-      <Card>
-        <h2 className="mb-4 text-lg font-extrabold">➕ Ajouter un enfant</h2>
-        <ChildForm />
-      </Card>
-
-      <Card>
-        <p className="font-bold">🚧 Bientôt</p>
-        <p className="mt-1 text-ink-soft">Décomptes mensuels, paiements reçus, documents Pajemploi et exports PDF.</p>
-      </Card>
+      <SectionTitle>Argent et papiers</SectionTitle>
+      <HubLink href="/gestion/factures" emoji="💶" title="Factures et paiements" text="Paiement reçu → facture prête à envoyer" tone="gold" />
+      <HubLink href="/gestion/charges" emoji="🧾" title="Mes charges" text="Cocher, saisir, exporter" tone="aqua" />
+      <HubLink href="/profil/impots" emoji="🏛️" title="Impôts et documents" text="Aide à la déclaration, attestations d’accueil" tone="primary" />
     </>
   );
 }
@@ -167,7 +146,7 @@ async function Dashboard() {
 export default function Page() {
   return (
     <>
-      <PageTitle subtitle="Tableau de bord, contrats et finances">Gestion</PageTitle>
+      <PageTitle subtitle="Mes enfants, mon argent, mes papiers">Gestion</PageTitle>
       <Suspense fallback={<Skeleton lines={4} />}>
         <Dashboard />
       </Suspense>
