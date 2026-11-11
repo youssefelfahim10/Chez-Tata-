@@ -81,7 +81,7 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
   return (
     <div className={`flex items-baseline justify-between gap-3 py-1.5 ${strong ? "border-t border-sun/60 pt-2.5 text-base font-extrabold" : "text-sm"}`}>
       <dt className={strong ? "" : "text-ink-soft"}>{label}</dt>
-      <dd className={`tabular-nums ${strong ? "text-gold-deep" : "font-bold"}`}>{value}</dd>
+      <dd className={`shrink-0 whitespace-nowrap tabular-nums ${strong ? "text-gold-deep" : "font-bold"}`}>{value}</dd>
     </div>
   );
 }
