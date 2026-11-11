@@ -65,6 +65,14 @@ export default function Page() {
       </section>
 
       <section>
+        <h2>5 bis. Connexion avec Google</h2>
+        <p>
+          Si vous choisissez « Continuer avec Google », Google nous transmet votre <b>nom</b> et votre <b>adresse e-mail</b> pour créer votre compte. Chez TaTa n&apos;a accès ni à vos contacts, ni à vos e-mails, ni à vos
+          fichiers. Google est informé que vous vous connectez à Chez TaTa, selon sa propre politique de confidentialité. Vous pouvez aussi vous inscrire sans Google, avec une adresse e-mail et un mot de passe.
+        </p>
+      </section>
+
+      <section>
         <h2>6. Dictée vocale</h2>
         <p>
           Le bouton « Dicter » utilise la reconnaissance vocale de votre téléphone ou navigateur (selon l&apos;appareil : Google ou Apple). Le son est transmis à ce service pour être transcrit ;

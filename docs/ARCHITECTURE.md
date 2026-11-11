@@ -128,3 +128,10 @@ Chaque point fait l'objet d'une issue.
   l'enfant, apporter quelque chose, rappel de règlement). Le texte est relu, modifiable, puis ouvert dans WhatsApp par l'utilisatrice
   (même composant que le bilan : case « J'ai relu », jamais d'envoi automatique). Un champ obligatoire manquant empêche tout texte ; aucun montant ni
   symptôme n'est inventé.
+
+## Connexion avec Google
+
+- Action `signInWithGoogle` (`src/app/actions/auth.ts`) → Google → Supabase → `/auth/callback` (échange du code PKCE contre la session).
+  Destination de retour limitée aux chemins internes (`safeNextPath`) ; erreur ou refus → `/connexion?erreur=google`.
+- Seuls nom et adresse e-mail sont reçus de Google. Le prénom alimente le profil (migration `…0009`), jamais une valeur inventée.
+- L'e-mail et le mot de passe restent disponibles. Mise en service (Google Cloud + Supabase) : `docs/GOOGLE_SIGNIN.md`.

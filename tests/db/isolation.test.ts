@@ -150,6 +150,22 @@ describe("configuration de sécurité du schéma", () => {
     expect(functions).toEqual([]);
   });
 
+  it("reprend le prénom fourni par Google, sans rien inventer", async () => {
+    const cases: [Record<string, string>, string][] = [
+      [{ given_name: "Marie", full_name: "Marie Test" }, "Marie"],
+      [{ full_name: "Jeanne Exemple" }, "Jeanne"],
+      [{ name: "Léa Fictive" }, "Léa"],
+      [{ display_name: "Tata", given_name: "Autre" }, "Tata"],
+      [{}, ""],
+    ];
+    for (const [meta, expected] of cases) {
+      const email = `google-${Math.random().toString(36).slice(2)}@exemple.test`;
+      const rows = await t.admin("insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id", [email, meta]);
+      const profile = await t.admin("select display_name from profiles where id = $1", [rows[0].id]);
+      expect(profile, JSON.stringify(meta)).toEqual([{ display_name: expected }]);
+    }
+  });
+
   it("crée un profil à l'inscription", async () => {
     const rows = await t.admin("select display_name from profiles where id = $1", [alice.id]);
     expect(rows).toEqual([{ display_name: "alice" }]);

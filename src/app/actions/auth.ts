@@ -72,6 +72,26 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   return { message: "Vérifiez votre boîte mail : un lien de confirmation vient de vous être envoyé." };
 }
 
+/**
+ * Connexion (ou création de compte) avec Google. Le navigateur est envoyé chez Google puis revient sur
+ * /auth/callback. Seule une destination interne est acceptée (pas de redirection ouverte).
+ * Chez TaTa ne reçoit de Google que le nom et l'adresse e-mail : aucun accès aux contacts ni à Gmail.
+ */
+export async function signInWithGoogle(_prev: FormState, formData: FormData): Promise<FormState> {
+  const next = safeNextPath(z.string().max(500).safeParse(formData.get("next")).data);
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${await siteOrigin()}/auth/callback?next=${encodeURIComponent(next)}`,
+      // Laisse choisir le compte Google (utile quand plusieurs comptes sont connectés sur le téléphone).
+      queryParams: { prompt: "select_account" },
+    },
+  });
+  if (error || !data.url) return { error: "La connexion avec Google n'est pas disponible pour le moment. Utilisez votre e-mail." };
+  redirect(data.url);
+}
+
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
