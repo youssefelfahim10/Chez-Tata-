@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { HelpButton } from "@/components/help/help-button";
 import { Button } from "@/components/ui";
 import { LABELS, type ActionType } from "@/lib/journal/labels";
 import { detectSpeechEnv, explainSpeechError, keyboardTip, MIC_NO_ANSWER, NOTHING_HEARD, SAFARI_ADVICE, type SpeechEnv } from "@/lib/voice/errors";
@@ -207,7 +208,7 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
   return (
     <section aria-label="Dictée vocale" className="rounded-card border border-line bg-surface p-4 shadow-md">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-extrabold">🎙️ Dicter</h2>
+        <h2 className="flex items-center gap-2 text-lg font-extrabold">🎙️ Dicter <HelpButton topic="today.voice" /></h2>
         <button type="button" onClick={onClose} className="min-h-11 rounded-xl px-3 font-bold text-ink-soft" aria-label="Fermer la dictée">
           ✕
         </button>

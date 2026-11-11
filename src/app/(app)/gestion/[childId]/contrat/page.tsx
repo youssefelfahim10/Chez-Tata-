@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ContractEditor } from "@/components/contract-editor";
+import { TourLauncher } from "@/components/help/tour";
 import { PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace } from "@/lib/auth/session";
 import { emptyDetails, parseDetails } from "@/lib/documents/details";
@@ -66,6 +67,7 @@ async function Content({ params }: { params: Promise<{ childId: string }> }) {
     <>
       <PageTitle subtitle="Contrat d'accueil professionnel">{childName}</PageTitle>
       <Link href={`/gestion/${childId}`} className="-mt-2 font-bold text-primary underline">← Retour à la fiche enfant</Link>
+      <TourLauncher tour="contrat" />
       <ContractEditor
         childId={childId}
         childName={childName}

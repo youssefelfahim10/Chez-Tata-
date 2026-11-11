@@ -151,6 +151,18 @@ Chaque point fait l'objet d'une issue.
 - **Urgence en démo** : numéros fictifs ; les boutons 15 / 112 / 18 ne composent jamais de numéro (`button`, pas `tel:`).
 - L'ancien accès équipe (compte de démonstration protégé par code, `src/app/actions/demo.ts`) reste disponible, sous « Accès équipe » sur l'accueil.
 
+## Aide et visites guidées
+
+Pour celles qui sont peu à l'aise avec le numérique : chaque case ou bouton important a un « ? » qui ouvre une explication courte, et chaque grand écran a une **visite guidée**.
+
+- **Une seule bibliothèque de textes** : `src/lib/help/topics.ts` (titre, 1 à 2 phrases, exemple facultatif). Règles testées (`tests/unit/help.test.ts`) : titres ≤ 40 caractères, texte ≤ 210, phrases courtes,
+  vouvoiement, aucun jargon. Visites : `src/lib/help/tours.ts` (étapes = un sujet + un repère d'écran `data-tour`). Un test vérifie que chaque repère existe dans le code.
+- **« ? »** (`HelpButton`) : pastille 28 px, zone tactile 44 px, fenêtre en bas d'écran (grand texte, exemple, bouton « J'ai compris »), Échap, focus rendu. Les champs de formulaire l'obtiennent avec `help="…"` (`Field`, `TextareaField`).
+- **Lecture à voix haute** : bouton « Écouter l'explication » (voix du téléphone, `speechSynthesis`) ; seul le texte d'aide est lu, jamais une donnée sur un enfant.
+- **Visite guidée** (`TourLauncher`) : l'écran s'assombrit, l'élément expliqué reste éclairé, une carte dit à quoi il sert ; Suivant / Précédent / Quitter, flèches et Échap. L'élément remonte en haut de l'écran, la carte prend le bas
+  (l'éclairage est limité à la partie visible) ; un bloc replié est déplié. Une proposition « Première fois ici ? » n'apparaît qu'une fois par écran (mémorisée sur l'appareil).
+- Écrans couverts : Aujourd'hui, Gestion, Factures, Contrat, Impôts, fiche santé, profil.
+
 ## Couleurs fonctionnelles
 
 - Une couleur = un sens, partout (écran du jour, démo, accueil, navigation) : **Arrivée** vert · **Départ** marine · **Repas** or · **Sieste/Réveil** violet doux ·

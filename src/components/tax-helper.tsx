@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { HelpButton } from "@/components/help/help-button";
 import { useMemo, useState } from "react";
 import { Button, Card, Field } from "@/components/ui";
 import { downloadPdf, loadFontBytes, safeFileName } from "@/lib/pdf/browser";
@@ -187,6 +188,7 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
   return (
     <>
       <nav aria-label="Année" className="flex flex-wrap gap-2">
+        <HelpButton topic="tax.year" />
         {years.map((y) => (
           <Link key={y} href={`/profil/impots?annee=${y}`} aria-current={y === year ? "page" : undefined} className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-bold ${y === year ? "border-sun bg-sun-soft text-gold-deep" : "border-line bg-surface text-ink-soft"}`}>
             Revenus {y}
@@ -194,8 +196,8 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
         ))}
       </nav>
 
-      <Card className="border-sun/50 bg-sun-soft">
-        <p className="font-bold">Une aide, pas un document officiel</p>
+      <Card className="border-sun/50 bg-sun-soft" tour="i-intro">
+        <p className="flex items-center justify-between gap-2 font-bold">Une aide, pas un document officiel <HelpButton topic="tax.what" /></p>
         <p className="mt-1 text-sm text-ink">
           Les montants viennent de vos factures Chez TaTa (année de paiement) et de vos présences. <b>Tout est modifiable</b> : comparez avec vos bulletins, vos déclarations Pajemploi et votre déclaration pré-remplie, puis corrigez.
         </p>
@@ -218,11 +220,11 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
         </p>
       ) : null}
 
-      <Card>
+      <Card tour="i-params">
         <h2 className="text-lg font-extrabold">Paramètres de l’année {year}</h2>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          <Field label="SMIC horaire brut (€)" name="smic" value={smic} onChange={(e) => setSmic(e.target.value)} inputMode="decimal" hint={smicDefaultCents ? "11,88 € en 2025 (impots.gouv.fr)." : `À vérifier pour ${year} sur service-public.fr.`} />
-          <Field label="Repas fourni par les parents (€ par jour)" name="meal" value={meal} onChange={(e) => setMeal(e.target.value)} inputMode="decimal" hint={mealDefaultCents ? "5,45 € en 2025 (impots.gouv.fr)." : "Seulement si les parents fournissent le repas."} />
+          <Field label="SMIC horaire brut (€)" help="tax.smic" tour="i-smic" name="smic" value={smic} onChange={(e) => setSmic(e.target.value)} inputMode="decimal" hint={smicDefaultCents ? "11,88 € en 2025 (impots.gouv.fr)." : `À vérifier pour ${year} sur service-public.fr.`} />
+          <Field label="Repas fourni par les parents (€ par jour)" help="tax.parentMeal" name="meal" value={meal} onChange={(e) => setMeal(e.target.value)} inputMode="decimal" hint={mealDefaultCents ? "5,45 € en 2025 (impots.gouv.fr)." : "Seulement si les parents fournissent le repas."} />
         </div>
         {result.missingSmic ? <p className="mt-3 rounded-xl bg-pink-soft px-3 py-2 text-sm font-bold text-danger">Sans SMIC, aucune somme forfaitaire n’est déduite.</p> : null}
       </Card>
@@ -238,7 +240,7 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
           const r = result.children[index];
           const changed = JSON.stringify(st) !== JSON.stringify(initial[c.id]);
           return (
-            <Card key={c.id} className="p-0">
+            <Card key={c.id} className="p-0" tour="i-card">
               <details open={kids.length === 1} className="group">
                 <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 px-5 py-4">
                   <span className="min-w-0">
@@ -257,11 +259,11 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
                   <div>
                     <h3 className="font-bold">Jours de garde</h3>
                     <div className="mt-2 grid grid-cols-2 gap-3">
-                      <Field label="Jours de 8 h ou plus" name={`full-${c.id}`} value={st.fullDays} onChange={(e) => patch(c.id, { fullDays: e.target.value })} inputMode="numeric" />
-                      <Field label="Heures des autres jours" name={`part-${c.id}`} value={st.partialHours} onChange={(e) => patch(c.id, { partialHours: e.target.value })} inputMode="decimal" hint="Total, ex. 42,5" />
+                      <Field label="Jours de 8 h ou plus" help="tax.fullDays" tour="i-days" name={`full-${c.id}`} value={st.fullDays} onChange={(e) => patch(c.id, { fullDays: e.target.value })} inputMode="numeric" />
+                      <Field label="Heures des autres jours" help="tax.partialHours" name={`part-${c.id}`} value={st.partialHours} onChange={(e) => patch(c.id, { partialHours: e.target.value })} inputMode="decimal" hint="Total, ex. 42,5" />
                     </div>
-                    <fieldset className="mt-3">
-                      <legend className="text-sm font-bold">Somme forfaitaire</legend>
+                    <fieldset className="mt-3" data-tour="i-forfait">
+                      <legend className="w-full"><span className="flex items-center justify-between gap-2 text-sm font-bold">Somme forfaitaire <HelpButton topic="tax.forfait" /></span></legend>
                       <div className="mt-1 grid grid-cols-2 gap-2">
                         {([3, 4] as const).map((m) => (
                           <label key={m} className={`flex min-h-12 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm font-bold ${st.multiplier === m ? "border-sun bg-sun-soft" : "border-line"}`}>
@@ -270,22 +272,29 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
                           </label>
                         ))}
                       </div>
-                      <p className="mt-1 text-xs text-ink-soft">4 × pour un enfant donnant droit à une majoration de salaire (handicap, maladie).</p>
+                      <p className="mt-1 flex items-center justify-between gap-2 text-xs text-ink-soft">
+                        <span>4 × pour un enfant donnant droit à une majoration de salaire (handicap, maladie).</span>
+                        <HelpButton topic="tax.multiplier" />
+                      </p>
                     </fieldset>
                     <div className="mt-3 grid grid-cols-2 gap-3">
-                      <Field label="Repas fournis par les parents (jours)" name={`pm-${c.id}`} value={st.parentMealDays} onChange={(e) => patch(c.id, { parentMealDays: e.target.value })} inputMode="numeric" />
-                      <Field label="Ajustement forfait (€)" name={`adj-${c.id}`} value={st.adjustment} onChange={(e) => patch(c.id, { adjustment: e.target.value })} inputMode="decimal" hint="Ex. gardes de 24 h." />
+                      <Field label="Repas fournis par les parents (jours)" help="tax.parentMeal" name={`pm-${c.id}`} value={st.parentMealDays} onChange={(e) => patch(c.id, { parentMealDays: e.target.value })} inputMode="numeric" />
+                      <Field label="Ajustement forfait (€)" help="tax.adjust" name={`adj-${c.id}`} value={st.adjustment} onChange={(e) => patch(c.id, { adjustment: e.target.value })} inputMode="decimal" hint="Ex. gardes de 24 h." />
                     </div>
                   </div>
 
                   {st.estimated.some(Boolean) ? (
-                    <p className="rounded-xl border border-sun/60 bg-sun-soft px-3 py-2 text-sm">
-                      ✨ <b>{st.estimated.filter(Boolean).length} mois remplis automatiquement</b> d’après le contrat et les présences pointées (mois sans facture validée). Ce sont des <b>estimations</b> : corrigez-les dans le détail ci-dessous, ou validez la facture du mois pour utiliser le montant réel.
+                    <p data-tour="i-estimated" className="flex items-start justify-between gap-2 rounded-xl border border-sun/60 bg-sun-soft px-3 py-2 text-sm">
+                      <span>✨ <b>{st.estimated.filter(Boolean).length} mois remplis automatiquement</b> d’après le contrat et les présences pointées (mois sans facture validée). Ce sont des <b>estimations</b> : corrigez-les dans le détail ci-dessous, ou validez la facture du mois pour utiliser le montant réel.</span>
+                      <HelpButton topic="tax.estimated" />
                     </p>
                   ) : null}
 
-                  <details className="rounded-xl border border-line">
-                    <summary className="min-h-12 cursor-pointer px-4 py-3 text-sm font-bold">Détail par mois de paiement (modifiable)</summary>
+                  <details className="rounded-xl border border-line" data-tour="i-months">
+                    <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-2 px-4 py-3 text-sm font-bold">
+                      <span>Détail par mois de paiement (modifiable)</span>
+                      <HelpButton topic="tax.months" />
+                    </summary>
                     <div className="overflow-x-auto px-3 pb-3">
                       <table className="w-full min-w-[320px] text-sm">
                         <thead>
@@ -356,9 +365,12 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
       )}
 
       {kids.length > 0 ? (
-        <Card className="border-sun/60">
-          <h2 className="text-lg font-extrabold">Ce que vous reportez dans votre déclaration</h2>
-          <dl className="mt-3">
+        <Card className="border-sun/60" tour="i-outputs">
+          <h2 className="flex items-center justify-between gap-2 text-lg font-extrabold">
+            <span>Ce que vous reportez dans votre déclaration</span>
+            <HelpButton topic="tax.result" />
+          </h2>
+          <dl className="mt-3" data-tour="i-result">
             <Row label="Montant à déclarer (lignes 1AA à 1DA)" value={money(result.totals.taxableCents)} strong />
             <Row label="Somme forfaitaire déduite (cases 1GA à 1JA)" value={money(result.totals.deductionCents)} />
           </dl>
@@ -377,7 +389,10 @@ export function TaxHelper({ year, years, generatedOn, caregiver, hasProfile, kid
               {error}
             </p>
           ) : null}
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <p className="mt-4 flex items-center gap-2 text-sm font-bold">
+            Vos documents <HelpButton topic="tax.outputs" />
+          </p>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2" data-tour="i-docs">
             <Button type="button" disabled={busy !== null} onClick={pdfHelp}>
               {busy === "help" ? "Préparation…" : "📄 Télécharger l’aide (PDF)"}
             </Button>

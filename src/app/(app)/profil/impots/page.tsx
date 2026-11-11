@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { TourLauncher } from "@/components/help/tour";
 import { TaxHelper, type TaxChildProps } from "@/components/tax-helper";
 import { PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace } from "@/lib/auth/session";
@@ -184,6 +185,7 @@ export default function Page({ searchParams }: PageProps<"/profil/impots">) {
       <Link href="/profil" className="-mt-2 font-bold text-primary underline">
         ← Retour au profil
       </Link>
+      <TourLauncher tour="impots" />
       <Suspense fallback={<Skeleton lines={4} />}>
         <Content searchParams={searchParams} />
       </Suspense>

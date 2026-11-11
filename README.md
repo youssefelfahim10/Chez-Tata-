@@ -53,6 +53,8 @@ sequenceDiagram
 | **Gestion** | Enfants, familles, contrats PDF, factures « paiement reçu », charges |
 | **Profil** | Identité, agrément, assurance, **aide à la déclaration d'impôts** (modifiable, jamais présentée comme officielle) |
 
+🧭 **Aide à chaque pas** : une visite guidée par écran et un « ? » à côté de chaque case, avec des explications courtes et simples (lisibles à voix haute).
+
 Couleurs **et** emojis pour chaque geste (la couleur n'est jamais seule) : 👋 arrivée · 🏠 départ · 🍽️ repas · 😴 sieste · 🧷 change · 🩹 soin.
 
 ## Comment ça marche

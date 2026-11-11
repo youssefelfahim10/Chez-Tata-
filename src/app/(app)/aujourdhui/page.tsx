@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { TourLauncher } from "@/components/help/tour";
 import { TodayBoard } from "@/components/today-board";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
 import { toGender } from "@/lib/children/gender";
@@ -62,6 +63,7 @@ async function Today() {
   return (
     <>
       <PageTitle subtitle={formatLongDate(now)}>Bonjour {name} !</PageTitle>
+      {kids.length > 0 ? <TourLauncher tour="aujourdhui" offer /> : null}
       {reminders.length > 0 ? (
         <Link href="/profil" className={`flex min-h-12 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold ${reminders[0].level === "late" ? "bg-pink-soft text-danger" : "bg-sun-soft text-ink"}`}>
           <span aria-hidden>{reminders[0].level === "late" ? "⚠️" : "⏰"}</span>

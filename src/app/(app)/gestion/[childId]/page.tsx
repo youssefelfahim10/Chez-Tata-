@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ChildAvatar } from "@/components/child-avatar";
 import { ChildGenderPicker } from "@/components/child-gender-picker";
+import { HelpButton } from "@/components/help/help-button";
 import { ChildHealthForm } from "@/components/child-health-form";
 import { ContractForm, EndContractForm, FamilyForm } from "@/components/family-contract-forms";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
@@ -76,7 +77,7 @@ async function Detail({ params }: { params: Promise<{ childId: string }> }) {
         <div className="flex items-center gap-3">
           <ChildAvatar name={String(c.first_name)} gender={c.gender as string | null} size="lg" />
           <div>
-            <h2 className="text-lg font-extrabold">Icône de {String(c.first_name)}</h2>
+            <h2 className="flex items-center gap-2 text-lg font-extrabold">Icône de {String(c.first_name)} <HelpButton topic="child.icon" /></h2>
             <p className="text-sm text-ink-soft">Fille ou garçon : sert seulement à choisir l’icône à l’écran.</p>
           </div>
         </div>

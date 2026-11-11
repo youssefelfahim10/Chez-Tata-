@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { HelpButton } from "@/components/help/help-button";
+import type { HelpId } from "@/lib/help/topics";
 import { TONES, type ToneName } from "@/lib/ui/tones";
 
 /** Rangée de navigation : émoji teinté, titre, explication courte. Même présentation partout (Profil, Gestion). */
@@ -19,6 +21,11 @@ export function HubLink({ href, emoji, title, text, tone }: { href: string; emoj
   );
 }
 
-export function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="mt-2 text-xs font-bold uppercase tracking-[0.22em] text-gold-deep">{children}</h2>;
+export function SectionTitle({ children, help }: { children: React.ReactNode; help?: HelpId }) {
+  return (
+    <h2 className="mt-2 flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-[0.22em] text-gold-deep">
+      <span>{children}</span>
+      {help ? <HelpButton topic={help} /> : null}
+    </h2>
+  );
 }

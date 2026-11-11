@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { HelpButton } from "@/components/help/help-button";
 import type { FormState } from "@/app/actions/auth";
 import { saveChildHealth } from "@/app/actions/health";
 import { CONTACT_SLOTS, type Contact } from "@/lib/health/schema";
@@ -40,7 +41,7 @@ function ContactRows({ prefix, legend, hint, defaults }: { prefix: "ec" | "pk"; 
   const open = defaults.length > VISIBLE_SLOTS;
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="text-sm font-bold text-ink">{legend}</legend>
+      <legend className="w-full"><span className="flex items-center justify-between gap-2 text-sm font-bold text-ink">{legend} <HelpButton topic={prefix === "ec" ? "health.emergency" : "health.pickup"} /></span></legend>
       <p className="-mt-1 text-sm text-ink-soft">{hint}</p>
       {Array.from({ length: VISIBLE_SLOTS }, (_, i) => (
         <ContactSlot key={i} prefix={prefix} index={i} legend={legend} contact={defaults[i]} />
@@ -66,13 +67,13 @@ export function ChildHealthForm({ childId, defaults }: { childId: string; defaul
         Ce sont des informations de santé : ne saisissez que ce qui est utile en cas d’urgence. Rien n’est envoyé à personne, et tout est facultatif.
       </p>
 
-      <TextareaField label="Allergies" name="allergies" defaultValue={defaults.allergies} maxLength={500} placeholder="ex. arachides, œuf" />
-      <TextareaField label="Régime alimentaire" name="diet" defaultValue={defaults.diet} maxLength={300} placeholder="ex. sans porc" />
-      <TextareaField label="Traitement en cours" name="medication" defaultValue={defaults.medication} maxLength={500} placeholder="ex. inhalateur : 2 bouffées si besoin" />
+      <TextareaField label="Allergies" help="health.allergies" name="allergies" defaultValue={defaults.allergies} maxLength={500} placeholder="ex. arachides, œuf" />
+      <TextareaField label="Régime alimentaire" help="health.diet" name="diet" defaultValue={defaults.diet} maxLength={300} placeholder="ex. sans porc" />
+      <TextareaField label="Traitement en cours" help="health.medication" name="medication" defaultValue={defaults.medication} maxLength={500} placeholder="ex. inhalateur : 2 bouffées si besoin" />
       <TextareaField label="Autres remarques utiles" name="medicalNotes" defaultValue={defaults.medicalNotes} maxLength={500} />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Médecin ou pédiatre" name="doctorName" defaultValue={defaults.doctorName} maxLength={120} autoComplete="off" />
+        <Field label="Médecin ou pédiatre" help="health.doctor" name="doctorName" defaultValue={defaults.doctorName} maxLength={120} autoComplete="off" />
         <Field label="Téléphone du médecin" name="doctorPhone" defaultValue={defaults.doctorPhone} maxLength={30} type="tel" inputMode="tel" autoComplete="off" />
       </div>
 
