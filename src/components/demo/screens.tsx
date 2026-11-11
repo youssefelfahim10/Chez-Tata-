@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
-import { Icon, type IconName } from "@/components/icons";
+import { Icon } from "@/components/icons";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
+import { ACTION_EMOJI, ACTION_TONE } from "@/lib/journal/labels";
 import { buildDayReport, renderSummary } from "@/lib/whatsapp/summary";
 import type { JournalEvent } from "@/lib/journal/day";
 import type { SceneId } from "@/lib/demo/script";
+import { TONES, type ToneName } from "@/lib/ui/tones";
 
 /* Écrans animés du « film ». Purement décoratifs (aria-hidden côté lecteur) : le texte de chaque chapitre est lu à côté. */
 
@@ -18,7 +20,7 @@ function Tap({ when, children, className = "" }: { when: number; children: React
       </span>
       <span aria-hidden className="d-ripple pointer-events-none absolute left-1/2 top-1/2 size-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-deep/40" style={at(when + 0.72)} />
       <span aria-hidden className="d-finger pointer-events-none absolute -bottom-3 right-1 z-20 flex size-9 items-center justify-center rounded-full bg-ink/85 text-white shadow-lg" style={at(when)}>
-        <Icon name="pointer" className="size-5" />
+        <span className="text-lg leading-none">👆</span>
       </span>
     </span>
   );
@@ -48,16 +50,17 @@ function Avatar({ letter, tone = "bg-primary-soft text-primary" }: { letter: str
   return <span className={`flex size-10 shrink-0 items-center justify-center rounded-full font-display text-lg font-semibold ${tone}`}>{letter}</span>;
 }
 
-type Btn = { icon: IconName; label: string; tapAt?: number; active?: boolean };
+type Btn = { emoji: string; label: string; tone: ToneName; tapAt?: number };
 
 function ActionGrid({ buttons }: { buttons: Btn[] }) {
   return (
     <div className="mt-3 grid grid-cols-3 gap-1.5">
       {buttons.map((b) => {
-        const cls = `h-[68px] rounded-xl border text-[11px] font-bold ${b.active ? "border-sun/70 bg-sun-soft text-gold-deep" : "border-line bg-cream text-primary"}`;
+        const tone = TONES[b.tone];
+        const cls = `h-[68px] rounded-xl border text-[11px] font-bold text-ink ${tone.box}`;
         const inner = (
           <>
-            <Icon name={b.icon} className="size-5" />
+            <span aria-hidden className="text-xl leading-none">{b.emoji}</span>
             {b.label}
           </>
         );
@@ -84,20 +87,20 @@ function Swap({ when, before, after, className = "" }: { when: number; before: R
   );
 }
 
-const pill = (text: string, tone: string, icon?: IconName) => (
+const pill = (text: string, tone: string, glyph?: string) => (
   <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-bold ${tone}`}>
-    {icon ? <Icon name={icon} className="size-3" /> : null}
+    {glyph ? <span aria-hidden>{glyph}</span> : null}
     {text}
   </span>
 );
 
 const BASE: Btn[] = [
-  { icon: "login", label: "Arrivée" },
-  { icon: "logout", label: "Départ" },
-  { icon: "utensils", label: "Repas" },
-  { icon: "moon", label: "Sieste" },
-  { icon: "droplet", label: "Change" },
-  { icon: "plus", label: "Soins" },
+  { emoji: ACTION_EMOJI.arrival, label: "Arrivée", tone: ACTION_TONE.arrival },
+  { emoji: ACTION_EMOJI.departure, label: "Départ", tone: ACTION_TONE.departure },
+  { emoji: ACTION_EMOJI.meal, label: "Repas", tone: ACTION_TONE.meal },
+  { emoji: ACTION_EMOJI.nap, label: "Sieste", tone: ACTION_TONE.nap },
+  { emoji: ACTION_EMOJI.diaper, label: "Change", tone: ACTION_TONE.diaper },
+  { emoji: ACTION_EMOJI.care, label: "Soins", tone: ACTION_TONE.care },
 ];
 
 function Arrivee() {
@@ -113,7 +116,7 @@ function Arrivee() {
               <Swap when={2.9} before={<>Journée du jour</>} after={<>Arrivée 08 h 12</>} />
             </p>
           </div>
-          <Swap when={2.9} before={pill("Pas encore arrivé", "bg-sun-soft text-gold-deep")} after={pill("Présent", "bg-leaf-soft text-leaf", "check")} className="shrink-0" />
+          <Swap when={2.9} before={pill("Pas encore arrivé", "bg-sun-soft text-gold-deep")} after={pill("Présent", "bg-leaf-soft text-leaf", "✓")} className="shrink-0" />
         </div>
         <ActionGrid buttons={BASE.map((b) => (b.label === "Arrivée" ? { ...b, tapAt: 1.3 } : b))} />
       </div>
@@ -137,9 +140,9 @@ function Gestes() {
           )}
         />
         <div className="mt-3 flex min-h-[26px] flex-wrap gap-1.5">
-          <span className="d-pop" style={at(1.5)}>{pill("Repas ×1", "bg-sun-soft text-gold-deep", "utensils")}</span>
-          <span className="d-pop" style={at(4.2)}>{pill("Sieste en cours", "bg-primary-soft text-primary", "moon")}</span>
-          <span className="d-pop" style={at(5.9)}>{pill("Change ×1", "bg-cream text-primary", "droplet")}</span>
+          <span className="d-pop" style={at(1.5)}>{pill("Repas ×1", TONES.gold.chip, "🍽️")}</span>
+          <span className="d-pop" style={at(4.2)}>{pill("Sieste en cours", TONES.dusk.chip, "😴")}</span>
+          <span className="d-pop" style={at(5.9)}>{pill("Change ×1", TONES.aqua.chip, "🧷")}</span>
         </div>
       </div>
       <div className="d-in mx-3 mt-3 rounded-2xl border border-sun/50 bg-sun-soft p-3" style={at(1.6)}>
@@ -163,17 +166,17 @@ function Reseau() {
           <p className="text-[11px] text-ink-soft">Présent</p>
         </div>
         <span className="mt-1 inline-grid justify-items-end">
-          <span className="d-out [grid-area:1/1]" style={at(0.9)}>{pill("En ligne", "bg-leaf-soft text-leaf", "check")}</span>
+          <span className="d-out [grid-area:1/1]" style={at(0.9)}>{pill("En ligne", "bg-leaf-soft text-leaf", "✓")}</span>
           <span className="d-in [grid-area:1/1]" style={at(0.9)}>
-            <span className="d-out inline-flex" style={at(5.1)}>{pill("Hors ligne", "bg-sun-soft text-gold-deep", "wifiOff")}</span>
+            <span className="d-out inline-flex" style={at(5.1)}>{pill("Hors ligne", "bg-sun-soft text-gold-deep", "📴")}</span>
           </span>
-          <span className="d-in [grid-area:1/1]" style={at(5.1)}>{pill("Synchronisé", "bg-leaf-soft text-leaf", "check")}</span>
+          <span className="d-in [grid-area:1/1]" style={at(5.1)}>{pill("Synchronisé", "bg-leaf-soft text-leaf", "✓")}</span>
         </span>
       </div>
       <div className="relative mx-3 mb-3 min-h-[46px]">
         <div className="d-in" style={at(1.2)}>
           <div className="d-out flex items-start gap-2 rounded-xl bg-sun-soft px-3 py-2.5 text-[11px] text-ink" style={at(5.1)}>
-            <Icon name="wifiOff" className="mt-0.5 size-4 shrink-0 text-gold-deep" />
+            <span aria-hidden className="mt-px shrink-0">📴</span>
             Pas de réseau : vos saisies restent sur le téléphone.
           </div>
         </div>
@@ -186,9 +189,9 @@ function Reseau() {
         <ActionGrid buttons={BASE.map((b) => (b.label === "Repas" ? { ...b, tapAt: 2 } : b))} />
         <div className="mt-3 grid min-h-[26px] justify-items-start">
           <span className="d-pop [grid-area:1/1]" style={at(3.2)}>
-            <span className="d-out inline-flex" style={at(5.1)}>{pill("1 saisie à envoyer", "bg-primary-soft text-primary", "history")}</span>
+            <span className="d-out inline-flex" style={at(5.1)}>{pill("1 saisie à envoyer", "bg-primary-soft text-primary", "⏳")}</span>
           </span>
-          <span className="d-pop [grid-area:1/1]" style={at(5.2)}>{pill("Envoyé · heure réelle du geste", "bg-leaf-soft text-leaf", "check")}</span>
+          <span className="d-pop [grid-area:1/1]" style={at(5.2)}>{pill("Envoyé · heure réelle du geste", "bg-leaf-soft text-leaf", "✓")}</span>
         </div>
       </div>
       <Toast when={3}>
@@ -206,7 +209,7 @@ function Dictee() {
       <Header title="Dictée" sub="Parlez, l’appli propose" />
       <div className="mx-3 flex flex-col items-center rounded-2xl border border-line bg-surface p-4 shadow-luxe">
         <span className="d-glow flex size-14 items-center justify-center rounded-full bg-gradient-to-b from-primary to-primary-strong text-white">
-          <Icon name="mic" className="size-6" />
+          <span aria-hidden className="text-2xl">🎙️</span>
         </span>
         <div aria-hidden className="mt-3 flex h-8 items-center gap-1">
           {bars.map((d, i) => (
@@ -299,7 +302,7 @@ function Urgence() {
       <Header title="Urgence · Lou" sub="Les informations que vous avez saisies" />
       <div className="mx-3 rounded-2xl border border-danger/30 bg-pink-soft p-3">
         <p className="flex items-center gap-1.5 text-[11px] font-bold text-danger">
-          <Icon name="alert" className="size-4" /> Danger vital : appelez sans attendre
+          <span aria-hidden>🚨</span> Danger vital : appelez sans attendre
         </p>
         <div className="mt-2 grid grid-cols-3 gap-2">{[["15", "SAMU"], ["112", "Européen"], ["18", "Pompiers"]].map(([n, l], i) => call(n, l, i))}</div>
       </div>
@@ -313,7 +316,7 @@ function Urgence() {
         ["Autorisé à récupérer", "Tante Test", "tante", 3.3],
       ].map(([k, n, p, d]) => (
         <div key={String(k)} className="d-in mx-3 mt-2 flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3 py-2" style={at(Number(d))}>
-          <Icon name="phone" className="size-4 shrink-0 text-primary" />
+          <span aria-hidden className="shrink-0 text-base">📞</span>
           <div className="flex-1 text-xs">
             <p className="font-bold">{n}</p>
             <p className="text-[10px] text-ink-soft">{k} · {p}</p>

@@ -20,6 +20,12 @@
   --color-sun: #c9a24d;
   --color-sun-soft: #fbf5e6;
   --color-gold-deep: #8f6f26;
+  /* Teintes fonctionnelles (une couleur = un sens), toutes assorties à la marque. */
+  --color-dusk: #5b4bb7;
+  --color-dusk-soft: #efedfb;
+  --color-aqua: #0e7490;
+  --color-aqua-soft: #e3f4f8;
+  --color-rose: #c4104a;
   --shadow-luxe: 0 1px 2px rgb(15 31 61 / 0.04), 0 14px 34px -16px rgb(15 31 61 / 0.18);
   --color-sky-soft: #eaf2fd;
   --color-danger: #b3261e;

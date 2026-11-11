@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Icon } from "@/components/icons";
 import { ShareSummary, type Recipient } from "@/components/share-summary";
 import { findTemplate, missingFields, renderTemplate, TEMPLATES, type Template, type TemplateId, type Values } from "@/lib/messages/templates";
 
@@ -63,7 +62,7 @@ export function MessageComposer({ childName, sender, recipients }: { childName: 
         <ShareSummary key={text} initialText={text} recipients={recipients} hasContent />
       ) : (
         <p className="flex items-center gap-2 rounded-xl bg-cream px-4 py-3 text-sm text-ink-soft">
-          <Icon name="message" className="size-4 shrink-0" />
+          <span aria-hidden>💬</span>
           Renseignez : {missing.map((m) => m.label.toLowerCase()).join(", ")}.
         </p>
       )}

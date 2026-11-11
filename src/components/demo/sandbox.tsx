@@ -1,23 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Icon, type IconName } from "@/components/icons";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { applyAction, demoBilan, DEMO_EMERGENCY, DEMO_KIDS } from "@/lib/demo/sandbox";
 import { formatDuration, formatTime, summarizeChildDay, type JournalEvent } from "@/lib/journal/day";
-import { LABELS, type ActionType } from "@/lib/journal/labels";
+import { ACTION_EMOJI, ACTION_TONE, LABELS, type ActionType } from "@/lib/journal/labels";
+import { TONES } from "@/lib/ui/tones";
 
 /** Mode « essayez vous-même » : les vrais gestes de l'application sur deux enfants fictifs, en mémoire. */
-
-const ICONS: Record<ActionType, IconName> = {
-  arrival: "login",
-  departure: "logout",
-  meal: "utensils",
-  nap: "moon",
-  nap_end: "sun",
-  diaper: "droplet",
-  care: "plus",
-};
 
 type View = { name: "home" } | { name: "bilan" | "urgence"; childId: string };
 type Toast = { text: string; error?: boolean };
@@ -88,9 +78,9 @@ export function Sandbox({ onTouched }: { onTouched?: () => void }) {
                         type="button"
                         onClick={() => act(kid.id, type)}
                         aria-label={`${LABELS[type].label} — ${kid.firstName}`}
-                        className="flex h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line bg-cream text-[11px] font-bold text-primary transition active:scale-95"
+                        className={`flex h-16 flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-bold text-ink transition active:scale-95 ${TONES[ACTION_TONE[type]].box}`}
                       >
-                        <Icon name={ICONS[type]} className="size-5" />
+                        <span aria-hidden className="text-2xl">{ACTION_EMOJI[type]}</span>
                         {LABELS[type].label}
                       </button>
                     ))}
@@ -100,7 +90,7 @@ export function Sandbox({ onTouched }: { onTouched?: () => void }) {
                       <WhatsAppIcon className="size-4 text-white" /> Bilan
                     </button>
                     <button type="button" onClick={() => setView({ name: "urgence", childId: kid.id })} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-danger/40 text-danger">
-                      <Icon name="alert" className="size-4" /> Urgence
+                      <span aria-hidden>🚨</span> Urgence
                     </button>
                   </div>
                 </li>
@@ -146,7 +136,7 @@ export function Sandbox({ onTouched }: { onTouched?: () => void }) {
               <Back onClick={() => setView({ name: "home" })} />
               <p className="font-display text-2xl font-semibold">Urgence · {name}</p>
               <div className="mt-2 rounded-2xl border border-danger/30 bg-pink-soft p-3">
-                <p className="flex items-center gap-1.5 text-[11px] font-bold text-danger"><Icon name="alert" className="size-4" /> Danger vital : appelez sans attendre</p>
+                <p className="flex items-center gap-1.5 text-[11px] font-bold text-danger"><span aria-hidden>🚨</span> Danger vital : appelez sans attendre</p>
                 <div className="mt-2 grid grid-cols-3 gap-2">
                   {[["15", "SAMU"], ["112", "Européen"], ["18", "Pompiers"]].map(([n, l]) => (
                     <button key={n} type="button" onClick={fake} className="flex h-14 flex-col items-center justify-center rounded-xl bg-danger text-white">

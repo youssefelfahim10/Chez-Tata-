@@ -147,3 +147,12 @@ Chaque point fait l'objet d'une issue.
   et le **bilan** viennent du vrai code (`summarizeChildDay`, `buildDayReport`, `renderSummary`), donc ce que voit le visiteur est ce que produit l'application.
 - **Urgence en démo** : numéros fictifs ; les boutons 15 / 112 / 18 ne composent jamais de numéro (`button`, pas `tel:`).
 - L'ancien accès équipe (compte de démonstration protégé par code, `src/app/actions/demo.ts`) reste disponible, sous « Accès équipe » sur l'accueil.
+
+## Couleurs fonctionnelles
+
+- Une couleur = un sens, partout (écran du jour, démo, accueil, navigation) : **Arrivée** vert · **Départ** marine · **Repas** or · **Sieste/Réveil** violet doux ·
+  **Change** turquoise · **Soins** rose. Jetons et classes dans `src/lib/ui/tones.ts` ; icône et teinte de chaque geste dans `src/lib/journal/labels.ts`
+  (`ACTION_EMOJI`, `ACTION_TONE`). Pour changer une couleur : modifier ces deux fichiers (et les jetons `--color-*` de `globals.css`).
+- **Règle d'accessibilité** : la couleur n'est jamais seule. Chaque bouton garde son émoji et son texte (en encre foncée, contraste élevé). Les alertes (allergie,
+  urgence) restent en rose/rouge, réservé à l'attention.
+- **Les émojis sont conservés** (choix du produit : ils parlent tout de suite) et accompagnés de leur teinte. Les icônes fines ne servent que pour les commandes (lecture, pause, flèches, coche).

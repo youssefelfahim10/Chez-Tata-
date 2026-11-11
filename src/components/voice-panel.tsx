@@ -170,7 +170,7 @@ export function VoicePanel({ kids, onValidate, onClose }: Props) {
                   <select aria-label="Action" value={row.action} onChange={(e) => update(row.key, { action: e.target.value as VoiceAction })} className="min-h-12 rounded-xl border border-line bg-surface px-3">
                     {ACTIONS.map((a) => (
                       <option key={a} value={a}>
-                        {LABELS[a as ActionType].icon} {LABELS[a as ActionType].label}
+                        {LABELS[a as ActionType].label}
                       </option>
                     ))}
                   </select>

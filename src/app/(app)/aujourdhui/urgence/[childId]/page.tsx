@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { Icon } from "@/components/icons";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace } from "@/lib/auth/session";
 import { contactsFromJson, telHref, type Contact } from "@/lib/health/schema";
@@ -17,7 +16,7 @@ function CallButton({ href, label, detail, tone = "ghost" }: { href: string | nu
   const style = tone === "danger" ? "bg-danger text-white" : "border border-line bg-surface text-ink";
   const content = (
     <>
-      <Icon name="phone" className="size-5 shrink-0" />
+      <span aria-hidden className="shrink-0 text-xl">📞</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate">{label}</span>
         {detail ? <span className={`block text-sm font-normal ${tone === "danger" ? "text-white/85" : "text-ink-soft"}`}>{detail}</span> : null}
@@ -30,7 +29,7 @@ function CallButton({ href, label, detail, tone = "ghost" }: { href: string | nu
     </a>
   ) : (
     <div className={`${base} border border-dashed border-line text-ink-soft`}>
-      <Icon name="phone" className="size-5 shrink-0 opacity-50" />
+      <span aria-hidden className="shrink-0 text-xl opacity-50">📞</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate">{label}</span>
         <span className="block text-sm font-normal">Pas de numéro renseigné</span>
@@ -94,7 +93,7 @@ async function Urgence({ params }: { params: Promise<{ childId: string }> }) {
 
       <Card className="border-danger/30 bg-pink-soft">
         <p className="flex items-center gap-2 font-bold text-danger">
-          <Icon name="alert" className="size-5" /> Danger vital : appelez sans attendre
+          <span aria-hidden>🚨</span> Danger vital : appelez sans attendre
         </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
           <CallButton href="tel:15" label="15" detail="SAMU" tone="danger" />
