@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { initialPlayer, playerReducer, SCENES, totalDuration, type PlayerState } from "@/lib/demo/script";
-import { applyAction, demoBilan, DEMO_EMERGENCY, DEMO_KIDS } from "@/lib/demo/sandbox";
+import { applyAction, demoBilan, DEMO_EMERGENCY, DEMO_KIDS, runOps } from "@/lib/demo/sandbox";
 import type { JournalEvent } from "@/lib/journal/day";
 
 describe("scénario de la démo", () => {
@@ -13,6 +13,13 @@ describe("scénario de la démo", () => {
       expect(s.duration).toBeLessThanOrEqual(10_000);
     }
     expect(totalDuration()).toBeLessThan(90_000);
+  });
+
+  it("présente les mêmes fonctions que l'application : corriger, archives, impôts, dictée", () => {
+    const ids = SCENES.map((s) => s.id);
+    for (const id of ["gestes", "corriger", "dictee", "bilan", "urgence", "papiers", "impots"] as const) expect(ids).toContain(id);
+    expect(ids.indexOf("corriger")).toBeGreaterThan(ids.indexOf("gestes"));
+    expect(ids.at(-1)).toBe("fin");
   });
 });
 
@@ -90,5 +97,28 @@ describe("bac à sable", () => {
     for (const info of Object.values(DEMO_EMERGENCY)) {
       for (const p of info.parents) expect(p.phone).toMatch(/^0[1-9]( \d\d){4}$/);
     }
+  });
+
+  it("annuler un geste le met en archive et le rétablit avec ses précisions (code réel de l'application)", () => {
+    let state = { events: applyAction([], lou, "arrival", t(8, 0)).events, archived: [] as JournalEvent[] };
+    const meal = applyAction(state.events, lou, "meal", t(11, 30));
+    state = { ...state, events: meal.events };
+    state = runOps(state, [{ kind: "detail", id: "d1", targetId: meal.created!, payload: { amount: "all" } }]);
+    state = runOps(state, [{ kind: "undo", id: "u1", targetId: meal.created!, undo: "event" }]);
+    expect(state.events.map((e) => e.event_type)).toEqual(["arrival"]);
+    expect(state.archived).toHaveLength(1);
+    state = runOps(state, [{ kind: "restore", id: "r1", targetId: meal.created! }]);
+    expect(state.events.map((e) => e.event_type)).toEqual(["arrival", "meal"]);
+    expect(state.archived).toEqual([]);
+    expect(state.events[1].event_payload).toEqual({ amount: "all" });
+  });
+
+  it("les identifiants restent uniques même après une annulation", () => {
+    const first = applyAction([], lou, "arrival", t(8, 0));
+    const second = applyAction(first.events, lou, "meal", t(9, 0));
+    const archivedOnly = runOps({ events: second.events, archived: [] }, [{ kind: "undo", id: "u", targetId: first.created!, undo: "event" }]);
+    const third = applyAction(archivedOnly.events, lou, "care", t(10, 0));
+    const ids = [...third.events, ...archivedOnly.archived].map((e) => e.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

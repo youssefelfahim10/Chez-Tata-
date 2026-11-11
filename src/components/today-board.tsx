@@ -19,6 +19,7 @@ import {
   type JournalEvent,
 } from "@/lib/journal/day";
 import { ACTION_EMOJI, ACTION_TONE, LABELS, type ActionType } from "@/lib/journal/labels";
+import { buildEdit } from "@/lib/journal/edit";
 import { buildTimeline, type TimelineItem } from "@/lib/journal/timeline";
 import { TONES } from "@/lib/ui/tones";
 import { isPlausibleTime, type Op } from "@/lib/offline/ops";
@@ -188,48 +189,16 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
 
   function saveEdit(kid: BoardChild, item: TimelineItem) {
     if (!editing) return;
-    const fail = (error: string) => setEditing({ ...editing, error });
-    const date = parisDateKey(item.startedAt);
-    let startedAt = item.startedAt;
-    let endedAt: string | undefined;
-    try {
-      if (editing.start !== item.startValue) startedAt = parisInstant(date, editing.start).toISOString();
-      if (item.endValue !== null && editing.end !== item.endValue) endedAt = parisInstant(date, editing.end).toISOString();
-    } catch {
-      return fail("Indiquez une heure valide.");
-    }
-    if (startedAt !== item.startedAt && !isPlausibleTime(startedAt, new Date())) return fail(`L’heure ${editing.start} est dans le futur ou trop ancienne.`);
-    if (endedAt && !isPlausibleTime(endedAt, new Date())) return fail(`L’heure ${editing.end} est dans le futur ou trop ancienne.`);
-    const finalEnd = endedAt ?? item.endedAt;
-    if (finalEnd && Date.parse(finalEnd) < Date.parse(startedAt)) return fail("Le réveil ne peut pas précéder l’endormissement.");
-
-    const payload: Record<string, string> = {};
-    const undoPayload: Record<string, string> = {};
-    for (const key of ["amount", "diaper", "care", "note"]) {
-      const next = (editing.values[key] ?? "").trim().slice(0, NOTE_MAX);
-      const before = item.values[key] ?? "";
-      if (next !== before) {
-        payload[key] = next;
-        undoPayload[key] = before;
-      }
-    }
-    const timeChanged = startedAt !== item.startedAt;
-    if (!timeChanged && !endedAt && Object.keys(payload).length === 0) return setEditing(null);
-
-    submit({ kind: "edit", id: crypto.randomUUID(), targetId: item.targetId, ...(timeChanged ? { startedAt } : {}), ...(endedAt ? { endedAt } : {}), ...(Object.keys(payload).length ? { payload } : {}) });
+    const outcome = buildEdit(item, editing, new Date());
+    if ("error" in outcome) return setEditing({ ...editing, error: outcome.error });
     setEditing(null);
+    if ("unchanged" in outcome) return;
+    submit({ kind: "edit", id: crypto.randomUUID(), targetId: item.targetId, ...outcome.fields });
     show(
       {
         text: `${item.label} modifié`,
         childId: kid.id,
-        undo: {
-          kind: "edit",
-          id: crypto.randomUUID(),
-          targetId: item.targetId,
-          ...(timeChanged ? { startedAt: item.startedAt } : {}),
-          ...(endedAt && item.endedAt ? { endedAt: item.endedAt } : {}),
-          ...(Object.keys(undoPayload).length ? { payload: undoPayload } : {}),
-        },
+        undo: { kind: "edit", id: crypto.randomUUID(), targetId: item.targetId, ...outcome.revert },
         undoLabel: "↩ Annuler la modification",
         undoDone: "Modification annulée",
       },

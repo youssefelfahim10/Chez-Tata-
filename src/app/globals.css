@@ -127,6 +127,10 @@ html { scroll-behavior: smooth; }
   .d-finger { animation: d-finger 1.6s ease var(--d, 0s) both; }
   .d-ripple { animation: d-ripple 0.8s ease-out var(--d, 0s) both; }
   .d-type { animation: d-type var(--t, 1.4s) steps(var(--n, 20)) var(--d, 0s) both; }
+  @keyframes d-collapse { from { grid-template-rows: 1fr; opacity: 1; } to { grid-template-rows: 0fr; opacity: 0; } }
+  @keyframes d-expand { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
+  .d-collapse { animation: d-collapse 0.5s ease var(--d, 0s) forwards; }
+  .d-expand { animation: d-expand 0.5s ease var(--d, 0s) both; }
   .d-bar { animation: d-bar 0.9s ease-in-out var(--d, 0s) infinite; transform-origin: center; }
   .d-scene { animation: d-scene 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   .d-caption { animation: d-caption 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
@@ -137,5 +141,7 @@ html { scroll-behavior: smooth; }
 }
 @media (prefers-reduced-motion: reduce) {
   .d-out { display: none; }
+  .d-collapse { display: none; }
+  .d-expand { animation: none; grid-template-rows: 1fr; opacity: 1; }
   .d-finger, .d-ripple { display: none; }
 }

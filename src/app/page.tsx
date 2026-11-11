@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ChildAvatar } from "@/components/child-avatar";
 import { DemoGate } from "@/components/demo-gate";
 import { Icon } from "@/components/icons";
 import { ACTION_EMOJI, ACTION_TONE } from "@/lib/journal/labels";
@@ -60,28 +61,34 @@ function PhoneMockup() {
 
         <div className="mt-4 rounded-2xl border border-line p-3">
           <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-full bg-primary-soft font-display text-lg font-semibold text-primary">L</span>
+            <ChildAvatar name="Lou" gender="girl" size="sm" />
             <div className="flex-1">
               <p className="text-sm font-bold leading-none">Lou</p>
-              <p className="mt-1 text-[11px] text-ink-soft">Journée du jour</p>
+              <p className="mt-1 text-[11px] text-ink-soft">Arrivée 08 h 12</p>
             </div>
             <span className="rounded-full bg-leaf-soft px-2.5 py-1 text-[11px] font-bold text-leaf">Présent</span>
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2">
             {ACTIONS.map((a) => (
-              <span key={a.label} className={`flex h-16 flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-bold text-ink ${TONES[a.tone].box}`}>
+              <span key={a.label} className={`flex h-14 flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-bold text-ink ${TONES[a.tone].box}`}>
                 <span aria-hidden className="text-xl leading-none">{a.emoji}</span>
                 {a.label}
               </span>
             ))}
           </div>
-          <p className="mt-3 flex h-10 items-center justify-center gap-2 rounded-xl bg-[#25D366] text-xs font-bold text-[#06301a]">
-            <WhatsAppIcon className="size-4 text-white" /> Bilan du jour
+          <p className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-leaf/30 bg-leaf-soft px-2.5 py-2 text-[11px] font-extrabold">
+            <span>✓ Repas enregistré</span>
+            <span className="rounded-lg border border-ink/15 bg-surface px-2 py-0.5 text-[10px] text-primary">Annuler</span>
+          </p>
+          <div className="mt-2 rounded-xl border border-line bg-cream px-2.5 py-2">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold-deep">Journée de Lou</p>
+            <p className="mt-1 flex items-center gap-2 text-[11px] font-extrabold"><span aria-hidden>👋</span> Arrivée <span className="font-semibold text-ink-soft">· 08 h 12</span></p>
+            <p className="mt-1 flex items-center gap-2 text-[11px] font-extrabold"><span aria-hidden>🍽️</span> Repas <span className="font-semibold text-ink-soft">· 11 h 45 · tout mangé</span></p>
+          </div>
+          <p className="mt-2 flex h-10 items-center justify-center gap-2 rounded-xl bg-[#25D366] text-xs font-bold text-[#06301a]">
+            <WhatsAppIcon className="size-4 text-white" /> Bilan du jour sur WhatsApp
           </p>
         </div>
-        <p className="mt-3 flex items-center gap-2 rounded-xl bg-ink px-3 py-2 text-[11px] font-semibold text-white">
-          <Icon name="check" className="size-3.5 text-sun" /> Arrivée enregistrée pour Lou
-        </p>
       </div>
     </div>
   );

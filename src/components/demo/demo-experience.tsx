@@ -4,16 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { Icon } from "@/components/icons";
+import { MusicToggle } from "@/components/demo/music-toggle";
 import { Phone } from "@/components/demo/phone";
 import { Sandbox } from "@/components/demo/sandbox";
 import { SceneScreen } from "@/components/demo/screens";
 import { initialPlayer, playerReducer, SCENES } from "@/lib/demo/script";
 
 const TICK = 100;
-const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 
 const TRY_STEPS = [
-  "Touchez « Arrivée » sur Lou, puis « Repas » et « Sieste ».",
+  "Touchez « Arrivée » sur Lou, puis « Repas » et « Sieste » : chaque geste s’ajoute à sa journée.",
+  "Dans « Journée de Lou » : ✏️ Modifier une heure, ✕ Annuler un geste, puis ↩ Rétablir depuis les archives.",
   "Touchez « Bilan » : le message est écrit à partir de vos gestes.",
   "Touchez « Urgence » pour voir la fiche (les numéros sont fictifs).",
 ];
@@ -76,6 +78,7 @@ export function DemoExperience() {
             Chez TaTa
           </Link>
           <div className="flex items-center gap-2">
+            <MusicToggle />
             <Link href="/connexion" className="inline-flex min-h-11 items-center rounded-xl px-4 font-semibold hover:bg-primary-soft">Se connecter</Link>
             <Link href="/inscription" className="hidden min-h-11 items-center rounded-xl bg-primary px-5 font-bold text-white sm:inline-flex">Créer mon espace</Link>
           </div>

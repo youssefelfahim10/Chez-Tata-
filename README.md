@@ -3,7 +3,7 @@
 **Moins d'administratif, plus de temps pour les enfants.**
 L'outil de poche des assistantes maternelles : on pointe la journée en quelques gestes (ou à la voix), et le reste — bilan aux parents, présences, factures, aide pour les impôts — se prépare tout seul.
 
-🌐 En ligne : <https://chez-tata.vercel.app> · 🎬 Démonstration ouverte à tous : <https://chez-tata.vercel.app/demo>
+🌐 En ligne : <https://chez-tata.vercel.app> · 🎬 Démonstration ouverte à tous (animée, avec une musique douce que l'on peut couper) : <https://chez-tata.vercel.app/demo>
 
 ---
 
