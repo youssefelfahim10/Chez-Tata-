@@ -10,7 +10,16 @@ create schema auth;
 create table auth.users (
   id                 uuid primary key default gen_random_uuid(),
   email              text unique,
-  raw_user_meta_data jsonb not null default '{}'::jsonb
+  raw_user_meta_data jsonb not null default '{}'::jsonb,
+  raw_app_meta_data  jsonb not null default '{"provider": "email"}'::jsonb,
+  created_at         timestamptz not null default now(),
+  last_sign_in_at    timestamptz,
+  banned_until       timestamptz
+);
+
+create table auth.sessions (
+  id      uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade
 );
 
 create function auth.jwt() returns jsonb
