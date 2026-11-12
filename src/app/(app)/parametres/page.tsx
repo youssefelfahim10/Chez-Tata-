@@ -158,7 +158,9 @@ async function Settings() {
         <h2 className="text-lg font-extrabold">Mes données</h2>
         <p className="mt-1 mb-4 text-sm text-ink-soft">
           Vos données vous appartiennent : téléchargez-les ou supprimez votre compte à tout moment.{" "}
-          <Link href="/confidentialite" className="font-bold text-primary underline">Confidentialité</Link>
+          <Link href="/confidentialite" className="font-bold text-primary underline">Confidentialité</Link>{" · "}
+          <Link href="/conditions" className="font-bold text-primary underline">Conditions</Link>{" · "}
+          <Link href="/cookies" className="font-bold text-primary underline">Cookies</Link>
         </p>
         <div className="flex flex-col gap-3">
           <a href="/api/export" download className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-line px-4 font-bold hover:bg-primary-soft">

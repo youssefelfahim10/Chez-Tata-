@@ -27,6 +27,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro?: s
         <nav aria-label="Informations légales" className="mx-auto flex w-full max-w-3xl flex-wrap gap-x-6 gap-y-2 px-4 py-6 text-sm font-bold text-primary">
           <Link href="/confidentialite" className="underline">Confidentialité</Link>
           <Link href="/conditions" className="underline">Conditions d’utilisation</Link>
+          <Link href="/cookies" className="underline">Cookies</Link>
           <Link href="/mentions-legales" className="underline">Mentions légales</Link>
           <Link href="/suppression-compte" className="underline">Supprimer mon compte</Link>
           <Link href="/aide" className="underline">Aide</Link>
