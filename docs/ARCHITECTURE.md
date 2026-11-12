@@ -56,7 +56,7 @@ donc ses contrats et finances lui sont strictement personnels.
   précédent dans `daily_event_revisions` ; aucune suppression définitive par l'API.
 - **Finances** : montants en centimes ; un décompte finalisé est figé par déclencheur.
 - **Effacement** : supprimer une organisation efface en cascade toutes ses données (testé).
-- **Parents et administration de la plateforme** : non exposés à ce stade (phase ultérieure).
+- **Parents** : non exposés à ce stade (phase ultérieure). L'**administration de la plateforme** existe : voir « Administration de la plateforme » en bas de ce document.
 
 ## Reste à faire côté sécurité
 
@@ -176,3 +176,20 @@ Chaque point fait l'objet d'une issue.
   **Remplissage automatique** (`src/lib/tax/estimate.ts`) : les mois terminés sans facture validée sont estimés d'après le contrat (mensualisation) et les présences pointées ; jamais le mois en cours.
   Ils sont marqués « estimé » (écran, PDF, CSV) et restent modifiables ; une facture validée remplace toujours l'estimation.
 - **Dictée vocale** : chaque échec (autorisation, dictée iOS désactivée, silence, micro qui ne démarre pas) affiche un message et la marche à suivre ; la dictée du clavier du téléphone est toujours proposée.
+
+## Administration de la plateforme (`/admin`)
+
+Outil de l'éditeur : tableau de bord (comptes créés, connexions, comptes actifs, espaces, histogrammes sur 30 jours) et liste des comptes (recherche, méthode de connexion, suspension / réactivation).
+
+- **Qui y accède** : les comptes listés dans `private.platform_admins` (migration 0012), **par identifiant de compte** — pas par e-mail, pas par rôle dans `profiles`. Table du schéma `private` (non exposée par l'API),
+  alimentée à la main : `insert into private.platform_admins (user_id) select id from auth.users where email = '<adresse de l administrateur>';`
+  Les autres visiteurs reçoivent une page « introuvable » (`requirePlatformAdmin`, `src/lib/auth/admin.ts`).
+- **Pas de `service_role`** : toutes les lectures et actions passent par des fonctions `SECURITY DEFINER` (`admin_overview`, `admin_list_users`, `admin_set_user_suspended`) qui revérifient le droit à chaque appel
+  (`private.require_platform_admin`). La page ne fait que de l'affichage ; la base décide.
+- **Confidentialité** : l'administrateur ne voit que des comptes (prénom, e-mail, méthode, dates) et des **comptages** (espaces, enfants). Jamais un nom d'enfant, une fiche santé, un journal, un contrat ou une facture
+  (test : les colonnes renvoyées sont figées). Le compte de démonstration (`DEMO_EMAIL`) est exclu des chiffres.
+- **Connexions** : le journal d'audit de Supabase Auth est vide sur ce projet ; les connexions réussies (e-mail, Google) sont donc journalisées par `record_login` dans `private.login_events`
+  (une ligne par minute et par compte au plus ; supprimées avec le compte). « Comptes actifs » s'appuie sur `auth.users.last_sign_in_at`. Jours comptés à l'heure de Paris.
+- **Suspension** : `banned_until` + suppression des sessions ; l'accès en cours expire avec le jeton (au plus une heure), la reconnexion est refusée jusqu'à réactivation. On ne peut suspendre ni soi-même ni un autre administrateur.
+  Chaque action est tracée dans `private.admin_actions`.
+- **À venir** : visites du site (mesure sans cookies) et activation des comptes à l'abonnement (paiement).
