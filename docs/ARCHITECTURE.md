@@ -175,7 +175,7 @@ Chaque point fait l'objet d'une issue.
   Ces documents sont une **aide**, jamais un justificatif officiel (bulletins, Pajemploi et déclaration pré-remplie font foi). Les règles et plafonds changent : à revérifier chaque année.
   **Remplissage automatique** (`src/lib/tax/estimate.ts`) : les mois terminés sans facture validée sont estimés d'après le contrat (mensualisation) et les présences pointées ; jamais le mois en cours.
   Ils sont marqués « estimé » (écran, PDF, CSV) et restent modifiables ; une facture validée remplace toujours l'estimation.
-- **Dictée vocale** : chaque échec (autorisation, dictée iOS désactivée, silence, micro qui ne démarre pas) affiche un message et la marche à suivre ; la dictée du clavier du téléphone est toujours proposée.
+- **Dictée vocale** : chaque échec (autorisation, dictée iOS désactivée, silence, micro qui ne démarre pas) affiche un message et la marche à suivre ; la dictée du clavier du téléphone est toujours proposée. Le délai de sécurité attend la réponse à la fenêtre d’autorisation (`src/lib/voice/session.ts`), chaque dictée complète le texte déjà saisi, et « Le micro ne marche pas ? » affiche un diagnostic (support, réseau, autorisation, appareil).
 
 ## Administration de la plateforme (`/admin`)
 
