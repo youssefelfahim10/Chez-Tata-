@@ -193,3 +193,9 @@ Outil de l'éditeur : tableau de bord (comptes créés, connexions, comptes acti
 - **Suspension** : `banned_until` + suppression des sessions ; l'accès en cours expire avec le jeton (au plus une heure), la reconnexion est refusée jusqu'à réactivation. On ne peut suspendre ni soi-même ni un autre administrateur.
   Chaque action est tracée dans `private.admin_actions`.
 - **À venir** : visites du site (mesure sans cookies) et activation des comptes à l'abonnement (paiement).
+
+## Pages légales et application Android
+
+Pages publiques : `/confidentialite`, `/conditions`, `/cookies`, `/mentions-legales`, `/suppression-compte` (aucune valeur légale inventée : l'identité de l'éditeur vient de variables d'environnement `NEXT_PUBLIC_LEGAL_*`).
+Seuls des cookies strictement nécessaires sont utilisés (session Supabase `sb-*`, espace actif `ct_org`) : pas de bandeau de consentement.
+L'application Android est une Trusted Web Activity qui ouvre le site ; `/.well-known/assetlinks.json` est généré par `src/lib/android.ts` à partir de `ANDROID_SHA256_CERT_FINGERPRINTS`. Marche à suivre complète et réponses Play Console : `docs/ANDROID.md`.

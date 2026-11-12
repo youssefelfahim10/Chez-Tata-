@@ -11,7 +11,7 @@ export const LEGAL = {
   registration: pick(process.env.NEXT_PUBLIC_LEGAL_REGISTRATION, "À compléter : SIRET ou numéro d'immatriculation"),
   director: pick(process.env.NEXT_PUBLIC_LEGAL_DIRECTOR, "À compléter : directeur de la publication"),
   contactEmail: pick(process.env.NEXT_PUBLIC_CONTACT_EMAIL, ""),
-  updatedOn: "10 novembre 2026",
+  updatedOn: "12 novembre 2026",
 } as const;
 
 export const isLegalComplete = () => !LEGAL.publisher.startsWith("À compléter") && Boolean(LEGAL.contactEmail);

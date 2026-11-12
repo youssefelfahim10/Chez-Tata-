@@ -28,7 +28,8 @@ export default function Page() {
           <li><b>Les enfants accueillis</b> : prénom, nom, date de naissance, jours et heures de présence, repas, siestes, changes, soins et notes que vous choisissez de saisir.</li>
           <li><b>Les familles</b> : noms des parents, téléphone, e-mail, adresse que vous renseignez.</li>
           <li><b>Contrats et finances</b> : horaires, tarifs, indemnités, factures, paiements reçus, charges.</li>
-          <li><b>Données techniques</b> : adresse IP et journaux de connexion conservés brièvement par l&apos;hébergeur pour la sécurité ; un cookie de session strictement nécessaire.</li>
+          <li><b>Journal de connexion</b> : la date, l&apos;heure et la méthode (e-mail ou Google) de vos connexions, pour sécuriser votre compte et connaître l&apos;usage global du service. Il est effacé avec votre compte.</li>
+          <li><b>Données techniques</b> : adresse IP et journaux de l&apos;hébergeur conservés brièvement pour la sécurité ; un cookie de session et un cookie d&apos;espace, strictement nécessaires (voir la page <a href="/cookies">Cookies</a>).</li>
         </ul>
         <p>Certaines saisies (soins, médicaments, allergies) peuvent révéler des informations de santé. Saisissez uniquement ce qui est utile à l&apos;accueil de l&apos;enfant.</p>
         <p>Nous n&apos;utilisons <b>aucun traceur publicitaire</b>, aucune mesure d&apos;audience tierce et ne vendons aucune donnée.</p>
@@ -38,7 +39,7 @@ export default function Page() {
         <h2>3. Pourquoi et sur quelle base ?</h2>
         <ul>
           <li><b>Fournir le service</b> (pointage, planning, contrats, factures, bilans) : exécution du contrat d&apos;utilisation.</li>
-          <li><b>Sécuriser le service</b> (authentification, prévention des abus) : intérêt légitime.</li>
+          <li><b>Sécuriser et gérer le service</b> (authentification, prévention des abus, suspension d&apos;un compte abusif, statistiques globales d&apos;inscriptions et de connexions) : intérêt légitime.</li>
           <li><b>Dictée vocale</b> : uniquement si vous appuyez sur le micro, avec votre accord (voir §6).</li>
           <li><b>Respecter la loi</b> (demandes d&apos;exercice de droits, obligations comptables du service) : obligation légale.</li>
         </ul>
@@ -52,6 +53,10 @@ export default function Page() {
         </p>
         <p>
           Le bilan WhatsApp et l&apos;envoi d&apos;un contrat ou d&apos;une facture ne partent <b>jamais automatiquement</b> : vous relisez, vous choisissez le destinataire et vous envoyez vous-même.
+        </p>
+        <p>
+          L&apos;éditeur dispose d&apos;un espace d&apos;administration qui ne montre que la liste des comptes (adresse e-mail, prénom, méthode de connexion, dates, nombre d&apos;espaces et d&apos;enfants suivis) et des
+          statistiques globales. Il lui permet de suspendre un compte en cas d&apos;abus, ce qui est tracé. L&apos;éditeur <b>ne voit ni le nom ni les informations des enfants</b>, ni les fiches santé, journaux, contrats ou factures.
         </p>
       </section>
 
@@ -77,6 +82,15 @@ export default function Page() {
         <p>
           Le bouton « Dicter » utilise la reconnaissance vocale de votre téléphone ou navigateur (selon l&apos;appareil : Google ou Apple). Le son est transmis à ce service pour être transcrit ;
           Chez TaTa ne reçoit ni ne conserve aucun enregistrement. Le texte reconnu vous est proposé et n&apos;est enregistré qu&apos;après votre validation.
+        </p>
+      </section>
+
+      <section>
+        <h2>6 bis. Application Android</h2>
+        <p>
+          L&apos;application Android ouvre Chez TaTa en plein écran : ce sont le même service et les mêmes données que sur le site, avec les mêmes règles. Elle n&apos;ajoute aucun traceur, ne demande
+          pas votre position, vos contacts ni votre caméra, et n&apos;utilise le micro que si vous appuyez sur « Dicter ». Les données restent sur les serveurs décrits au §5 ; l&apos;appareil ne garde que ce qui est
+          décrit sur la page <a href="/cookies">Cookies</a>.
         </p>
       </section>
 

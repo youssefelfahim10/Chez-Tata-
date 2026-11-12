@@ -56,6 +56,11 @@ export function SignUpForm({ next }: { next?: string }) {
   }
   return (
     <Card>
+      <p className="mb-4 text-center text-sm text-ink-soft">
+        En créant votre espace, vous acceptez nos{" "}
+        <Link href="/conditions" className="font-bold text-primary underline">conditions d&apos;utilisation</Link> et notre{" "}
+        <Link href="/confidentialite" className="font-bold text-primary underline">politique de confidentialité</Link>.
+      </p>
       {GOOGLE_SIGNIN_ENABLED ? (
         <div className="flex flex-col gap-4">
           <GoogleButton next={next} />
