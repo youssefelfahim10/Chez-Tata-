@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { recordLogin } from "@/lib/auth/login-log";
 import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/lib/safe-redirect";
 
@@ -15,7 +16,10 @@ export async function GET(request: NextRequest) {
     const flowId = params.get("sb_flow_id");
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined);
-    if (!error) return NextResponse.redirect(new URL(next, request.url));
+    if (!error) {
+      await recordLogin(supabase, "google");
+      return NextResponse.redirect(new URL(next, request.url));
+    }
   }
   return NextResponse.redirect(new URL("/connexion?erreur=google", request.url));
 }

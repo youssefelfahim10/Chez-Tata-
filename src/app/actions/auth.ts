@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { GOOGLE_SIGNIN_ENABLED } from "@/lib/auth/google";
+import { recordLogin } from "@/lib/auth/login-log";
+import { isDemoEmail } from "@/lib/demo";
 import { safeNextPath } from "@/lib/safe-redirect";
 
 export type FormState = { error?: string; message?: string };
@@ -41,6 +43,8 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
     }
     return failure;
   }
+  // Le compte de démonstration publique n'est pas une vraie utilisatrice : il ne compte pas dans les statistiques.
+  if (!isDemoEmail(parsed.data.email)) await recordLogin(supabase, "email");
   redirect(safeNextPath(formData.get("next")));
 }
 
