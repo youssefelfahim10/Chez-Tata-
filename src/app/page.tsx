@@ -92,7 +92,7 @@ export default function Page() {
     <div className="flex flex-1 flex-col overflow-x-clip">
       <header className="ct-glass sticky top-0 z-40 border-b border-line">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <Link href="/" className="flex items-center gap-2.5 font-display text-2xl font-semibold text-primary-strong">
+          <Link href="/" className="flex min-h-11 items-center gap-2.5 font-display text-2xl font-semibold text-primary-strong">
             <Image src="/logo-sm.png" alt="" width={40} height={40} className="size-9 rounded-lg" priority />
             Chez TaTa
           </Link>
@@ -247,12 +247,12 @@ export default function Page() {
           <p className="flex items-center gap-2 font-display text-xl font-semibold text-ink"><Image src="/logo-sm.png" alt="" width={28} height={28} className="size-7 rounded-md" /> Chez TaTa</p>
           <p>Conçu pour protéger les données des enfants : isolation entre comptes, hébergement dans l’Union européenne, aucun envoi automatique d’informations.</p>
           <nav aria-label="Informations légales" className="flex flex-wrap gap-x-5 gap-y-2 pt-1 font-bold text-primary">
-            <Link href="/confidentialite" className="underline">Confidentialité</Link>
-            <Link href="/conditions" className="underline">Conditions d’utilisation</Link>
-            <Link href="/cookies" className="underline">Cookies</Link>
-            <Link href="/mentions-legales" className="underline">Mentions légales</Link>
-            <Link href="/suppression-compte" className="underline">Supprimer mon compte</Link>
-            <Link href="/aide" className="underline">Aide</Link>
+            <Link href="/confidentialite" className="inline-flex min-h-11 items-center underline">Confidentialité</Link>
+            <Link href="/conditions" className="inline-flex min-h-11 items-center underline">Conditions d’utilisation</Link>
+            <Link href="/cookies" className="inline-flex min-h-11 items-center underline">Cookies</Link>
+            <Link href="/mentions-legales" className="inline-flex min-h-11 items-center underline">Mentions légales</Link>
+            <Link href="/suppression-compte" className="inline-flex min-h-11 items-center underline">Supprimer mon compte</Link>
+            <Link href="/aide" className="inline-flex min-h-11 items-center underline">Aide</Link>
           </nav>
         </div>
       </footer>

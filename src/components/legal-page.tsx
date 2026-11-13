@@ -8,7 +8,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro?: s
     <div className="flex flex-1 flex-col bg-cream">
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <Link href="/" className="flex items-center gap-2 text-lg font-extrabold text-primary">
+          <Link href="/" className="flex min-h-11 items-center gap-2 text-lg font-extrabold text-primary">
             <Image src="/logo-sm.png" alt="" width={36} height={36} className="size-9 rounded-xl" />
             Chez TaTa
           </Link>
@@ -25,12 +25,12 @@ export function LegalPage({ title, intro, children }: { title: string; intro?: s
       </main>
       <footer className="border-t border-line bg-surface">
         <nav aria-label="Informations légales" className="mx-auto flex w-full max-w-3xl flex-wrap gap-x-6 gap-y-2 px-4 py-6 text-sm font-bold text-primary">
-          <Link href="/confidentialite" className="underline">Confidentialité</Link>
-          <Link href="/conditions" className="underline">Conditions d’utilisation</Link>
-          <Link href="/cookies" className="underline">Cookies</Link>
-          <Link href="/mentions-legales" className="underline">Mentions légales</Link>
-          <Link href="/suppression-compte" className="underline">Supprimer mon compte</Link>
-          <Link href="/aide" className="underline">Aide</Link>
+          <Link href="/confidentialite" className="inline-flex min-h-11 items-center underline">Confidentialité</Link>
+          <Link href="/conditions" className="inline-flex min-h-11 items-center underline">Conditions d’utilisation</Link>
+          <Link href="/cookies" className="inline-flex min-h-11 items-center underline">Cookies</Link>
+          <Link href="/mentions-legales" className="inline-flex min-h-11 items-center underline">Mentions légales</Link>
+          <Link href="/suppression-compte" className="inline-flex min-h-11 items-center underline">Supprimer mon compte</Link>
+          <Link href="/aide" className="inline-flex min-h-11 items-center underline">Aide</Link>
         </nav>
       </footer>
     </div>

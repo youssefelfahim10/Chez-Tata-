@@ -68,7 +68,7 @@ async function Detail({ params }: { params: Promise<{ childId: string }> }) {
   return (
     <>
       <PageTitle subtitle="Famille et contrat">{name}</PageTitle>
-      <Link href="/gestion" className="-mt-2 font-bold text-primary underline">
+      <Link href="/gestion" className="-mt-2 inline-flex min-h-11 items-center font-bold text-primary underline">
         ← Retour à la gestion
       </Link>
 

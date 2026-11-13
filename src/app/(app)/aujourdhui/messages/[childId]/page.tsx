@@ -33,7 +33,7 @@ async function Messages({ params }: { params: Promise<{ childId: string }> }) {
   return (
     <>
       <PageTitle subtitle="Choisissez un modèle, relisez, puis envoyez vous-même">Message pour la famille de {child.data.first_name as string}</PageTitle>
-      <Link href="/aujourdhui" className="-mt-2 font-bold text-primary underline">
+      <Link href="/aujourdhui" className="-mt-2 inline-flex min-h-11 items-center font-bold text-primary underline">
         ← Retour à Aujourd’hui
       </Link>
       <Card>

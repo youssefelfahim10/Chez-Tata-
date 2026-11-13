@@ -87,7 +87,7 @@ async function Urgence({ params }: { params: Promise<{ childId: string }> }) {
   return (
     <>
       <PageTitle subtitle="Les informations que vous avez saisies pour cet enfant">Urgence · {name}</PageTitle>
-      <Link href="/aujourdhui" className="-mt-2 font-bold text-primary underline">
+      <Link href="/aujourdhui" className="-mt-2 inline-flex min-h-11 items-center font-bold text-primary underline">
         ← Retour à Aujourd’hui
       </Link>
 

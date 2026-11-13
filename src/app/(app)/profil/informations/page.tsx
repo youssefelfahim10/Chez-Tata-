@@ -48,7 +48,7 @@ export default function Page() {
   return (
     <>
       <PageTitle subtitle="Reprises dans vos contrats, factures et documents">Mes informations</PageTitle>
-      <Link href="/profil" className="-mt-2 font-bold text-primary underline">
+      <Link href="/profil" className="-mt-2 inline-flex min-h-11 items-center font-bold text-primary underline">
         ← Retour au profil
       </Link>
       <Suspense fallback={<Skeleton lines={4} />}>

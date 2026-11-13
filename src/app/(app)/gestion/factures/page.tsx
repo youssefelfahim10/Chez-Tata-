@@ -88,7 +88,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
   const title = `${monthNameFR(month)} ${month.slice(0, 4)}`;
   return (
     <>
-      <Link href="/gestion" className="-mt-2 font-bold text-primary underline">← Retour à la gestion</Link>
+      <Link href="/gestion" className="-mt-2 inline-flex min-h-11 items-center font-bold text-primary underline">← Retour à la gestion</Link>
       <Card>
         <div className="flex items-center justify-between gap-2">
           <Link href={`/gestion/factures?mois=${shiftMonth(month, -1)}`} className="flex min-h-12 min-w-12 items-center justify-center rounded-xl border border-line text-xl" aria-label="Mois précédent">◀</Link>

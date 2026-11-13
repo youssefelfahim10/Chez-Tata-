@@ -65,7 +65,7 @@ async function Content({ params }: { params: Promise<{ childId: string }> }) {
   return (
     <>
       <PageTitle subtitle="Contrat d'accueil professionnel">{childName}</PageTitle>
-      <Link href={`/gestion/${childId}`} className="-mt-2 font-bold text-primary underline">← Retour à la fiche enfant</Link>
+      <Link href={`/gestion/${childId}`} className="-mt-2 inline-flex min-h-11 items-center font-bold text-primary underline">← Retour à la fiche enfant</Link>
       <ContractEditor
         childId={childId}
         childName={childName}

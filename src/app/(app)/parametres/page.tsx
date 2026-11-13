@@ -59,7 +59,7 @@ async function Settings() {
 
   return (
     <>
-      <Link href="/profil" className="-mt-2 font-bold text-primary underline">
+      <Link href="/profil" className="-mt-2 inline-flex min-h-11 items-center font-bold text-primary underline">
         ← Retour au profil
       </Link>
 
