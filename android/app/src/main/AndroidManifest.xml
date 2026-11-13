@@ -3,8 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Dictée vocale : la reconnaissance est faite par le navigateur ; l'accès micro est demandé à ce moment-là. -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Pas de permission micro dans l'application : la dictée vocale est gérée par Chrome (autorisation du site demandée par Chrome). -->
 
     <application
         android:allowBackup="false"
@@ -61,23 +60,6 @@
                 <data android:scheme="https" android:host="${twaHost}" />
             </intent-filter>
         </activity>
-
-        <activity android:name="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
-            android:exported="false">
-            <meta-data
-                android:name="android.support.customtabs.trusted.MANAGE_SPACE_URL"
-                android:value="https://${twaHost}/parametres" />
-        </activity>
-
-        <service
-            android:name="com.google.androidbrowserhelper.trusted.DelegationService"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

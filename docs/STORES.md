@@ -1,7 +1,7 @@
 # Publication sur les stores — Chez TaTa
 
 > Document de travail. Les valeurs marquées **TODO** sont à fournir par le propriétaire : rien n'est inventé.
-> Domaine : `cheztata.app` · Package Android proposé : `fr.cheztata.app` (**définitif après publication — à confirmer**).
+> Domaine : `cheztata.app` · Package Android proposé : `app.cheztata.android` (**définitif après publication — à confirmer**).
 
 ## 1. Google Play (Android) — en premier
 
@@ -12,7 +12,7 @@
 - [ ] Créer l'application : nom, langue par défaut français (France), type « Application », gratuite/payante (**TODO : modèle économique**).
 - [ ] **Play App Signing** : activer ; la clé d'import (upload key) est générée et gardée par le propriétaire, jamais dans le dépôt. Relever l'empreinte **SHA-256 de la clé de signature de l'application** (Console → Intégrité de l'application) et la fournir pour `/.well-known/assetlinks.json` (**TODO : empreinte**).
 - [ ] Envoyer l'**AAB signé** (build TWA, workstream Android).
-- [ ] **Digital Asset Links** : `https://cheztata.app/.well-known/assetlinks.json` doit référencer `fr.cheztata.app` + l'empreinte SHA-256 (sinon la barre d'URL s'affiche dans l'app).
+- [ ] **Digital Asset Links** : `https://cheztata.app/.well-known/assetlinks.json` doit référencer `app.cheztata.android` + l'empreinte SHA-256 (sinon la barre d'URL s'affiche dans l'app).
 - [ ] **Politique de confidentialité** : `https://cheztata.app/confidentialite` (le bloc éditeur doit être complété d'abord : voir `src/lib/legal.ts`, variables `NEXT_PUBLIC_LEGAL_*` et `NEXT_PUBLIC_CONTACT_EMAIL`).
 - [ ] **Suppression de compte** — URL web : `https://cheztata.app/suppression-compte` ; en plus, suppression dans l'app (Réglages → Mes données). Les deux sont exigés par Google.
 - [ ] **Classification du contenu** (questionnaire IARC) : aucune violence, contenu sexuel, jeu d'argent, achats… Catégorie attendue : « Utilitaires/Productivité ». Répondre honnêtement ; pas d'interaction entre utilisateurs publics.
@@ -119,7 +119,7 @@ Pour toute question : contact@cheztata.app (TODO : confirmer l'adresse de contac
 ## 3. Ce que seul le propriétaire peut faire
 
 - [ ] Créer et payer le compte Google Play (25 $) ; plus tard Apple Developer (99 €/an) ; vérification d'identité.
-- [ ] Confirmer le **package** `fr.cheztata.app`.
+- [ ] Confirmer le **package** `app.cheztata.android`.
 - [ ] Fournir les **informations légales** : raison sociale/nom, adresse, SIRET, directeur de publication, e-mail de contact (variables `NEXT_PUBLIC_LEGAL_*`, `NEXT_PUBLIC_CONTACT_EMAIL` sur Vercel).
 - [ ] Générer/garder la **clé d'import** (upload key) et fournir l'empreinte SHA-256 de la clé de signature Play.
 - [ ] Recruter les **testeurs du test fermé** (si compte personnel récent).

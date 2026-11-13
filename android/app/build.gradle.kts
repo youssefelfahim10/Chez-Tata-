@@ -8,7 +8,7 @@ plugins {
 val twaHost: String = (System.getenv("TWA_HOST") ?: (project.findProperty("twaHost") as String?) ?: "cheztata.app").trim()
 require(Regex("^[a-z0-9.-]+$").matches(twaHost)) { "twaHost invalide : $twaHost" }
 val twaStartPath: String = (project.findProperty("twaStartPath") as String?) ?: "/aujourdhui"
-val appId: String = (project.findProperty("appId") as String?) ?: "fr.cheztata.app"
+val appId: String = (project.findProperty("appId") as String?) ?: "app.cheztata.android"
 
 // Numéro de version : Play exige un versionCode strictement croissant. La CI passe -PversionCode=$GITHUB_RUN_NUMBER.
 val vCode: Int = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
@@ -23,7 +23,7 @@ fun signingValue(env: String, key: String): String? = System.getenv(env) ?: keys
 val storeFilePath = signingValue("ANDROID_KEYSTORE_FILE", "storeFile")
 
 android {
-    namespace = "fr.cheztata.app"
+    namespace = "app.cheztata.android"
     compileSdk = 36
 
     defaultConfig {
@@ -34,7 +34,12 @@ android {
         versionName = vName
         manifestPlaceholders["twaHost"] = twaHost
         manifestPlaceholders["twaStartPath"] = twaStartPath
-        resValue("string", "twa_host", twaHost)
+        // Déclaration Digital Asset Links côté application (le lien site → application est dans /.well-known/assetlinks.json).
+        resValue(
+            "string",
+            "asset_statements",
+            "[{ \\\"relation\\\": [\\\"delegate_permission/common.handle_all_urls\\\"], \\\"target\\\": {\\\"namespace\\\": \\\"web\\\", \\\"site\\\": \\\"https://$twaHost\\\"}}]",
+        )
         buildConfigField("String", "TWA_HOST", "\"$twaHost\"")
     }
 
