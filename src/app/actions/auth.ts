@@ -4,6 +4,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { GOOGLE_SIGNIN_ENABLED } from "@/lib/auth/google";
+import { recordLogin } from "@/lib/auth/login-log";
+import { isDemoEmail } from "@/lib/demo";
 import { safeNextPath } from "@/lib/safe-redirect";
 
 export type FormState = { error?: string; message?: string };
@@ -40,6 +43,8 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
     }
     return failure;
   }
+  // Le compte de démonstration publique n'est pas une vraie utilisatrice : il ne compte pas dans les statistiques.
+  if (!isDemoEmail(parsed.data.email)) await recordLogin(supabase, "email");
   redirect(safeNextPath(formData.get("next")));
 }
 
@@ -70,6 +75,27 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   if (data.session) redirect(next);
   // Même message que l'adresse existe déjà ou non (pas d'énumération de comptes).
   return { message: "Vérifiez votre boîte mail : un lien de confirmation vient de vous être envoyé." };
+}
+
+/**
+ * Connexion (ou création de compte) avec Google. Le navigateur est envoyé chez Google puis revient sur
+ * /auth/callback. Seule une destination interne est acceptée (pas de redirection ouverte).
+ * Chez TaTa ne reçoit de Google que le nom et l'adresse e-mail : aucun accès aux contacts ni à Gmail.
+ */
+export async function signInWithGoogle(_prev: FormState, formData: FormData): Promise<FormState> {
+  if (!GOOGLE_SIGNIN_ENABLED) return { error: "La connexion avec Google n'est pas encore activée. Utilisez votre e-mail." };
+  const next = safeNextPath(z.string().max(500).safeParse(formData.get("next")).data);
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${await siteOrigin()}/auth/callback?next=${encodeURIComponent(next)}`,
+      // Laisse choisir le compte Google (utile quand plusieurs comptes sont connectés sur le téléphone).
+      queryParams: { prompt: "select_account" },
+    },
+  });
+  if (error || !data.url) return { error: "La connexion avec Google n'est pas disponible pour le moment. Utilisez votre e-mail." };
+  redirect(data.url);
 }
 
 export async function signOut(): Promise<void> {

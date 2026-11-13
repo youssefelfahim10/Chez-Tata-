@@ -4,7 +4,8 @@ import { Suspense } from "react";
 import { InvoiceBoard, type InvoiceItem } from "@/components/invoice-board";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace } from "@/lib/auth/session";
-import { parseDetails } from "@/lib/documents/details";
+import { fillEmployeeFromProfile, parseDetails } from "@/lib/documents/details";
+import { employeeFromProfile, PROFILE_COLUMNS, type ProfileRow } from "@/lib/profile/schema";
 import { monthRange, shiftMonth } from "@/lib/finance/summary";
 import { parisDayBounds } from "@/lib/journal/day";
 import { monthNameFR } from "@/lib/sheet/compute";
@@ -23,10 +24,10 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
   const { first, after } = monthRange(month);
 
   const supabase = await createClient();
-  const [contracts, statements, profile] = await Promise.all([
+  const [contracts, statements, profile, caregiver] = await Promise.all([
     supabase
       .from("contracts")
-      .select("id, child_id, scheduled_hours, weeks_per_year, hourly_rate, maintenance_allowance_cents, meal_allowance_cents, details, children(first_name, last_name)")
+      .select("id, child_id, scheduled_hours, weeks_per_year, hourly_rate, maintenance_allowance_cents, meal_allowance_cents, details, children(first_name, last_name, gender)")
       .eq("organization_id", membership.organizationId)
       .eq("assigned_assmat_id", user.id)
       .eq("status", "active")
@@ -38,9 +39,11 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
       .eq("period", first)
       .eq("status", "finalized"),
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
+    // Profil de l'assistante : complète les coordonnées laissées vides dans les contrats.
+    supabase.from("caregiver_profiles").select(PROFILE_COLUMNS).eq("organization_id", membership.organizationId).eq("user_id", user.id).maybeSingle(),
   ]);
   if (contracts.error || statements.error) throw new Error("Chargement des factures impossible.");
-  const contractRows = (contracts.data ?? []) as unknown as (Row & { children: { first_name: string; last_name: string | null } | null })[];
+  const contractRows = (contracts.data ?? []) as unknown as (Row & { children: { first_name: string; last_name: string | null; gender: string | null } | null })[];
 
   const attendance = contractRows.length
     ? await supabase
@@ -57,9 +60,10 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
   const items: InvoiceItem[] = contractRows.map((c) => {
     const rows = ((attendance.data ?? []) as Row[]).filter((a) => a.child_id === c.child_id);
     const st = ((statements.data ?? []) as Row[]).find((s) => s.contract_id === c.id);
-    const details = parseDetails(c.details);
+    const details = fillEmployeeFromProfile(parseDetails(c.details), caregiver.error ? null : employeeFromProfile(caregiver.data as ProfileRow | null));
     return {
       contractId: c.id as string,
+      childGender: c.children?.gender ?? null,
       childName: [c.children?.first_name, c.children?.last_name].filter(Boolean).join(" "),
       contract: {
         scheduledHours: Number(c.scheduled_hours),

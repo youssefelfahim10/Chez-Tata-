@@ -4,13 +4,13 @@ import { Suspense } from "react";
 import { SignOutForm } from "@/components/sign-out-form";
 import { revokeInvitation, setMemberStatus, switchOrganization } from "@/app/actions/organization";
 import { DeleteAccountForm } from "@/components/delete-account";
-import { DisplayNameForm, InviteForm } from "@/components/settings-forms";
+import { InviteForm } from "@/components/settings-forms";
 import { Button, Card, PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace, type Role } from "@/lib/auth/session";
 import { isDemoEmail } from "@/lib/demo";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Réglages" };
+export const metadata: Metadata = { title: "Espace et données" };
 
 const ROLE_LABELS: Record<Role, string> = {
   owner: "Propriétaire",
@@ -26,8 +26,7 @@ async function Settings() {
   const supabase = await createClient();
   const isMam = membership.organizationType === "mam";
 
-  const [profile, members, invitations] = await Promise.all([
-    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
+  const [members, invitations] = await Promise.all([
     supabase
       .from("organization_members")
       .select("user_id, role, status")
@@ -60,11 +59,9 @@ async function Settings() {
 
   return (
     <>
-      <Card>
-        <h2 className="text-lg font-extrabold">Mon profil</h2>
-        <p className="mt-1 mb-4 text-sm text-ink-soft">{user.email}</p>
-        <DisplayNameForm defaultValue={profile.data?.display_name ?? ""} />
-      </Card>
+      <Link href="/profil" className="-mt-2 font-bold text-primary underline">
+        ← Retour au profil
+      </Link>
 
       <Card>
         <h2 className="text-lg font-extrabold">{membership.organizationName}</h2>
@@ -157,11 +154,13 @@ async function Settings() {
         </Card>
       ) : null}
 
-      <Card>
+      <Card id="donnees" className="scroll-mt-20">
         <h2 className="text-lg font-extrabold">Mes données</h2>
         <p className="mt-1 mb-4 text-sm text-ink-soft">
           Vos données vous appartiennent : téléchargez-les ou supprimez votre compte à tout moment.{" "}
-          <Link href="/confidentialite" className="font-bold text-primary underline">Confidentialité</Link>
+          <Link href="/confidentialite" className="font-bold text-primary underline">Confidentialité</Link>{" · "}
+          <Link href="/conditions" className="font-bold text-primary underline">Conditions</Link>{" · "}
+          <Link href="/cookies" className="font-bold text-primary underline">Cookies</Link>
         </p>
         <div className="flex flex-col gap-3">
           <a href="/api/export" download className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-line px-4 font-bold hover:bg-primary-soft">
@@ -180,7 +179,7 @@ async function Settings() {
 export default function Page() {
   return (
     <>
-      <PageTitle subtitle="Profil, espace et membres">Réglages</PageTitle>
+      <PageTitle subtitle="Espace, équipe et données personnelles">Espace et données</PageTitle>
       <Suspense fallback={<Skeleton lines={3} />}>
         <Settings />
       </Suspense>

@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const TABS = [
+const TABS: readonly { href: string; label: string; icon: string; also?: string[] }[] = [
   { href: "/aujourdhui", label: "Aujourd'hui", icon: "☀️" },
   { href: "/planning", label: "Planning", icon: "📅" },
   { href: "/gestion", label: "Gestion", icon: "📒" },
-  { href: "/parametres", label: "Réglages", icon: "⚙️" },
-] as const;
+  { href: "/profil", label: "Profil", icon: "👤", also: ["/parametres"] },
+];
 
 /** Navigation principale à 4 onglets, atteignable au pouce. */
 export function BottomNav() {
@@ -20,7 +20,7 @@ export function BottomNav() {
     >
       <ul className="mx-auto grid max-w-2xl grid-cols-4">
         {TABS.map((tab) => {
-          const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+          const active = [tab.href, ...(tab.also ?? [])].some((p) => pathname === p || pathname.startsWith(`${p}/`));
           return (
             <li key={tab.href}>
               <Link
@@ -30,7 +30,7 @@ export function BottomNav() {
                   active ? "text-primary" : "text-ink-soft"
                 }`}
               >
-                <span aria-hidden className={`rounded-full px-4 py-0.5 text-xl ${active ? "bg-primary-soft" : ""}`}>
+                <span aria-hidden className={`rounded-full px-4 py-0.5 text-xl ${active ? "bg-sun-soft" : ""}`}>
                   {tab.icon}
                 </span>
                 {tab.label}

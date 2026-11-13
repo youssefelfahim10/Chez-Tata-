@@ -16,7 +16,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro?: s
         </div>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
-        <h1 className="text-3xl font-extrabold tracking-tight text-primary-strong">{title}</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-primary-strong">{title}</h1>
         <p className="mt-1 text-sm text-ink-soft">Dernière mise à jour : {LEGAL.updatedOn}</p>
         {intro ? <p className="mt-4 text-lg text-ink-soft">{intro}</p> : null}
         <div className="mt-8 flex flex-col gap-8 [&_a]:font-bold [&_a]:text-primary [&_a]:underline [&_h2]:text-xl [&_h2]:font-extrabold [&_h2]:text-primary-strong [&_li]:leading-relaxed [&_p]:leading-relaxed [&_section]:flex [&_section]:flex-col [&_section]:gap-3 [&_ul]:list-disc [&_ul]:pl-6">
@@ -27,6 +27,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro?: s
         <nav aria-label="Informations légales" className="mx-auto flex w-full max-w-3xl flex-wrap gap-x-6 gap-y-2 px-4 py-6 text-sm font-bold text-primary">
           <Link href="/confidentialite" className="underline">Confidentialité</Link>
           <Link href="/conditions" className="underline">Conditions d’utilisation</Link>
+          <Link href="/cookies" className="underline">Cookies</Link>
           <Link href="/mentions-legales" className="underline">Mentions légales</Link>
           <Link href="/suppression-compte" className="underline">Supprimer mon compte</Link>
           <Link href="/aide" className="underline">Aide</Link>

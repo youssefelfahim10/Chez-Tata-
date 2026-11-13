@@ -11,7 +11,7 @@ export default function Page() {
         <h2>Dans l&apos;application (le plus rapide)</h2>
         <ol className="list-decimal pl-6">
           <li>Connectez-vous à Chez TaTa.</li>
-          <li>Ouvrez l&apos;onglet <b>Réglages</b>, section <b>Mes données</b>.</li>
+          <li>Ouvrez l&apos;onglet <b>Profil</b>, puis <b>Mes données</b>.</li>
           <li>Appuyez sur <b>Supprimer mon compte</b>, tapez « SUPPRIMER » puis confirmez.</li>
         </ol>
         <p>Vous pouvez d&apos;abord <b>télécharger vos données</b> depuis la même section.</p>

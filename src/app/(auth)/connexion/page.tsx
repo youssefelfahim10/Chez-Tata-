@@ -6,9 +6,10 @@ import { safeNextPath } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = { title: "Connexion" };
 
-async function Form({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const { next } = await searchParams;
-  return <SignInForm next={next ? safeNextPath(next) : undefined} />;
+async function Form({ searchParams }: { searchParams: Promise<{ next?: string; erreur?: string }> }) {
+  const { next, erreur } = await searchParams;
+  const notice = erreur === "google" ? "La connexion avec Google a été annulée ou a échoué. Réessayez, ou utilisez votre e-mail." : undefined;
+  return <SignInForm next={next ? safeNextPath(next) : undefined} notice={notice} />;
 }
 
 export default function Page({ searchParams }: PageProps<"/connexion">) {
