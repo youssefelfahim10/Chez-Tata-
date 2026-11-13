@@ -109,6 +109,7 @@ export default function Page() {
         </div>
       </header>
 
+      <main className="flex-1">
       {/* Hero */}
       <section className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 pb-20 pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:pt-24">
         <div className="flex flex-col gap-7">
@@ -134,7 +135,6 @@ export default function Page() {
         </div>
       </section>
 
-      <main className="flex-1">
         {/* Comment ça marche */}
         <section id="comment" className="mx-auto w-full max-w-6xl scroll-mt-20 border-t border-line px-4 py-24">
           <div className="reveal text-center">

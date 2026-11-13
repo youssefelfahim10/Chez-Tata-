@@ -102,7 +102,7 @@ export function PageTitle({ children, subtitle }: { children: ReactNode; subtitl
 
 export function Skeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="flex flex-col gap-3" aria-busy="true" aria-label="Chargement">
+    <div className="flex flex-col gap-3" role="status" aria-busy="true" aria-label="Chargement">
       {Array.from({ length: lines }, (_, i) => (
         <div key={i} className="h-24 animate-pulse rounded-card bg-line/60" />
       ))}
