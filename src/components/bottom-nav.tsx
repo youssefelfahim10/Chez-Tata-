@@ -2,25 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { isTabActive, NAV_TABS } from "@/lib/nav";
 
-const TABS: readonly { href: string; label: string; icon: string; also?: string[] }[] = [
-  { href: "/aujourdhui", label: "Aujourd'hui", icon: "☀️" },
-  { href: "/planning", label: "Planning", icon: "📅" },
-  { href: "/gestion", label: "Gestion", icon: "📒" },
-  { href: "/profil", label: "Profil", icon: "👤", also: ["/parametres"] },
-];
-
-/** Navigation principale à 4 onglets, atteignable au pouce. */
+/** Navigation principale à 4 onglets, atteignable au pouce (téléphone et tablette ; sur PC, voir la barre latérale). */
 export function BottomNav() {
   const pathname = usePathname();
   return (
     <nav
       aria-label="Navigation principale"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
     >
       <ul className="mx-auto grid max-w-2xl grid-cols-4">
-        {TABS.map((tab) => {
-          const active = [tab.href, ...(tab.also ?? [])].some((p) => pathname === p || pathname.startsWith(`${p}/`));
+        {NAV_TABS.map((tab) => {
+          const active = isTabActive(tab, pathname);
           return (
             <li key={tab.href}>
               <Link
