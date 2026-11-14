@@ -28,6 +28,7 @@ export async function saveCaregiverProfile(_prev: FormState, formData: FormData)
   if (error) return { error: "Impossible d'enregistrer le profil. Réessayez." };
 
   revalidatePath("/profil", "layout");
+  revalidatePath("/demarrage");
   revalidatePath("/aujourdhui");
   return { message: "Profil enregistré." };
 }

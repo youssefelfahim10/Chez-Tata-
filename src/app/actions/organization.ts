@@ -36,7 +36,7 @@ export async function createOrganization(_prev: FormState, formData: FormData): 
   if (error || !data) return { error: "Impossible de créer l'espace. Réessayez." };
 
   await rememberActiveOrg(data as string);
-  redirect("/aujourdhui");
+  redirect("/demarrage");
 }
 
 export async function switchOrganization(formData: FormData): Promise<void> {

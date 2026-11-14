@@ -35,6 +35,7 @@ export async function createChild(_prev: FormState, formData: FormData): Promise
   if (error) return { error: "Impossible d'ajouter l'enfant." };
   revalidatePath("/gestion");
   revalidatePath("/aujourdhui");
+  revalidatePath("/demarrage");
   return { message: `${parsed.data.firstName} a été ajouté.` };
 }
 

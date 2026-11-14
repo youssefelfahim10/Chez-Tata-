@@ -74,8 +74,8 @@ async function Today() {
       {kids.length === 0 ? (
         <Card className="flex flex-col items-start gap-3">
           <p className="text-ink-soft">Ajoutez un premier enfant pour commencer à pointer sa journée.</p>
-          <Link href="/gestion" className="inline-flex min-h-12 items-center rounded-2xl bg-primary px-5 font-bold text-white">
-            ➕ Ajouter un enfant
+          <Link href="/demarrage" className="inline-flex min-h-12 items-center rounded-2xl bg-primary px-5 font-bold text-white">
+            ➕ Commencer la mise en route
           </Link>
         </Card>
       ) : (
