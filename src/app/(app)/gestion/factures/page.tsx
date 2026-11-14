@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { InvoiceBoard, type InvoiceItem } from "@/components/invoice-board";
+import { HelpButton } from "@/components/help/help-button";
+import { TourLauncher } from "@/components/help/tour";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
 import { requireWorkspace } from "@/lib/auth/session";
 import { fillEmployeeFromProfile, parseDetails } from "@/lib/documents/details";
@@ -89,13 +91,15 @@ async function Content({ searchParams }: { searchParams: Promise<{ mois?: string
   return (
     <>
       <Link href="/gestion" className="-mt-2 inline-flex min-h-11 items-center font-bold text-primary underline">← Retour à la gestion</Link>
-      <Card>
+      <Card tour="f-month">
         <div className="flex items-center justify-between gap-2">
           <Link href={`/gestion/factures?mois=${shiftMonth(month, -1)}`} className="flex min-h-12 min-w-12 items-center justify-center rounded-xl border border-line text-xl" aria-label="Mois précédent">◀</Link>
           <h2 className="text-lg font-extrabold capitalize">{title}</h2>
           <Link href={`/gestion/factures?mois=${shiftMonth(month, 1)}`} className="flex min-h-12 min-w-12 items-center justify-center rounded-xl border border-line text-xl" aria-label="Mois suivant">▶</Link>
         </div>
-        <p className="mt-2 text-center text-sm text-ink-soft">Paiement reçu ? Un clic, la facture est prête à envoyer.</p>
+        <p className="mt-2 flex items-center justify-center gap-2 text-center text-sm text-ink-soft">
+          Paiement reçu ? Un clic, la facture est prête à envoyer. <HelpButton topic="invoice.month" />
+        </p>
       </Card>
       {items.length === 0 ? (
         <Card>
@@ -113,6 +117,7 @@ export default function Page({ searchParams }: PageProps<"/gestion/factures">) {
   return (
     <>
       <PageTitle subtitle="Paiement reçu, facture envoyée">Factures</PageTitle>
+      <TourLauncher tour="factures" />
       <Suspense fallback={<Skeleton lines={5} />}>
         <Content searchParams={searchParams} />
       </Suspense>

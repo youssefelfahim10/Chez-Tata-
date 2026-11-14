@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ChildAvatar } from "@/components/child-avatar";
 import { Icon } from "@/components/icons";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { ACTION_EMOJI, ACTION_TONE } from "@/lib/journal/labels";
@@ -26,17 +27,6 @@ function Tap({ when, children, className = "" }: { when: number; children: React
   );
 }
 
-function Toast({ children, when, hideAt }: { children: ReactNode; when: number; hideAt?: number }) {
-  return (
-    <p
-      className={`absolute inset-x-3 bottom-3 z-10 flex items-center gap-2 rounded-xl bg-ink px-3 py-2.5 text-[11px] font-semibold text-white shadow-lg ${hideAt ? "d-out" : "d-in"}`}
-      style={hideAt ? at(hideAt) : at(when)}
-    >
-      {hideAt ? <span className="d-in contents" style={at(when)}>{children}</span> : children}
-    </p>
-  );
-}
-
 function Header({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="px-4 pb-2">
@@ -46,18 +36,14 @@ function Header({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
-function Avatar({ letter, tone = "bg-primary-soft text-primary" }: { letter: string; tone?: string }) {
-  return <span className={`flex size-10 shrink-0 items-center justify-center rounded-full font-display text-lg font-semibold ${tone}`}>{letter}</span>;
-}
-
 type Btn = { emoji: string; label: string; tone: ToneName; tapAt?: number };
 
-function ActionGrid({ buttons }: { buttons: Btn[] }) {
+function ActionGrid({ buttons, compact = false }: { buttons: Btn[]; compact?: boolean }) {
   return (
     <div className="mt-3 grid grid-cols-3 gap-1.5">
       {buttons.map((b) => {
         const tone = TONES[b.tone];
-        const cls = `h-[68px] rounded-xl border text-[11px] font-bold text-ink ${tone.box}`;
+        const cls = `${compact ? "h-[54px]" : "h-[68px]"} rounded-xl border text-[11px] font-bold text-ink ${tone.box}`;
         const inner = (
           <>
             <span aria-hidden className="text-xl leading-none">{b.emoji}</span>
@@ -103,28 +89,101 @@ const BASE: Btn[] = [
   { emoji: ACTION_EMOJI.care, label: "Soins", tone: ACTION_TONE.care },
 ];
 
+type RowType = "arrival" | "departure" | "meal" | "nap" | "diaper" | "care";
+
+/** Ligne de la « Journée de … » : même présentation que dans l'application (emoji teinté, heure, précision, boutons). */
+function Row({ type, label, time, detail, pills = false, compact = false, tapModify, tapCancel }: { type: RowType; label: string; time: ReactNode; detail?: ReactNode; pills?: boolean; compact?: boolean; tapModify?: number; tapCancel?: number }) {
+  const modify = "inline-flex h-6 items-center rounded-full border border-primary/30 bg-surface px-2 text-[9px] font-extrabold text-primary";
+  const cancel = "inline-flex h-6 items-center rounded-full border border-line bg-surface px-2 text-[9px] font-bold text-ink-soft";
+  return (
+    <div className={`flex items-start gap-2 border-t border-line first:border-t-0 ${compact ? "py-1" : "py-1.5"}`}>
+      <span aria-hidden className={`flex shrink-0 items-center justify-center rounded-lg border ${compact ? "size-7 text-base" : "size-8 text-lg"} ${TONES[ACTION_TONE[type]].box}`}>
+        {ACTION_EMOJI[type]}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-extrabold leading-tight">
+          {label} <span className="font-semibold text-ink-soft">· {time}</span>
+        </p>
+        {detail ? <p className="text-[10px] leading-tight text-ink-soft">{detail}</p> : null}
+        {pills ? (
+          <span className="mt-1 flex gap-1.5">
+            {tapModify !== undefined ? <Tap when={tapModify} className={modify}>✏️ Modifier</Tap> : <span className={modify}>✏️ Modifier</span>}
+            {tapCancel !== undefined ? <Tap when={tapCancel} className={cancel}>✕ Annuler</Tap> : <span className={cancel}>✕ Annuler</span>}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function Journee({ name, children, className = "" }: { name: string; children: ReactNode; className?: string }) {
+  return (
+    <section className={`mx-3 mt-2 rounded-xl border border-line bg-cream p-2 ${className}`}>
+      <h3 className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold-deep">Journée de {name}</h3>
+      {children}
+    </section>
+  );
+}
+
+function KidHeader({ name, gender, sub, status }: { name: string; gender: "girl" | "boy"; sub: ReactNode; status: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <ChildAvatar name={name} gender={gender} size="sm" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold leading-none">{name}</p>
+        <p className="mt-1 text-[10px] text-ink-soft">{sub}</p>
+      </div>
+      {status}
+    </div>
+  );
+}
+
+/** Retour dans la carte (comme dans l'application) : confirmation + bouton d'annulation. */
+function Feedback({ children, action, className = "", style }: { children: ReactNode; action?: string; className?: string; style?: React.CSSProperties }) {
+  return (
+    <div className={`rounded-xl border border-leaf/30 bg-leaf-soft p-2 text-[11px] ${className}`} style={style}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-extrabold">✓ {children}</p>
+        {action ? <span className="shrink-0 rounded-lg border border-ink/15 bg-surface px-2 py-1 text-[10px] font-extrabold text-primary">{action}</span> : null}
+      </div>
+    </div>
+  );
+}
+
+/** Contenu visible de l'instant `from` à l'instant `to` (sans `to` : jusqu'à la fin). Empilé dans la même cellule : rien ne « saute ». */
+function Timed({ from, to, children }: { from: number; to?: number; children: ReactNode }) {
+  return (
+    <span className="d-in block [grid-area:1/1]" style={at(from)}>
+      {to !== undefined ? (
+        <span className="d-out block" style={at(to)}>
+          {children}
+        </span>
+      ) : (
+        children
+      )}
+    </span>
+  );
+}
+
 function Arrivee() {
   return (
     <div className="relative h-full">
       <Header title="Bonjour TaTa !" sub="mardi 10 novembre 2026" />
       <div className="mx-3 rounded-2xl border border-line bg-surface p-3 shadow-luxe">
-        <div className="flex items-center gap-2.5">
-          <Avatar letter="L" />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold leading-none">Lou</p>
-            <p className="mt-1 text-[10px] text-ink-soft">
-              <Swap when={2.9} before={<>Journée du jour</>} after={<>Arrivée 08 h 12</>} />
-            </p>
-          </div>
-          <Swap when={2.9} before={pill("Pas encore arrivé", "bg-sun-soft text-gold-deep")} after={pill("Présent", "bg-leaf-soft text-leaf", "✓")} className="shrink-0" />
-        </div>
+        <KidHeader
+          name="Lou"
+          gender="girl"
+          sub={<Swap when={2.9} before={<>Aucune arrivée saisie</>} after={<>Arrivée 08 h 12</>} />}
+          status={<Swap when={2.9} before={pill("Pas encore arrivé", "bg-sun-soft text-gold-deep")} after={pill("Présent", "bg-leaf-soft text-leaf", "✓")} className="shrink-0" />}
+        />
         <ActionGrid buttons={BASE.map((b) => (b.label === "Arrivée" ? { ...b, tapAt: 1.3 } : b))} />
+        <Feedback className="d-in mt-2" action="Annuler" style={at(3.1)}>
+          Arrivée enregistrée
+        </Feedback>
       </div>
-      <Toast when={3.1}>
-        <Icon name="check" className="size-3.5 shrink-0 text-sun" />
-        <span className="flex-1">Arrivée enregistrée pour Lou · 08 h 12</span>
-        <span className="rounded-lg bg-white/15 px-2 py-1 text-sun">Annuler</span>
-      </Toast>
+      <Journee name="Lou" className="d-in" >
+        <Row type="arrival" label="Arrivée" time="08 h 12" pills />
+      </Journee>
     </div>
   );
 }
@@ -132,26 +191,123 @@ function Arrivee() {
 function Gestes() {
   return (
     <div className="relative h-full">
-      <Header title="Lou" sub="Présent depuis 08 h 12" />
-      <div className="mx-3 rounded-2xl border border-line bg-surface p-3 shadow-luxe">
+      <div className="mx-3 mt-1 rounded-2xl border border-line bg-surface p-3 shadow-luxe">
+        <KidHeader name="Lou" gender="girl" sub="Arrivée 08 h 12" status={pill("Présent", "bg-leaf-soft text-leaf", "✓")} />
         <ActionGrid
+          compact
           buttons={BASE.map((b) =>
             b.label === "Repas" ? { ...b, tapAt: 0.5 } : b.label === "Sieste" ? { ...b, tapAt: 3.3 } : b.label === "Change" ? { ...b, tapAt: 5 } : b,
           )}
         />
-        <div className="mt-3 flex min-h-[26px] flex-wrap gap-1.5">
-          <span className="d-pop" style={at(1.5)}>{pill("Repas ×1", TONES.gold.chip, "🍽️")}</span>
-          <span className="d-pop" style={at(4.2)}>{pill("Sieste en cours", TONES.dusk.chip, "😴")}</span>
-          <span className="d-pop" style={at(5.9)}>{pill("Change ×1", TONES.aqua.chip, "🧷")}</span>
+        <div className="mt-2 grid min-h-[72px]">
+          <Timed from={1.0} to={3.4}>
+            <div className="rounded-xl border border-leaf/30 bg-leaf-soft p-2 text-[11px]">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-extrabold">✓ Repas enregistré</p>
+                <span className="rounded-lg border border-ink/15 bg-surface px-2 py-1 text-[10px] font-extrabold text-primary">Annuler</span>
+              </div>
+              <p className="mt-1 text-[9px] font-bold text-ink-soft">Comment s’est passé le repas ? (facultatif)</p>
+              <div className="mt-1 grid grid-cols-3 gap-1 whitespace-nowrap text-[9px] font-bold">
+                <span className="rounded-full border border-line bg-surface py-1 text-center">Un peu</span>
+                <span className="d-pop rounded-full border border-sun bg-gradient-to-b from-[#d9b865] to-sun py-1 text-center text-ink" style={at(2.4)}>Tout mangé</span>
+                <span className="rounded-full border border-line bg-surface py-1 text-center">Rien</span>
+              </div>
+            </div>
+          </Timed>
+          <Timed from={3.6} to={5.2}>
+            <Feedback action="Annuler">Sieste enregistrée</Feedback>
+          </Timed>
+          <Timed from={5.3}>
+            <Feedback action="Annuler">Change enregistré</Feedback>
+          </Timed>
         </div>
       </div>
-      <div className="d-in mx-3 mt-3 rounded-2xl border border-sun/50 bg-sun-soft p-3" style={at(1.6)}>
-        <p className="text-[10px] font-bold uppercase tracking-wider text-gold-deep">Précision du repas</p>
-        <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px] font-bold">
-          <span className="rounded-lg border border-line bg-surface py-2 text-center">Un peu</span>
-          <span className="d-pop rounded-lg border border-sun bg-gradient-to-b from-[#d9b865] to-sun py-2 text-center text-ink" style={at(2.4)}>Tout mangé</span>
-          <span className="rounded-lg border border-line bg-surface py-2 text-center">Rien</span>
+      <Journee name="Lou">
+        <Row compact type="arrival" label="Arrivée" time="08 h 12" />
+        <div className="d-in" style={at(1.0)}>
+          <Row compact type="meal" label="Repas" time="11 h 45" detail={<Swap when={2.5} before={<>—</>} after={<>tout mangé</>} />} />
         </div>
+        <div className="d-in" style={at(3.6)}>
+          <Row compact type="nap" label="Sieste" time="12 h 30 → en cours" />
+        </div>
+        <div className="d-in" style={at(5.3)}>
+          <Row compact type="diaper" label="Change" time="14 h 10" />
+        </div>
+      </Journee>
+    </div>
+  );
+}
+
+function Corriger() {
+  return (
+    <div className="relative h-full">
+      <Header title="Journée de Lou" sub="Une erreur ? Rien n’est perdu" />
+      {/* Retours dans la carte, l'un après l'autre, dans la même cellule. */}
+      <div className="mx-3 grid min-h-[78px]">
+        <Timed from={1.9} to={3.9}>
+          <div className="rounded-xl border border-sun/60 bg-surface p-2.5">
+            <p className="text-[11px] font-extrabold">Modifier : Change</p>
+            <div className="mt-1.5 grid grid-cols-[1fr_auto] items-end gap-2">
+              <div>
+                <p className="text-[9px] font-bold text-ink-soft">Heure</p>
+                <p className="mt-0.5 flex h-8 items-center rounded-lg border border-line px-2 text-[12px]">
+                  <Swap when={2.9} before={<>14 h 10</>} after={<span className="font-bold">14 h 25</span>} />
+                </p>
+              </div>
+              <Tap when={3.1} className="flex h-8 w-28 rounded-lg bg-gradient-to-b from-primary to-primary-strong text-[11px] font-extrabold text-white">
+                ✓ Enregistrer
+              </Tap>
+            </div>
+          </div>
+        </Timed>
+        <Timed from={4.0} to={5.2}>
+          <Feedback action="↩ Annuler la modification">Change modifié</Feedback>
+        </Timed>
+        <Timed from={5.3} to={7.6}>
+          <Feedback action="↩ Rétablir">Repas de 11 h 45 annulé</Feedback>
+        </Timed>
+        <Timed from={7.7}>
+          <Feedback>Repas de 11 h 45 rétabli</Feedback>
+        </Timed>
+      </div>
+
+      <Journee name="Lou">
+        <Row type="arrival" label="Arrivée" time="08 h 12" pills />
+        {/* Le repas : visible, puis archivé, puis rétabli (même emplacement, aucun saut). */}
+        <div className="grid">
+          <div className="d-collapse grid [grid-area:1/1]" style={at(5.3)}>
+            <div className="min-h-0 overflow-hidden">
+              <Row type="meal" label="Repas" time="11 h 45" detail="tout mangé" pills tapCancel={4.4} />
+            </div>
+          </div>
+          <div className="d-expand grid [grid-area:1/1]" style={at(7.7)}>
+            <div className="min-h-0 overflow-hidden">
+              <Row type="meal" label="Repas" time="11 h 45" detail="tout mangé" pills />
+            </div>
+          </div>
+        </div>
+        <Row
+          type="diaper"
+          label="Change"
+          time={<Swap when={3.9} before={<>14 h 10</>} after={<>14 h 25</>} />}
+          pills
+          tapModify={1.2}
+        />
+      </Journee>
+
+      <div className="mx-3 mt-2 grid min-h-[64px]">
+        <Timed from={5.4} to={7.6}>
+          <div className="rounded-xl border border-dashed border-line bg-surface/70 p-2">
+            <p className="text-[10px] font-bold text-ink-soft">🗂️ Annulés aujourd’hui (1) · rien n’est perdu</p>
+            <div className="mt-1 flex items-center gap-2">
+              <span aria-hidden className="text-base opacity-60">🍽️</span>
+              <p className="flex-1 text-[10px] text-ink-soft line-through decoration-ink-soft/60">Repas · 11 h 45 · tout mangé</p>
+              <Tap when={6.6} className="inline-flex h-7 min-w-[74px] rounded-lg border border-line bg-surface text-[10px] font-extrabold text-primary">
+                ↩ Rétablir
+              </Tap>
+            </div>
+          </div>
+        </Timed>
       </div>
     </div>
   );
@@ -160,44 +316,34 @@ function Gestes() {
 function Reseau() {
   return (
     <div className="relative h-full">
-      <div className="flex items-start justify-between px-4 pb-2">
-        <div>
-          <p className="font-display text-2xl font-semibold leading-tight">Lou</p>
-          <p className="text-[11px] text-ink-soft">Présent</p>
-        </div>
-        <span className="mt-1 inline-grid justify-items-end">
-          <span className="d-out [grid-area:1/1]" style={at(0.9)}>{pill("En ligne", "bg-leaf-soft text-leaf", "✓")}</span>
-          <span className="d-in [grid-area:1/1]" style={at(0.9)}>
-            <span className="d-out inline-flex" style={at(5.1)}>{pill("Hors ligne", "bg-sun-soft text-gold-deep", "📴")}</span>
-          </span>
-          <span className="d-in [grid-area:1/1]" style={at(5.1)}>{pill("Synchronisé", "bg-leaf-soft text-leaf", "✓")}</span>
-        </span>
-      </div>
-      <div className="relative mx-3 mb-3 min-h-[46px]">
-        <div className="d-in" style={at(1.2)}>
-          <div className="d-out flex items-start gap-2 rounded-xl bg-sun-soft px-3 py-2.5 text-[11px] text-ink" style={at(5.1)}>
+      <div className="relative mx-3 mb-2 mt-1 min-h-[44px]">
+        <div className="d-in" style={at(1.0)}>
+          <div className="d-out flex items-start gap-2 rounded-xl bg-sun-soft px-3 py-2.5 text-[11px] font-bold text-ink" style={at(5.1)}>
             <span aria-hidden className="mt-px shrink-0">📴</span>
-            Pas de réseau : vos saisies restent sur le téléphone.
+            Hors ligne : vos saisies sont gardées sur ce téléphone et partiront dès le retour du réseau.
           </div>
         </div>
-        <div className="d-in absolute inset-0 flex items-start gap-2 rounded-xl bg-leaf-soft px-3 py-2.5 text-[11px] text-ink" style={at(5.1)}>
+        <div className="d-in absolute inset-0 flex items-start gap-2 rounded-xl bg-leaf-soft px-3 py-2.5 text-[11px] font-bold text-ink" style={at(5.1)}>
           <Icon name="check" className="mt-0.5 size-4 shrink-0 text-leaf" />
           Connexion revenue : tout est envoyé automatiquement.
         </div>
       </div>
       <div className="mx-3 rounded-2xl border border-line bg-surface p-3 shadow-luxe">
+        <KidHeader name="Lou" gender="girl" sub="Arrivée 08 h 12" status={pill("Présent", "bg-leaf-soft text-leaf", "✓")} />
         <ActionGrid buttons={BASE.map((b) => (b.label === "Repas" ? { ...b, tapAt: 2 } : b))} />
-        <div className="mt-3 grid min-h-[26px] justify-items-start">
+        <div className="mt-2 grid min-h-[34px] justify-items-start">
           <span className="d-pop [grid-area:1/1]" style={at(3.2)}>
             <span className="d-out inline-flex" style={at(5.1)}>{pill("1 saisie à envoyer", "bg-primary-soft text-primary", "⏳")}</span>
           </span>
           <span className="d-pop [grid-area:1/1]" style={at(5.2)}>{pill("Envoyé · heure réelle du geste", "bg-leaf-soft text-leaf", "✓")}</span>
         </div>
       </div>
-      <Toast when={3}>
-        <Icon name="check" className="size-3.5 shrink-0 text-sun" />
-        <span className="flex-1">Repas enregistré pour Lou (hors ligne)</span>
-      </Toast>
+      <Journee name="Lou">
+        <Row type="arrival" label="Arrivée" time="08 h 12" />
+        <div className="d-in" style={at(3.0)}>
+          <Row type="meal" label="Repas" time="11 h 45" detail={<Swap when={5.2} before={<>enregistré hors ligne</>} after={<>envoyé · heure réelle conservée</>} />} />
+        </div>
+      </Journee>
     </div>
   );
 }
@@ -225,7 +371,7 @@ function Dictee() {
       <div className="d-in mx-3 mt-3 rounded-2xl border border-sun/60 bg-sun-soft p-3" style={at(3.2)}>
         <p className="text-[10px] font-bold uppercase tracking-wider text-gold-deep">Proposition à confirmer</p>
         <div className="mt-2 flex items-center gap-2.5">
-          <Avatar letter="N" tone="bg-sun text-ink" />
+          <ChildAvatar name="Noa" gender="boy" size="sm" />
           <div className="flex-1 text-xs">
             <p className="font-bold">Noa · Repas</p>
             <p className="text-ink-soft">Tout mangé</p>
@@ -381,14 +527,62 @@ function Fin() {
   );
 }
 
+function Impots() {
+  const months: [string, boolean][] = [["Juil.", true], ["Août", true], ["Sept.", true], ["Oct.", false]];
+  return (
+    <div className="relative h-full">
+      <Header title="Impôts et documents" sub="Revenus d’accueil 2026 · une aide" />
+      <div className="mx-3 rounded-2xl border border-line bg-surface p-3 shadow-luxe">
+        <KidHeader name="Lou" gender="girl" sub="Famille Test" status={pill("2026", "bg-primary-soft text-primary")} />
+        <div className="mt-2 overflow-hidden rounded-xl border border-line">
+          <div className="grid grid-cols-[1.35fr_1fr_1fr] bg-primary-soft px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-primary">
+            <span>Mois</span>
+            <span className="text-right">Salaire</span>
+            <span className="text-right">Indemnités</span>
+          </div>
+          {months.map(([name, estimated], i) => (
+            <div key={name} className="d-in grid grid-cols-[1.35fr_1fr_1fr] items-center border-t border-line px-2 py-1.5 text-[10px] font-semibold" style={at(0.5 + i * 0.5)}>
+              <span className="flex min-w-0 items-center gap-1">
+                {name}
+                {estimated ? (
+                  <span className="d-pop rounded-full bg-sun-soft px-1.5 py-px text-[8px] font-bold text-gold-deep" style={at(0.9 + i * 0.5)}>estimé</span>
+                ) : (
+                  <span className="text-leaf">✓</span>
+                )}
+              </span>
+              <span className="text-right tabular-nums">612,40 €</span>
+              <span className="text-right tabular-nums">92,50 €</span>
+            </div>
+          ))}
+        </div>
+        <p className="d-in mt-2 rounded-xl border border-sun/60 bg-sun-soft px-2.5 py-2 text-[10px] leading-snug" style={at(3.0)}>
+          ✨ <b>3 mois remplis automatiquement</b> d’après le contrat et vos présences. Estimations : corrigez-les si besoin, ou validez la facture du mois pour le montant réel.
+        </p>
+        <div className="d-in mt-2 grid grid-cols-2 gap-1.5 text-[10px] font-bold" style={at(4.2)}>
+          <Tap when={4.8} className="h-9 rounded-lg border border-line bg-surface text-primary">
+            <span className="d-out inline-flex" style={at(6.2)}>📄 PDF d’aide</span>
+            <span className="d-in absolute inset-0 flex items-center justify-center" style={at(6.2)}>✓ PDF créé</span>
+          </Tap>
+          <span className="flex h-9 items-center justify-center rounded-lg border border-line bg-surface text-primary">🧾 Attestation</span>
+        </div>
+      </div>
+      <p className="d-fade mx-4 mt-2 text-center text-[10px] text-ink-soft" style={at(6.6)}>
+        Une aide à la déclaration, jamais un document officiel.
+      </p>
+    </div>
+  );
+}
+
 const SCREENS: Record<SceneId, () => ReactNode> = {
   arrivee: Arrivee,
   gestes: Gestes,
+  corriger: Corriger,
   reseau: Reseau,
   dictee: Dictee,
   bilan: Bilan,
   urgence: Urgence,
   papiers: Papiers,
+  impots: Impots,
   fin: Fin,
 };
 

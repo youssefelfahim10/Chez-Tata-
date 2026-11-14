@@ -1,4 +1,6 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
+import { HelpButton } from "@/components/help/help-button";
+import type { HelpId } from "@/lib/help/topics";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "ghost" | "danger";
@@ -21,19 +23,20 @@ export function Button({ variant = "primary", className = "", ...props }: Button
   );
 }
 
-export function Card({ children, className = "", id }: { children: ReactNode; className?: string; id?: string }) {
+export function Card({ children, className = "", id, tour }: { children: ReactNode; className?: string; id?: string; /** Repère de la visite guidée */ tour?: string }) {
   return (
-    <section id={id} className={`rounded-card border border-line bg-surface p-5 shadow-luxe ${className}`}>{children}</section>
+    <section id={id} data-tour={tour} className={`rounded-card border border-line bg-surface p-5 shadow-luxe ${className}`}>{children}</section>
   );
 }
 
-type FieldProps = InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string };
+type FieldProps = InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; /** Explication simple, ouverte par le « ? » */ help?: HelpId; /** Repère de la visite guidée */ tour?: string };
 
-export function Field({ label, hint, id, name, ...props }: FieldProps) {
+export function Field({ label, hint, help, tour, id, name, ...props }: FieldProps) {
   const fieldId = id ?? `field-${name}`;
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={fieldId} className="text-sm font-bold text-ink">
+    <div className="relative flex flex-col gap-1.5" data-tour={tour}>
+      {help ? <HelpButton topic={help} className="absolute -top-1 right-0" /> : null}
+      <label htmlFor={fieldId} className={`text-sm font-bold text-ink ${help ? "pr-9" : ""}`}>
         {label}
       </label>
       <input
@@ -52,13 +55,14 @@ export function Field({ label, hint, id, name, ...props }: FieldProps) {
   );
 }
 
-type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: string };
+type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: string; help?: HelpId };
 
-export function TextareaField({ label, hint, id, name, ...props }: TextareaProps) {
+export function TextareaField({ label, hint, help, id, name, ...props }: TextareaProps) {
   const fieldId = id ?? `field-${name}`;
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={fieldId} className="text-sm font-bold text-ink">
+    <div className="relative flex flex-col gap-1.5">
+      {help ? <HelpButton topic={help} className="absolute -top-1 right-0" /> : null}
+      <label htmlFor={fieldId} className={`text-sm font-bold text-ink ${help ? "pr-9" : ""}`}>
         {label}
       </label>
       <textarea

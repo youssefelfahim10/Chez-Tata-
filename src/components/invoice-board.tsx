@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { confirmPayment } from "@/app/actions/billing";
 import { ChildAvatar } from "@/components/child-avatar";
+import { HelpButton } from "@/components/help/help-button";
 import { Notice } from "@/components/ui";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { PAYMENT_METHODS, buildDraftLines, paymentMethodLabel, type BillingContract, type MonthActivity, type PaymentMethod } from "@/lib/billing/invoice";
@@ -10,6 +11,7 @@ import { buildInvoiceDoc, type ContractDetails, type StoredLine } from "@/lib/do
 import { downloadPdf, loadFontBytes, safeFileName, sharePdf } from "@/lib/pdf/browser";
 import { buildInvoicePdf } from "@/lib/pdf/invoice";
 import { formatDateFR, formatEuros, monthNameFR } from "@/lib/sheet/compute";
+import type { HelpId } from "@/lib/help/topics";
 import { buildWhatsAppUrl, toWhatsAppNumber } from "@/lib/whatsapp/link";
 
 export type InvoiceItem = {
@@ -33,6 +35,14 @@ export function parseSignedEuros(input: string): number | null {
   const cents = Number(m[2]) * 100 + Number((m[3] ?? "").padEnd(2, "0") || 0);
   return m[1] ? -cents : cents;
 }
+
+/** Explication et repère de visite de chaque ligne de la facture. */
+const LINE_HELP: Record<string, { help: HelpId; tour?: string }> = {
+  base: { help: "invoice.base", tour: "f-base" },
+  extra: { help: "invoice.extra", tour: "f-extra" },
+  maintenance: { help: "invoice.maintenance", tour: "f-maintenance" },
+  meal: { help: "invoice.meal", tour: "f-meal" },
+};
 
 const inputClass = "min-h-12 w-full rounded-xl border border-line bg-surface px-3 text-base";
 
@@ -143,12 +153,13 @@ function InvoiceCard({ item, month, today, canInvoice }: { item: InvoiceItem; mo
         ) : (
           <span className="rounded-full bg-sun-soft px-3 py-1 text-xs font-extrabold">À facturer</span>
         )}
+        <HelpButton topic="invoice.status" />
       </div>
 
       {existing ? (
         <div className="mt-4">
           <div className="rounded-2xl bg-leaf-soft p-4">
-            <p className="text-sm font-bold text-leaf">{existing.number}</p>
+            <p className="flex items-center gap-2 text-sm font-bold text-leaf">{existing.number} <HelpButton topic="invoice.number" /></p>
             <p className="text-3xl font-extrabold">{formatEuros(existing.totalCents)} €</p>
             <p className="text-sm text-ink-soft">Reçu le {formatDateFR(existing.paidAt)} · {paymentMethodLabel(existing.method)}</p>
           </div>
@@ -165,23 +176,39 @@ function InvoiceCard({ item, month, today, canInvoice }: { item: InvoiceItem; mo
               <WhatsAppIcon className="size-7 text-white" />
               {busy === "share" ? "Préparation…" : "Envoyer la facture par WhatsApp"}
             </button>
+            <p className="-mb-1 flex items-center justify-end gap-2 text-sm font-bold text-ink-soft">
+              Comment ça marche ? <HelpButton topic="invoice.send" />
+            </p>
             <button type="button" onClick={() => output("pdf")} disabled={busy !== null} className="min-h-12 rounded-2xl border border-line bg-surface font-bold">
               {busy === "pdf" ? "Création…" : "📄 Télécharger le PDF"}
             </button>
+            <p className="-mt-1 flex items-center justify-end gap-2 text-sm font-bold text-ink-soft">
+              C’est quoi, le PDF ? <HelpButton topic="invoice.pdf" />
+            </p>
           </div>
         </div>
       ) : canInvoice ? (
         <div className="mt-4">
-          <p className="text-sm font-bold">Lignes de la facture <span className="font-normal text-ink-soft">(cochez, corrigez si besoin)</span></p>
-          <ul className="mt-2 flex flex-col gap-2">
+          <p className="flex items-center justify-between gap-2 text-sm font-bold">
+            <span>Lignes de la facture <span className="font-normal text-ink-soft">(cochez, corrigez si besoin)</span></span>
+            <HelpButton topic="invoice.lines" />
+          </p>
+          <ul data-tour="f-lines" className="mt-2 flex flex-col gap-2">
             {drafts.map((d) => (
-              <li key={d.id} className={`rounded-2xl border p-3 ${d.on ? "border-leaf bg-leaf-soft" : "border-line opacity-70"}`}>
+              <li key={d.id} data-tour={LINE_HELP[d.id]?.tour} className={`rounded-2xl border p-3 ${d.on ? "border-leaf bg-leaf-soft" : "border-line opacity-70"}`}>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" aria-label={`Inclure ${d.label}`} className="size-6 accent-primary" checked={d.on} onChange={(e) => set(d.id, { on: e.target.checked })} />
                   {d.manual ? (
-                    <input aria-label="Libellé" className={`${inputClass} flex-1`} value={d.label} onChange={(e) => set(d.id, { label: e.target.value })} maxLength={120} placeholder="Ex. Remise, régularisation…" />
+                    <>
+                      <input aria-label="Libellé" className={`${inputClass} flex-1`} value={d.label} onChange={(e) => set(d.id, { label: e.target.value })} maxLength={120} placeholder="Ex. Remise, régularisation…" />
+                      <HelpButton topic="invoice.add" />
+                    </>
                   ) : (
-                    <span className="min-w-0 flex-1 text-sm font-bold">{d.label}<span className="block text-xs font-normal text-ink-soft">{d.detail}</span></span>
+                    <span className="min-w-0 flex-1 text-sm font-bold">
+                      {d.label}
+                      {LINE_HELP[d.id] ? <HelpButton topic={LINE_HELP[d.id].help} className="ml-1.5 align-middle" /> : null}
+                      <span className="block text-xs font-normal text-ink-soft">{d.detail}</span>
+                    </span>
                   )}
                   <span className="flex items-center gap-1">
                     <input aria-label={`Montant ${d.label}`} className="min-h-12 w-24 rounded-xl border border-line bg-surface px-2 text-right text-base font-bold" inputMode="decimal" value={d.amount} onChange={(e) => set(d.id, { amount: e.target.value })} disabled={!d.on} />
@@ -195,7 +222,8 @@ function InvoiceCard({ item, month, today, canInvoice }: { item: InvoiceItem; mo
             ➕ Ajouter une ligne
           </button>
 
-          <p className="mt-4 text-sm font-bold">Reçu par</p>
+          <div data-tour="f-method">
+          <p className="mt-4 flex items-center justify-between gap-2 text-sm font-bold">Reçu par <HelpButton topic="invoice.method" /></p>
           <div className="mt-2 flex flex-wrap gap-2">
             {PAYMENT_METHODS.map((m) => (
               <button key={m.value} type="button" onClick={() => setMethod(m.value)} aria-pressed={method === m.value} className={`min-h-11 rounded-full border px-4 text-sm font-bold ${method === m.value ? "border-primary bg-primary text-white" : "border-line bg-cream"}`}>
@@ -203,19 +231,26 @@ function InvoiceCard({ item, month, today, canInvoice }: { item: InvoiceItem; mo
               </button>
             ))}
           </div>
-          <label className="mt-3 flex flex-col gap-1.5 text-sm font-bold">
-            Date de réception
-            <input type="date" className={inputClass} value={paidAt} max={today} onChange={(e) => setPaidAt(e.target.value)} />
-          </label>
+          </div>
+          <div className="relative mt-3" data-tour="f-date">
+            <HelpButton topic="invoice.date" className="absolute -top-1 right-0" />
+            <label className="flex flex-col gap-1.5 text-sm font-bold">
+              Date de réception
+              <input type="date" className={inputClass} value={paidAt} max={today} onChange={(e) => setPaidAt(e.target.value)} />
+            </label>
+          </div>
 
-          <div className="mt-4 flex items-center justify-between rounded-2xl bg-sun-soft px-4 py-3">
-            <span className="font-bold">Total</span>
+          <div data-tour="f-total" className="mt-4 flex items-center justify-between rounded-2xl bg-sun-soft px-4 py-3">
+            <span className="flex items-center gap-2 font-bold">Total <HelpButton topic="invoice.total" /></span>
             <span className="text-2xl font-extrabold">{invalid ? "—" : `${formatEuros(total)} €`}</span>
           </div>
-          <button type="button" onClick={pay} disabled={busy !== null} className="mt-3 inline-flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-lg font-extrabold text-white disabled:opacity-50">
+          <button type="button" onClick={pay} disabled={busy !== null} data-tour="f-pay" className="mt-3 inline-flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-lg font-extrabold text-white disabled:opacity-50">
             {busy === "pay" ? "Génération…" : "✓ Paiement reçu : générer la facture"}
           </button>
-          <p className="mt-2 text-xs text-ink-soft">Une fois validée, la facture est numérotée et ne peut plus être modifiée.</p>
+          <p className="mt-2 flex items-center justify-between gap-2 text-xs text-ink-soft">
+            <span>Une fois validée, la facture est numérotée et ne peut plus être modifiée.</span>
+            <HelpButton topic="invoice.pay" />
+          </p>
         </div>
       ) : (
         <p className="mt-4 rounded-2xl bg-sun-soft px-4 py-3 text-sm">Ce mois n’est pas encore commencé : la facture se prépare à partir du mois en cours.</p>

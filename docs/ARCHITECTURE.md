@@ -140,13 +140,28 @@ Chaque point fait l'objet d'une issue.
 
 - **Aucune donnée, aucun compte, aucun appel serveur** : tout s'exécute dans le navigateur du visiteur, avec des enfants fictifs. Rien à nettoyer, rien à abuser,
   aucun risque de voir saisir de vraies données dans une base partagée. La page est publique (`PUBLIC_PATHS` dans `src/proxy.ts`).
-- **Présentation animée** (« film » de 8 chapitres) : scénario et machine à états du lecteur dans `src/lib/demo/script.ts` (pure, testée) ; écrans dans
+- **Présentation animée** (« film » de 10 chapitres : pointer, cocher, corriger, sans réseau, dicter, partager, urgence, papiers, impôts, final) : scénario et machine à états du lecteur dans `src/lib/demo/script.ts` (pure, testée) ; écrans dans
   `src/components/demo/screens.tsx`. Les animations sont en CSS (classes `d-*` dans `globals.css`, délais via `--d`) ; le lecteur gère pause, chapitres, clavier (← →).
   Mouvement réduit : pas de lecture automatique, contenu affiché dans son état final. L'onglet caché met en pause.
-- **« Essayer vous-même »** (`src/components/demo/sandbox.tsx`) : les vrais gestes sur deux enfants fictifs. Les règles (une arrivée par présence, une sieste à la fois)
-  et le **bilan** viennent du vrai code (`summarizeChildDay`, `buildDayReport`, `renderSummary`), donc ce que voit le visiteur est ce que produit l'application.
+- **« Essayer vous-même »** (`src/components/demo/sandbox.tsx`) : la même carte que l'application (👧 / 👦, retour dans la carte, « Journée de … », Modifier / Annuler / Rétablir, archives du jour)
+  sur deux enfants fictifs. Les règles et les opérations viennent du vrai code (`summarizeChildDay`, `buildTimeline`, `applyOpsWithArchive`, `buildEdit`, `buildDayReport`, `renderSummary`) :
+  la démo ne peut pas s'écarter de l'application. Rien n'est stocké (état en mémoire, jamais la file hors ligne réelle).
+- **Musique d'ambiance** (`src/lib/demo/music.ts`, bouton dans `music-toggle.tsx`) : boucle douce **générée** par Web Audio (accords lents + notes de boîte à musique) : aucun fichier, aucun droit d'auteur.
+  Elle démarre au premier geste (les navigateurs interdisent le son automatique), se coupe d'un clic (choix gardé sur l'appareil), se met en pause quand l'onglet est caché.
 - **Urgence en démo** : numéros fictifs ; les boutons 15 / 112 / 18 ne composent jamais de numéro (`button`, pas `tel:`).
 - L'ancien accès équipe (compte de démonstration protégé par code, `src/app/actions/demo.ts`) reste disponible, sous « Accès équipe » sur l'accueil.
+
+## Aide et visites guidées
+
+Pour celles qui sont peu à l'aise avec le numérique : chaque case ou bouton important a un « ? » qui ouvre une explication courte, et chaque grand écran a une **visite guidée**.
+
+- **Une seule bibliothèque de textes** : `src/lib/help/topics.ts` (titre, 1 à 2 phrases, exemple facultatif). Règles testées (`tests/unit/help.test.ts`) : titres ≤ 40 caractères, texte ≤ 210, phrases courtes,
+  vouvoiement, aucun jargon. Visites : `src/lib/help/tours.ts` (étapes = un sujet + un repère d'écran `data-tour`). Un test vérifie que chaque repère existe dans le code.
+- **« ? »** (`HelpButton`) : pastille 28 px, zone tactile 44 px, fenêtre en bas d'écran (grand texte, exemple, bouton « J'ai compris »), Échap, focus rendu. Les champs de formulaire l'obtiennent avec `help="…"` (`Field`, `TextareaField`).
+- **Lecture à voix haute** : bouton « Écouter l'explication » (voix du téléphone, `speechSynthesis`) ; seul le texte d'aide est lu, jamais une donnée sur un enfant.
+- **Visite guidée** (`TourLauncher`) : l'écran s'assombrit, l'élément expliqué reste éclairé, une carte dit à quoi il sert ; Suivant / Précédent / Quitter, flèches et Échap. L'élément remonte en haut de l'écran, la carte prend le bas
+  (l'éclairage est limité à la partie visible) ; un bloc replié est déplié. Une proposition « Première fois ici ? » n'apparaît qu'une fois par écran (mémorisée sur l'appareil).
+- Écrans couverts : Aujourd'hui, Gestion, Factures, Contrat, Impôts, fiche santé, profil.
 
 ## Couleurs fonctionnelles
 

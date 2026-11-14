@@ -7,6 +7,7 @@ import { syncOperation } from "@/app/actions/sync";
 import { useJournalSync, type SendFn } from "@/components/use-journal-sync";
 import { VoicePanel, type VoiceRow } from "@/components/voice-panel";
 import { ChildAvatar } from "@/components/child-avatar";
+import { HelpButton } from "@/components/help/help-button";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { DETAILS, NOTE_MAX } from "@/lib/journal/details";
 import {
@@ -19,6 +20,7 @@ import {
   type JournalEvent,
 } from "@/lib/journal/day";
 import { ACTION_EMOJI, ACTION_TONE, LABELS, type ActionType } from "@/lib/journal/labels";
+import { buildEdit } from "@/lib/journal/edit";
 import { buildTimeline, type TimelineItem } from "@/lib/journal/timeline";
 import { TONES } from "@/lib/ui/tones";
 import { isPlausibleTime, type Op } from "@/lib/offline/ops";
@@ -188,48 +190,16 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
 
   function saveEdit(kid: BoardChild, item: TimelineItem) {
     if (!editing) return;
-    const fail = (error: string) => setEditing({ ...editing, error });
-    const date = parisDateKey(item.startedAt);
-    let startedAt = item.startedAt;
-    let endedAt: string | undefined;
-    try {
-      if (editing.start !== item.startValue) startedAt = parisInstant(date, editing.start).toISOString();
-      if (item.endValue !== null && editing.end !== item.endValue) endedAt = parisInstant(date, editing.end).toISOString();
-    } catch {
-      return fail("Indiquez une heure valide.");
-    }
-    if (startedAt !== item.startedAt && !isPlausibleTime(startedAt, new Date())) return fail(`L’heure ${editing.start} est dans le futur ou trop ancienne.`);
-    if (endedAt && !isPlausibleTime(endedAt, new Date())) return fail(`L’heure ${editing.end} est dans le futur ou trop ancienne.`);
-    const finalEnd = endedAt ?? item.endedAt;
-    if (finalEnd && Date.parse(finalEnd) < Date.parse(startedAt)) return fail("Le réveil ne peut pas précéder l’endormissement.");
-
-    const payload: Record<string, string> = {};
-    const undoPayload: Record<string, string> = {};
-    for (const key of ["amount", "diaper", "care", "note"]) {
-      const next = (editing.values[key] ?? "").trim().slice(0, NOTE_MAX);
-      const before = item.values[key] ?? "";
-      if (next !== before) {
-        payload[key] = next;
-        undoPayload[key] = before;
-      }
-    }
-    const timeChanged = startedAt !== item.startedAt;
-    if (!timeChanged && !endedAt && Object.keys(payload).length === 0) return setEditing(null);
-
-    submit({ kind: "edit", id: crypto.randomUUID(), targetId: item.targetId, ...(timeChanged ? { startedAt } : {}), ...(endedAt ? { endedAt } : {}), ...(Object.keys(payload).length ? { payload } : {}) });
+    const outcome = buildEdit(item, editing, new Date());
+    if ("error" in outcome) return setEditing({ ...editing, error: outcome.error });
     setEditing(null);
+    if ("unchanged" in outcome) return;
+    submit({ kind: "edit", id: crypto.randomUUID(), targetId: item.targetId, ...outcome.fields });
     show(
       {
         text: `${item.label} modifié`,
         childId: kid.id,
-        undo: {
-          kind: "edit",
-          id: crypto.randomUUID(),
-          targetId: item.targetId,
-          ...(timeChanged ? { startedAt: item.startedAt } : {}),
-          ...(endedAt && item.endedAt ? { endedAt: item.endedAt } : {}),
-          ...(Object.keys(undoPayload).length ? { payload: undoPayload } : {}),
-        },
+        undo: { kind: "edit", id: crypto.randomUUID(), targetId: item.targetId, ...outcome.revert },
         undoLabel: "↩ Annuler la modification",
         undoDone: "Modification annulée",
       },
@@ -263,6 +233,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
           type="button"
           onClick={() => setVoiceOpen((v) => !v)}
           aria-expanded={voiceOpen}
+          data-tour="t-voice"
           className="flex min-w-20 flex-col items-center justify-center gap-0.5 rounded-card bg-primary px-4 text-sm font-extrabold text-white"
         >
           <span aria-hidden className="text-2xl">
@@ -296,7 +267,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
 
           return (
             <li key={kid.id} className="overflow-hidden rounded-card border border-line bg-surface shadow-luxe">
-              <header className="flex items-center gap-3 p-4 pb-3">
+              <header data-tour="t-card" className="flex items-center gap-3 p-4 pb-3">
                 <ChildAvatar name={kid.firstName} gender={kid.gender} size="lg" />
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate text-xl font-extrabold">{kid.firstName}</h2>
@@ -318,7 +289,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
                 </p>
               ) : null}
 
-              <div className="grid grid-cols-3 gap-2 px-4">
+              <div data-tour="t-actions" className="grid grid-cols-3 gap-2 px-4">
                 {actions.map((type) => (
                   <button
                     key={type}
@@ -391,8 +362,11 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
                 </div>
               ) : null}
 
-              <section aria-label={`Journée de ${kid.firstName}`} className="mx-4 mt-4 rounded-2xl border border-line bg-cream p-3">
-                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-gold-deep">Journée de {kid.firstName}</h3>
+              <section aria-label={`Journée de ${kid.firstName}`} data-tour="t-journee" className="mx-4 mt-4 rounded-2xl border border-line bg-cream p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-gold-deep">Journée de {kid.firstName}</h3>
+                  <HelpButton topic="today.journey" />
+                </div>
                 {timeline.length === 0 ? (
                   <p className="mt-2 text-sm text-ink-soft">Rien d’enregistré pour l’instant. Touchez un geste ci-dessus.</p>
                 ) : (
@@ -503,7 +477,10 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
                 )}
                 {cancelled.length > 0 ? (
                   <details className="mt-2 rounded-xl border border-dashed border-line bg-surface/60">
-                    <summary className="min-h-11 cursor-pointer px-3 py-2.5 text-sm font-bold text-ink-soft">🗂️ Annulés aujourd’hui ({cancelled.length}) · rien n’est perdu</summary>
+                    <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 px-3 py-2.5 text-sm font-bold text-ink-soft">
+                      <span>🗂️ Annulés aujourd’hui ({cancelled.length}) · rien n’est perdu</span>
+                      <HelpButton topic="today.cancel" />
+                    </summary>
                     <ul className="px-3 pb-2">
                       {cancelled.map((item) => (
                         <li key={item.id} className="flex items-center gap-3 border-t border-line py-2">
@@ -533,6 +510,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
                 {timeline.length > 0 ? (
                   <Link
                     href={`/aujourdhui/bilan/${kid.id}`}
+                    data-tour="t-bilan"
                     className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 text-base font-extrabold text-[#06301a]"
                   >
                     <WhatsAppIcon className="size-6 text-white" />
@@ -543,7 +521,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
                   <Link href={`/aujourdhui/messages/${kid.id}`} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-3 text-sm font-bold text-primary">
                     <span aria-hidden>💬</span> Message
                   </Link>
-                  <Link href={`/aujourdhui/urgence/${kid.id}`} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-danger/40 bg-surface px-3 text-sm font-bold text-danger">
+                  <Link href={`/aujourdhui/urgence/${kid.id}`} data-tour="t-urgence" className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-danger/40 bg-surface px-3 text-sm font-bold text-danger">
                     <span aria-hidden>🚨</span> Urgence
                   </Link>
                 </div>
@@ -575,9 +553,10 @@ function ConnectionBanner({ online, pending, syncing, problem, onDismiss }: { on
   }
   if (!online) {
     return (
-      <p role="status" className="rounded-card bg-sun-soft px-4 py-3 text-sm font-bold">
-        📴 Hors ligne : vos saisies sont gardées sur ce téléphone{pending > 0 ? ` (${pending} à envoyer)` : ""} et partiront dès le retour du réseau.
-      </p>
+      <div role="status" className="flex items-center justify-between gap-3 rounded-card bg-sun-soft px-4 py-3 text-sm font-bold">
+        <span>📴 Hors ligne : vos saisies sont gardées sur ce téléphone{pending > 0 ? ` (${pending} à envoyer)` : ""} et partiront dès le retour du réseau.</span>
+        <HelpButton topic="today.offline" />
+      </div>
     );
   }
   if (pending > 0) {

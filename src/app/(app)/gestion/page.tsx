@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ChildAvatar } from "@/components/child-avatar";
+import { TourLauncher } from "@/components/help/tour";
 import { ChildForm } from "@/components/child-form";
 import { HubLink, SectionTitle } from "@/components/hub-link";
 import { Card, PageTitle, Skeleton } from "@/components/ui";
@@ -85,8 +86,8 @@ async function Dashboard() {
 
   return (
     <>
-      <SectionTitle>Ce mois-ci</SectionTitle>
-      <div className="grid grid-cols-2 gap-3">
+      <SectionTitle help="gestion.month">Ce mois-ci</SectionTitle>
+      <div data-tour="g-month" className="grid grid-cols-2 gap-3">
         <Tile icon="👶" value={String(kids.length)} label={kids.length > 1 ? "Enfants accueillis" : "Enfant accueilli"} hint={`${present} présent${present > 1 ? "s" : ""} aujourd’hui`} tone="bg-leaf-soft" />
         <Tile
           icon="📄"
@@ -105,8 +106,8 @@ async function Dashboard() {
         />
       </div>
 
-      <SectionTitle>Mes enfants</SectionTitle>
-      <Card>
+      <SectionTitle help="gestion.kids">Mes enfants</SectionTitle>
+      <Card tour="g-kids">
         {kids.length === 0 ? (
           <p className="text-ink-soft">Aucun enfant pour le moment. Ajoutez le premier ci-dessous.</p>
         ) : (
@@ -134,10 +135,12 @@ async function Dashboard() {
         </details>
       </Card>
 
-      <SectionTitle>Argent et papiers</SectionTitle>
-      <HubLink href="/gestion/factures" emoji="💶" title="Factures et paiements" text="Paiement reçu → facture prête à envoyer" tone="gold" />
-      <HubLink href="/gestion/charges" emoji="🧾" title="Mes charges" text="Cocher, saisir, exporter" tone="aqua" />
-      <HubLink href="/profil/impots" emoji="🏛️" title="Impôts et documents" text="Aide à la déclaration, attestations d’accueil" tone="primary" />
+      <SectionTitle help="gestion.money">Argent et papiers</SectionTitle>
+      <div data-tour="g-money" className="flex flex-col gap-3">
+        <HubLink href="/gestion/factures" emoji="💶" title="Factures et paiements" text="Paiement reçu → facture prête à envoyer" tone="gold" />
+        <HubLink href="/gestion/charges" emoji="🧾" title="Mes charges" text="Cocher, saisir, exporter" tone="aqua" />
+        <HubLink href="/profil/impots" emoji="🏛️" title="Impôts et documents" text="Aide à la déclaration, attestations d’accueil" tone="primary" />
+      </div>
     </>
   );
 }
@@ -146,6 +149,7 @@ export default function Page() {
   return (
     <>
       <PageTitle subtitle="Mes enfants, mon argent, mes papiers">Gestion</PageTitle>
+      <TourLauncher tour="gestion" />
       <Suspense fallback={<Skeleton lines={4} />}>
         <Dashboard />
       </Suspense>

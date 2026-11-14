@@ -51,7 +51,7 @@ export function ProfileForm({ defaults: d, email }: { defaults: ProfileDefaults;
           <Field label="Prénom" name="firstName" defaultValue={d.firstName} maxLength={80} autoComplete="given-name" />
           <Field label="Nom" name="lastName" defaultValue={d.lastName} maxLength={80} autoComplete="family-name" />
         </div>
-        <Field label="Adresse du lieu d’accueil" name="addressLine" defaultValue={d.addressLine} maxLength={160} autoComplete="street-address" />
+        <Field label="Adresse du lieu d’accueil" help="profile.address" name="addressLine" defaultValue={d.addressLine} maxLength={160} autoComplete="street-address" />
         <div className="grid grid-cols-[1fr_2fr] gap-4">
           <Field label="Code postal" name="postalCode" defaultValue={d.postalCode} maxLength={10} inputMode="numeric" autoComplete="postal-code" />
           <Field label="Ville" name="city" defaultValue={d.city} maxLength={80} autoComplete="address-level2" />
@@ -63,19 +63,19 @@ export function ProfileForm({ defaults: d, email }: { defaults: ProfileDefaults;
       </Section>
 
       <Section emoji="🏛️" title="Agrément" hint="Nous vous prévenons quand l’échéance approche.">
-        <Field label="Numéro d’agrément" name="agreementNumber" defaultValue={d.agreementNumber} maxLength={40} autoComplete="off" />
+        <Field label="Numéro d’agrément" help="contract.agrement" name="agreementNumber" defaultValue={d.agreementNumber} maxLength={40} autoComplete="off" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Date d’agrément" name="agreementDate" type="date" defaultValue={d.agreementDate} />
-          <Field label="Fin / renouvellement" name="agreementExpiry" type="date" defaultValue={d.agreementExpiry} />
+          <Field label="Fin / renouvellement" help="profile.agrementEnd" name="agreementExpiry" type="date" defaultValue={d.agreementExpiry} />
         </div>
-        <Field label="Nombre d’enfants agréés" name="agreementCapacity" defaultValue={d.agreementCapacity} inputMode="numeric" maxLength={1} hint="De 1 à 6." />
+        <Field label="Nombre d’enfants agréés" help="profile.capacity" name="agreementCapacity" defaultValue={d.agreementCapacity} inputMode="numeric" maxLength={1} hint="De 1 à 6." />
       </Section>
 
       <Section emoji="🛡️" title="Assurance responsabilité civile">
-        <Field label="Assureur" name="insuranceCompany" defaultValue={d.insuranceCompany} maxLength={80} autoComplete="off" />
+        <Field label="Assureur" help="contract.insurance" name="insuranceCompany" defaultValue={d.insuranceCompany} maxLength={80} autoComplete="off" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Numéro de contrat" name="insurancePolicy" defaultValue={d.insurancePolicy} maxLength={60} autoComplete="off" />
-          <Field label="Échéance" name="insuranceExpiry" type="date" defaultValue={d.insuranceExpiry} />
+          <Field label="Échéance" help="profile.insuranceEnd" name="insuranceExpiry" type="date" defaultValue={d.insuranceExpiry} />
         </div>
       </Section>
 

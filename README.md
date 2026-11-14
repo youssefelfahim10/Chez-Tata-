@@ -3,7 +3,7 @@
 **Moins d'administratif, plus de temps pour les enfants.**
 L'outil de poche des assistantes maternelles : on pointe la journée en quelques gestes (ou à la voix), et le reste — bilan aux parents, présences, factures, aide pour les impôts — se prépare tout seul.
 
-🌐 En ligne : <https://chez-tata.vercel.app> · 🎬 Démonstration ouverte à tous : <https://chez-tata.vercel.app/demo>
+🌐 En ligne : <https://chez-tata.vercel.app> · 🎬 Démonstration ouverte à tous (animée, avec une musique douce que l'on peut couper) : <https://chez-tata.vercel.app/demo>
 
 ---
 
@@ -52,6 +52,8 @@ sequenceDiagram
 | **Planning** | Feuille de présence A4 prête à imprimer |
 | **Gestion** | Enfants, familles, contrats PDF, factures « paiement reçu », charges |
 | **Profil** | Identité, agrément, assurance, **aide à la déclaration d'impôts** (modifiable, jamais présentée comme officielle) |
+
+🧭 **Aide à chaque pas** : une visite guidée par écran et un « ? » à côté de chaque case, avec des explications courtes et simples (lisibles à voix haute).
 
 Couleurs **et** emojis pour chaque geste (la couleur n'est jamais seule) : 👋 arrivée · 🏠 départ · 🍽️ repas · 😴 sieste · 🧷 change · 🩹 soin.
 
