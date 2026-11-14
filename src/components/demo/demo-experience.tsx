@@ -82,7 +82,7 @@ export function DemoExperience() {
         </div>
       </header>
 
-      <main className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-4 py-10 lg:grid-cols-[1fr_auto] lg:gap-20 lg:py-14">
+      <main className="mx-auto grid w-full max-w-6xl flex-1 items-center overflow-x-clip gap-10 px-4 py-10 lg:grid-cols-[1fr_auto] lg:gap-20 lg:py-14">
         <section aria-labelledby="demo-title" className="order-2 flex flex-col gap-6 lg:order-1">
           <p className="w-fit rounded-full border border-sun/60 bg-sun-soft px-3.5 py-1 text-xs font-bold uppercase tracking-[0.2em] text-gold-deep">
             Démonstration · données fictives
@@ -161,8 +161,11 @@ export function DemoExperience() {
           ) : null}
         </section>
 
-        <div className="order-1 origin-top scale-[0.72] -mb-40 sm:scale-[0.85] sm:-mb-20 lg:order-2 lg:mb-0 lg:scale-100" data-paused={mode === "tour" && !state.playing ? "true" : "false"}>
-          <Phone label={mode === "tour" ? `Aperçu animé : ${scene.title}` : "Application en démonstration, utilisable avec des enfants fictifs"}>
+        <div
+          className={`order-1 flex min-w-0 origin-top justify-center lg:order-2 lg:mb-0 lg:scale-100 ${mode === "tour" ? "scale-[0.72] -mb-40 sm:scale-[0.85] sm:-mb-20" : "scale-[0.8] -mb-40 sm:scale-[0.9] sm:-mb-20"}`}
+          data-paused={mode === "tour" && !state.playing ? "true" : "false"}
+        >
+          <Phone wide={mode === "try"} label={mode === "tour" ? `Aperçu animé : ${scene.title}` : "Application en démonstration, utilisable avec des enfants fictifs"}>
             {mode === "tour" ? <SceneScreen key={`${state.index}-${state.runKey}`} id={scene.id} /> : <Sandbox onTouched={() => setTouched(true)} />}
           </Phone>
         </div>
