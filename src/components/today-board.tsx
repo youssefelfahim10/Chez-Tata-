@@ -222,7 +222,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
   const present = kids.filter((k) => days[k.id]?.status === "present").length;
 
   return (
-    <>
+    <div data-wide className="flex flex-col gap-5">
       <ConnectionBanner online={online} pending={pending} syncing={syncing} problem={problem} onDismiss={clearProblem} />
 
       <div className="grid grid-cols-[1fr_auto] items-stretch gap-3">
@@ -252,7 +252,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
         </>
       ) : null}
 
-      <ul className="flex flex-col gap-5">
+      <ul className="flex flex-col gap-5 xl:grid xl:grid-cols-2 xl:items-start">
         {kids.map((kid) => {
           const day = days[kid.id];
           const napping = Boolean(day.openNapId);
@@ -536,7 +536,7 @@ export function TodayBoard({ userId, orgId, kids, events: serverEvents, archived
           <p className={`pointer-events-auto w-full max-w-md rounded-2xl px-4 py-3 text-sm font-bold text-white shadow-lg ${toast.error ? "bg-danger" : "bg-ink"}`}>{toast.error ? toast.text : `✓ ${toast.text}`}</p>
         ) : null}
       </div>
-    </>
+    </div>
   );
 }
 
