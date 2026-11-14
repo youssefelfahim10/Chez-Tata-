@@ -54,6 +54,7 @@ export async function addFamily(_prev: FormState, formData: FormData): Promise<F
     return { error: "Impossible de relier la famille à l'enfant." };
   }
   revalidatePath(`/gestion/${d.childId}`);
+  revalidatePath("/demarrage");
   return { message: `Famille « ${d.name} » ajoutée.` };
 }
 
@@ -105,6 +106,7 @@ export async function createContract(_prev: FormState, formData: FormData): Prom
 
   revalidatePath(`/gestion/${childId.data}`);
   revalidatePath("/planning");
+  revalidatePath("/demarrage");
   return { message: "Contrat enregistré." };
 }
 

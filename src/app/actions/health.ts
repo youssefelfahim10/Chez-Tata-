@@ -47,5 +47,6 @@ export async function saveChildHealth(_prev: FormState, formData: FormData): Pro
   revalidatePath(`/gestion/${parsed.childId}`);
   revalidatePath(`/aujourdhui/urgence/${parsed.childId}`);
   revalidatePath("/aujourdhui");
+  revalidatePath("/demarrage");
   return { message: "Fiche enregistrée." };
 }
